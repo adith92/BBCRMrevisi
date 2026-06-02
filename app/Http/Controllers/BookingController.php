@@ -66,7 +66,7 @@ class BookingController extends Controller
             : ($request->sales_id ?? auth()->id());
         
         $validated['created_by'] = auth()->id();
-        $validated['booking_number'] = 'BK' . now()->format('YmdHis');
+        $validated['booking_number'] = 'GB-' . now()->format('Ymd') . '-' . str_pad(Booking::count() + 1, 4, '0', STR_PAD_LEFT);
         $validated['status'] = 'pending';
 
         // Parse price - remove dots (IDR formatting)

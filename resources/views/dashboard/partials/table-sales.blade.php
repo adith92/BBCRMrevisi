@@ -1,6 +1,0 @@
-@php $id='tbl_'.md5(__FILE__.json_encode($rows??[]).microtime()); $data=collect($rows??[]); @endphp
-<div class="space-y-3" data-table-wrapper>
-  <div class="flex justify-between items-center"><h3 class="font-semibold text-navy">Revenue per Sales</h3><input data-table-search class="border rounded-lg px-3 py-1.5 text-sm" placeholder="Search..."></div>
-  <div class="overflow-auto"><table class="min-w-full text-sm" data-table><thead><tr class="text-left border-b"><th data-sort="name" class="py-2 cursor-pointer">Nama</th><th data-sort="bookings" class="py-2 cursor-pointer">Booking</th><th data-sort="revenue" class="py-2 cursor-pointer">Revenue</th><th data-sort="avg" class="py-2 cursor-pointer">Avg/Booking</th></tr></thead><tbody>@foreach($data as $r)<tr class="border-b"><td class="py-2">{{ $r->name ?? $r['name'] ?? '-' }}</td><td>{{ $r->bookings_count ?? $r['bookings_count'] ?? 0 }}</td><td>{{ formatIDR($r->total_revenue ?? $r['total_revenue'] ?? 0) }}</td><td>{{ formatIDR($r->avg_revenue ?? $r['avg_revenue'] ?? 0) }}</td></tr>@endforeach</tbody></table></div>
-  <div data-table-pagination class="text-xs text-slate-500"></div>
-</div>

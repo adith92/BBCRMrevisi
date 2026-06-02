@@ -8,9 +8,9 @@
             <option value="">All Status</option>
             @foreach(['available','on_trip','maintenance','inactive'] as $s)<option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucfirst(str_replace('_',' ',$s)) }}</option>@endforeach
         </select>
-        <select name="brand" class="border rounded px-3 py-1.5 text-sm">
-            <option value="">All Brands</option>
-            @foreach(['bigbird','goldenbird','cititrans','executive'] as $b)<option value="{{ $b }}" {{ request('brand')===$b?'selected':'' }}>{{ ucfirst($b) }}</option>@endforeach
+        <select name="tier" class="border rounded px-3 py-1.5 text-sm">
+            <option value="">All Tiers</option>
+            @foreach(['standard','business','premium','luxury','executive'] as $t)<option value="{{ $t }}" {{ request('tier')===$t?'selected':'' }}>{{ ucfirst($t) }}</option>@endforeach
         </select>
         <button class="bg-navy text-white px-4 py-1.5 rounded text-sm">Filter</button>
     </form>
@@ -18,26 +18,54 @@
     <a href="{{ route('fleet.create') }}" class="bg-blue text-white px-4 py-2 rounded text-sm">+ New Vehicle</a>
     @endif
 </div>
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left">Plate</th><th class="px-4 py-3 text-left">Brand</th><th class="px-4 py-3 text-left">Model</th><th class="px-4 py-3 text-left">Capacity</th><th class="px-4 py-3 text-left">Year</th><th class="px-4 py-3 text-left">Pool</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3">Actions</th></tr></thead>
-        <tbody>
-        @forelse($vehicles as $v)
-        <tr class="border-b hover:bg-gray-50">
-            <td class="px-4 py-3 font-medium">{{ $v->plate_number }}</td>
-            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs bg-navy/10 text-navy">{{ ucfirst($v->brand) }}</span></td>
-            <td class="px-4 py-3">{{ $v->model }}</td>
-            <td class="px-4 py-3">{{ $v->capacity }} pax</td>
-            <td class="px-4 py-3">{{ $v->year }}</td>
-            <td class="px-4 py-3">{{ $v->pool->name ?? '-' }}</td>
-            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {{ $v->status==='available'?'bg-green-100 text-green-700':($v->status==='on_trip'?'bg-blue-100 text-blue-700':'bg-yellow-100 text-yellow-700') }}">{{ ucfirst(str_replace('_',' ',$v->status)) }}</span></td>
-            <td class="px-4 py-3 text-center"><a href="{{ route('fleet.show',$v) }}" class="text-blue hover:underline text-xs">View</a></td>
-        </tr>
-        @empty
-        <tr><td colspan="8" class="px-4 py-6 text-center text-gray-400">No vehicles</td></tr>
-        @endforelse
-        </tbody>
-    </table>
-    <div class="p-3 border-t">{{ $vehicles->links() }}</div>
+
+<!-- Fleet Grid View -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+@forelse($vehicles as $v)
+<div class="card overflow-hidden group cursor-pointer" onclick="window.location='{{ route('fleet.show',$v) }}'">
+    <!-- Thumbnail Foto Hitam -->
+    <div class="h-40 bg-gray-900 relative overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop" 
+             alt="{{ $v->model }}" 
+             class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300"
+             style="filter: brightness(0.75) saturate(0.3);">
+        <div class="absolute top-2 right-2">
+            <span class="px-2 py-1 rounded text-xs font-semibold text-white backdrop-blur-sm
+                @if($v->tier==='standard') bg-gray-500
+                @elseif($v->tier==='business') bg-blue-500
+                @elseif($v->tier==='premium') bg-purple-500
+                @elseif($v->tier==='luxury') bg-yellow-500
+                @else bg-red-500 @endif">
+                {{ ucfirst($v->tier) }}
+            </span>
+        </div>
+        <div class="absolute bottom-2 left-2">
+            <span class="px-2 py-1 rounded text-xs font-semibold text-white backdrop-blur-sm
+                @if($v->status==='available') bg-green-500
+                @elseif($v->status==='on_trip') bg-blue-500
+                @else bg-yellow-500 @endif">
+                {{ ucfirst(str_replace('_',' ',$v->status)) }}
+            </span>
+        </div>
+    </div>
+    <div class="p-4">
+        <div class="flex justify-between items-start mb-2">
+            <div>
+                <h3 class="font-semibold text-navy">{{ $v->model }}</h3>
+                <p class="text-xs text-gray-500">{{ $v->plate_number }}</p>
+            </div>
+            <span class="text-xs text-gray-400">{{ $v->year }}</span>
+        </div>
+        <div class="flex justify-between text-sm text-gray-600">
+            <span>{{ $v->capacity }} seats</span>
+            <span>{{ $v->pool->name ?? '-' }}</span>
+        </div>
+    </div>
 </div>
+@empty
+<div class="col-span-full text-center py-8 text-gray-400">No vehicles found</div>
+@endforelse
+</div>
+
+<div class="mt-4">{{ $vehicles->links() }}</div>
 @endsection

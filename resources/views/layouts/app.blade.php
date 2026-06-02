@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>BlueERP — @yield('title', 'Dashboard')</title>
+    <title>Golden Bird CRM — @yield('title', 'Dashboard')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,60 +12,71 @@
     tailwind.config = {
         theme: { extend: { colors: {
             navy: '#042C53', blue: '#185FA5', accent: '#378ADD',
-        }, fontFamily: { sans: ['Inter','sans-serif'] }}}
+        }, fontFamily: { sans: ['Inter','sans-serif'] }}},
+        content: ["./resources/views/**/*.blade.php"]
     }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .sidebar { background: white; width: 220px; border-right: 1px solid #E5E7EB; }
+        .sidebar a { transition: all .15s cubic-bezier(.4,0,.2,1); color: #64748b; }
+        .sidebar a:hover { background: #F1F5F9; color: #185FA5; }
+        .sidebar a.active { background: #EEF4FB; color: #185FA5; font-weight: 600; }
+        .btn-primary { background: #042C53; transition: all .2s cubic-bezier(.4,0,.2,1); }
+        .btn-primary:hover { background: #185FA5; transform: translateY(-1px); }
+        .card { border-radius: 12px; border: 1px solid #E5E7EB; background: white; transition: all .15s ease; }
+        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .popup-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:50; display:flex; align-items:center; justify-content:center; }
-        .popup-content { background:white; border-radius:8px; padding:24px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; }
+        .popup-content { background:white; border-radius:12px; padding:24px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; border: 1px solid #E5E7EB; }
+        @keyframes pageFadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        main { animation: pageFadeIn .25s ease; }
     </style>
 </head>
 <body class="min-h-screen">
 <div class="flex min-h-screen">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-navy text-white flex-shrink-0 flex flex-col">
-        <div class="p-4 border-b border-white/10">
-            <h1 class="text-xl font-bold">🐦 BlueERP</h1>
-            <p class="text-xs text-white/60 mt-1">Fleet Management System</p>
+    <!-- Sidebar Putih -->
+    <aside class="sidebar flex-shrink-0 flex flex-col">
+        <div class="p-4 border-b border-gray-100">
+            <h1 class="text-lg font-bold text-navy">🐦 Golden Bird</h1>
+            <p class="text-xs text-gray-400 mt-1">CRM System</p>
         </div>
-        <nav class="flex-1 p-3 space-y-1">
+        <nav class="flex-1 p-2 space-y-0.5">
             @php $role = auth()->user()->role; $current = request()->route() ? request()->route()->getName() : ''; @endphp
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'dashboard') ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10' }}">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'dashboard') ? 'active' : '' }}">
                 📊 Dashboard
             </a>
             @if(in_array($role,['sales','gm']))
-            <a href="{{ route('bookings.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'bookings') ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10' }}">
+            <a href="{{ route('bookings.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'bookings') ? 'active' : '' }}">
                 📅 Bookings
             </a>
-            <a href="{{ route('clients.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'clients') ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10' }}">
+            <a href="{{ route('clients.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'clients') ? 'active' : '' }}">
                 👥 Clients
             </a>
             @endif
             @if(in_array($role,['operational','gm']))
-            <a href="{{ route('fleet.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'fleet') ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10' }}">
+            <a href="{{ route('fleet.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'fleet') ? 'active' : '' }}">
                 🚗 Fleet
             </a>
-            <a href="{{ route('pool.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'pool') ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10' }}">
+            <a href="{{ route('pool.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'pool') ? 'active' : '' }}">
                 🅿️ Pool
             </a>
-            <a href="{{ route('maintenance.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'maintenance') ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10' }}">
+            <a href="{{ route('maintenance.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'maintenance') ? 'active' : '' }}">
                 🔧 Maintenance
             </a>
             @endif
             @if(in_array($role,['finance','gm']))
-            <a href="{{ route('finance.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'finance') ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10' }}">
+            <a href="{{ route('finance.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ str_contains($current,'finance') ? 'active' : '' }}">
                 💰 Finance
             </a>
             @endif
         </nav>
-        <div class="p-4 border-t border-white/10 text-xs text-white/50">v3.0 — {{ now()->year }}</div>
+        <div class="p-3 border-t border-gray-100 text-xs text-gray-400">v4.0 — {{ now()->year }}</div>
     </aside>
 
     <!-- Main -->
     <div class="flex-1 flex flex-col">
         <!-- Navbar -->
-        <header class="bg-white shadow-sm px-6 py-3 flex items-center justify-between">
+        <header class="bg-white shadow-sm px-6 py-3 flex items-center justify-between border-b border-gray-100">
             <h2 class="text-lg font-semibold text-gray-800">@yield('title', 'Dashboard')</h2>
             <div class="flex items-center gap-4">
                 <span class="text-sm text-gray-600">{{ auth()->user()->name }}</span>
@@ -97,7 +108,7 @@
 <div id="popup-stack" class="fixed inset-0 pointer-events-none z-50"></div>
 
 <script>
-// IDR Formatting
+// IDR Formatting - TITIK (Rp 1.500.000)
 function formatIDR(amount) {
     return 'Rp ' + Number(amount).toLocaleString('id-ID');
 }

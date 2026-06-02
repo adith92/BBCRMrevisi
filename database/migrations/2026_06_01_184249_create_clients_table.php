@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('email');
             $table->text('address')->nullable();
             $table->string('industry')->nullable();
+            $table->enum('tier', ['platinum','gold','silver','bronze'])->default('bronze');
             $table->enum('status', ['active','prospect','inactive'])->default('prospect');
             $table->foreignId('assigned_sales_id')->nullable()->constrained('users');
             $table->text('notes')->nullable();

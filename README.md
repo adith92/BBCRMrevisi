@@ -1,6 +1,6 @@
-# 🐦 BlueERP - B2B Fleet Management System
+# 🐦 Golden Bird CRM - B2B Fleet Management System
 
-Selamat datang di **BlueERP**, sebuah sistem ERP (Enterprise Resource Planning) yang dirancang khusus untuk manajemen armada B2B. Aplikasi ini dibuat untuk mendemonstrasikan kapabilitas pengembangan aplikasi web yang kompleks menggunakan Laravel.
+Selamat datang di **Golden Bird CRM**, sebuah sistem CRM (Customer Relationship Management) yang dirancang khusus untuk manajemen armada B2B oleh **Bluebird Group - Golden Bird Division**. Aplikasi ini dibuat untuk mendemonstrasikan kapabilitas pengembangan aplikasi web yang kompleks menggunakan Laravel.
 
 ## 🤖 Dibuat Oleh Siapa?
 
@@ -14,22 +14,23 @@ Aplikasi ini **100% ditulis dan dideploy oleh AI** dari model **Aion** (model: `
 
 -   [x] ⚙️ **Backend:** Selesai (13 Migrations, 11 Models, 9 Controllers, RBAC Middleware, 53 API Routes)
 -   [x] 🎨 **Frontend:** Selesai (Views untuk 4 role dashboard, 6 modul CRUD, styling dengan Tailwind CSS)
--   [x] 🗃️ **Database:** Selesai (Skema SQLite + 270+ mock data seeded)
+-   [x] 🗃️ **Database:** Selesai (Skema SQLite + **1,239** mock data seeded)
 -   [x] ✅ **Testing:** Selesai (Self-QA lolos, bug API diperbaiki)
 -   [x] ☁️ **Deployment:** Siap untuk Railway!
 
 ## ✨ Fitur Unggulan
 
 -   **Dashboard Multi-Role 👑:** Tampilan yang berbeda untuk General Manager (GM), Sales, Operational, dan Finance.
--   **Manajemen Client (CRM) 👥:** Mengelola data client B2B, dari prospek hingga menjadi pelanggan aktif.
--   **Sistem Booking 📅:** Membuat dan mengelola jadwal booking kendaraan untuk client.
--   **Manajemen Armada 🚗:** Database lengkap kendaraan (Bigbird, Goldenbird, Cititrans, Executive).
--   **Modul Keuangan 💰:** Mengelola Invoice, Payment, dan Purchase Order (PO).
+-   **Manajemen Client (CRM) 👥:** Mengelola data client B2B dengan tier system (Platinum, Gold, Silver, Bronze).
+-   **Sistem Booking 📅:** Membuat dan mengelola jadwal booking kendaraan untuk client dengan format nomor `GB-YYYYMMDD-XXXX`.
+-   **Manajemen Armada 🚗:** Database lengkap kendaraan **Golden Bird** (Veloz, Alphard, Vellfire, BMW i7, Genesis G80, dll) dengan tier classification (Standard → Executive).
+-   **Fleet Thumbnail Grid 🖼️:** Tampilan grid dengan foto hitam (CSS filter brightness 0.75) dan tier chip overlay.
+-   **Modul Keuangan 💰:** Mengelola Invoice, Payment, dan Purchase Order (PO) dengan overdue highlighting.
 -   **Manajemen Pool & Driver 🅿️:** Mengatur alokasi kendaraan dan supir di setiap pool.
 -   **Log Maintenance 🔧:** Mencatat riwayat servis dan perbaikan untuk setiap kendaraan.
 -   **Visualisasi Data 📊:** Grafik interaktif (revenue, status armada) menggunakan Chart.js.
 -   **Role-Based Access Control (RBAC) 🛡️:** Sistem hak akses ketat, memastikan setiap role hanya bisa melihat data yang relevan.
--   **Format Rupiah Otomatis 💸:** Input dan tampilan angka menggunakan format `Rp X.XXX.XXX`.
+-   **Format Rupiah Otomatis 💸:** Input dan tampilan angka menggunakan format `Rp X.XXX.XXX` (titik, bukan koma).
 
 ---
 
@@ -80,8 +81,8 @@ Setelah aplikasi live, Anda bisa langsung login dan mencoba berbagai fitur denga
 | 👑 General Manager | `gm@bluebird.co.id` | `password123` |
 | 📈 Sales 1 | `sales1@bluebird.co.id` | `password123` |
 | 📊 Sales 2 | `sales2@bluebird.co.id` | `password123` |
+| 📊 Sales 3 | `sales3@bluebird.co.id` | `password123` |
 | 🛠️ Operational | `ops@bluebird.co.id` | `password123` |
 | 💰 Finance | `finance@bluebird.co.id` | `password123` |
-| 🧑‍💼 Admin (GM) | `admin@bluebird.co.id`| `password123` |
 
 Selamat mencoba! 😉
