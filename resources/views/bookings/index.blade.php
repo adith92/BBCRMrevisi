@@ -1,0 +1,104 @@
+@extends('layouts.app')
+
+@section('page-title', 'Bookings')
+
+@section('content')
+<x-breadcrumb :items="[
+    ['url' => route('dashboard'), 'label' => 'Dashboard'],
+    ['url' => '#', 'label' => 'Bookings'],
+]" />
+
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="flex flex-wrap gap-2 justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-900">
+            Bookings
+            @if(request('status'))
+                <span class="text-sm font-normal text-gray-500">— {{ ucfirst(str_replace('_', ' ', request('status'))) }}</span>
+            @endif
+        </h2>
+        <div class="flex flex-wrap gap-2 items-center">
+            {{-- Status filters --}}
+            <div class="flex gap-1 text-xs">
+                <a href="{{ route('bookings.index', array_except(request()->query(), ['status'])) }}"
+                   class="{{ !request('status') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }} px-2 py-1 rounded">All</a>
+                <a href="{{ route('bookings.index', array_merge(request()->query(), ['status' => 'active'])) }}"
+                   class="{{ request('status') === 'active' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700' }} px-2 py-1 rounded">Active</a>
+                <a href="{{ route('bookings.index', array_merge(request()->query(), ['status' => 'pending'])) }}"
+                   class="{{ request('status') === 'pending' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700' }} px-2 py-1 rounded">Pending</a>
+                <a href="{{ route('bookings.index', array_merge(request()->query(), ['status' => 'completed'])) }}"
+                   class="{{ request('status') === 'completed' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700' }} px-2 py-1 rounded">Completed</a>
+                <a href="{{ route('bookings.index', array_merge(request()->query(), ['status' => 'cancelled'])) }}"
+                   class="{{ request('status') === 'cancelled' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700' }} px-2 py-1 rounded">Cancelled</a>
+            </div>
+
+            @if(auth()->user()->isSales() || auth()->user()->isGM() || auth()->user()->isOperational())
+                <a href="{{ route('bookings.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm">
+                    ➕ New Booking
+                </a>
+            @endif
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b">
+                <tr class="text-gray-600">
+                    <th class="px-4 py-3 text-left font-semibold">Booking #</th>
+                    <th class="px-4 py-3 text-left font-semibold">Client</th>
+                    <th class="px-4 py-3 text-left font-semibold">Sales</th>
+                    <th class="px-4 py-3 text-left font-semibold">Vehicle</th>
+                    <th class="px-4 py-3 text-left font-semibold">Pickup</th>
+                    <th class="px-4 py-3 text-left font-semibold">Status</th>
+                    <th class="px-4 py-3 text-right font-semibold">Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($bookings as $booking)
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3">
+                        <a href="{{ route('bookings.show', $booking->id) }}" class="text-blue-600 hover:underline font-mono font-semibold">
+                            {{ $booking->booking_number }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-3">
+                        <a href="{{ route('clients.show', $booking->client_id) }}" class="text-gray-800 hover:text-blue-600 hover:underline">
+                            {{ $booking->client->company_name }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-3">
+                        @if(auth()->user()->isGM())
+                            <a href="{{ route('sales.performance', $booking->sales_id) }}" class="text-blue-600 hover:underline">
+                                {{ $booking->sales->name }}
+                            </a>
+                        @else
+                            <span class="text-gray-700">{{ $booking->sales->name }}</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3">
+                        @if(auth()->user()->isGM() || auth()->user()->isOperational())
+                            <a href="{{ route('fleet.show', $booking->vehicle_id) }}" class="text-blue-600 hover:underline font-mono">
+                                {{ $booking->vehicle->plate_number }}
+                            </a>
+                        @else
+                            <span class="font-mono text-gray-700">{{ $booking->vehicle->plate_number }}</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3 text-gray-600">{{ $booking->pickup_datetime->format('d M Y') }}</td>
+                    <td class="px-4 py-3">
+                        <x-status-badge :status="$booking->status"
+                            :link="route('bookings.index', array_merge(request()->query(), ['status' => $booking->status]))" />
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold">{{ \App\Helpers\FormatHelper::formatIDR($booking->price) }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">No bookings found</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">{{ $bookings->links() }}</div>
+</div>
+@endsection

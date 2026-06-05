@@ -1,0 +1,58 @@
+services:
+  - type: web
+    name: golden-bird-crm
+    runtime: php
+    plan: free
+    region: singapore
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      php artisan key:generate --force
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    healthCheckPath: /
+    envVars:
+      - key: APP_NAME
+        value: "Golden Bird CRM"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: golden-bird-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: golden-bird-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: golden-bird-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: golden-bird-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: golden-bird-db
+          property: password
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_DRIVER
+        value: file
+      - key: LOG_CHANNEL
+        value: stderr
+
+databases:
+  - name: golden-bird-db
+    databaseName: golden_bird_crm
+    user: goldenbird
+    plan: free
+    region: singapore
