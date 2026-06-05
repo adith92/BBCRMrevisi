@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Tambah Opportunity')
+@section('header_title', 'Tambah Opportunity')
 
 @section('content')
 <div class="p-4 md:p-6 max-w-3xl mx-auto">

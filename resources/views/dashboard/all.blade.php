@@ -1,7 +1,7 @@
 <!-- resources/views/dashboard/operational.blade.php -->
 @extends('layouts.app')
 
-@section('page-title', 'Operational Dashboard')
+@section('header_title', 'Operational Dashboard')
 
 @section('content')
 <div class="space-y-6">
@@ -34,7 +34,7 @@
 <!-- resources/views/dashboard/finance.blade.php -->
 @extends('layouts.app')
 
-@section('page-title', 'Finance Dashboard')
+@section('header_title', 'Finance Dashboard')
 
 @section('content')
 <div class="space-y-6">

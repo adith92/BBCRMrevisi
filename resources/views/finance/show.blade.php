@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', $invoice->invoice_number)
+@section('header_title', $invoice->invoice_number)
 
 @section('content')
 <x-breadcrumb :items="[

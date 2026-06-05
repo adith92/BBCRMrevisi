@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', $user->name . ' — Performance')
+@section('header_title', $user->name . ' — Performance')
 
 @section('content')
 <x-breadcrumb :items="[

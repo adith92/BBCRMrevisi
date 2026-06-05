@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', $vehicle->plate_number)
+@section('header_title', $vehicle->plate_number)
 
 @section('content')
 <x-breadcrumb :items="[

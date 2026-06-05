@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Cross-sell Analysis')
+@section('header_title', 'Cross-sell Analysis')
 
 @section('content')
 <div class="space-y-6">

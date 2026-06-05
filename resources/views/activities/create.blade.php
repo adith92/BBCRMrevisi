@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Catat Aktivitas')
+@section('header_title', 'Catat Aktivitas')
 
 @section('content')
 <div x-data="{

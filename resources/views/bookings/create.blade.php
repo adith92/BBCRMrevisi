@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Create Booking')
+@section('header_title', 'Create Booking')
 
 @section('content')
 <div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-8">

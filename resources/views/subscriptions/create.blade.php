@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Tambah Kontrak Berlangganan')
+@section('header_title', 'Tambah Kontrak Berlangganan')
 
 @section('content')
 <x-breadcrumb :items="[

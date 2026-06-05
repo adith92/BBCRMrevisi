@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Finance & Invoices')
+@section('header_title', 'Finance & Invoices')
 
 @section('content')
 <x-breadcrumb :items="[

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Tambah Produk')
+@section('header_title', 'Tambah Produk')
 
 @section('content')
 <div class="p-4 md:p-6 max-w-2xl mx-auto">

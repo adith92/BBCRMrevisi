@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Fleet Management')
+@section('header_title', 'Fleet Management')
 
 @section('content')
 <x-breadcrumb :items="[

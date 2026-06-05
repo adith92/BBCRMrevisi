@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', $client->company_name)
+@section('header_title', $client->company_name)
 
 @section('content')
 <x-breadcrumb :items="[

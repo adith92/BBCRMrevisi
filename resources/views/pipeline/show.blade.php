@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', $opportunity->opp_number . ' - ' . $opportunity->title)
+@section('header_title', $opportunity->opp_number . ' - ' . $opportunity->title)
 
 @section('content')
 @php

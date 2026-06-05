@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Antrian Persetujuan')
+@section('header_title', 'Antrian Persetujuan')
 
 @section('content')
 <div x-data="approvalQueue()" class="space-y-6">

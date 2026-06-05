@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Log Aktivitas')
+@section('header_title', 'Log Aktivitas')
 
 @section('content')
 <div x-data="{ showFilters: false }">

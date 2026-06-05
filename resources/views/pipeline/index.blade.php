@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Sales Pipeline')
+@section('header_title', 'Sales Pipeline')
 
 @section('content')
 <div
