@@ -15,8 +15,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Force HTTPS in production
-        if (config('app.env') === 'production') {
+        // Force HTTPS kalau bukan local (Render selalu HTTPS di belakang proxy).
+        // Mencegah form action http:// → browser "not secure" warning.
+        if (config('app.env') !== 'local') {
             URL::forceScheme('https');
         }
 
