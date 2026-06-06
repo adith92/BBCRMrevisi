@@ -66,5 +66,5 @@ CMD ["/bin/sh", "-c", "\
     php artisan route:cache && \
     php artisan view:cache && \
     php artisan migrate --force && \
-    php artisan db:seed --force && \
+    (php artisan db:seed --force || true) & \
     /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
