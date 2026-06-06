@@ -1,125 +1,404 @@
-# 🐦 GOLDEN BIRD CRM — Complete System
+# 🚌 BLUEBIRD CRM — Command Center v7.5
 
-**Enterprise B2B Fleet Management & CRM System**  
-Built with Laravel 11, Tailwind CSS, and Chart.js
+> **Enterprise B2B Fleet Management & CRM System**  
+> Award-worthy UX · Dark/Light Dual Theme · Full Keyboard Navigation · Real-time Charts
+
+[![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Alpine.js](https://img.shields.io/badge/Alpine.js-3.x-8BC0D0?style=flat-square&logo=alpinedotjs&logoColor=white)](https://alpinejs.dev)
+[![Chart.js](https://img.shields.io/badge/Chart.js-4.x-FF6384?style=flat-square&logo=chartdotjs&logoColor=white)](https://chartjs.org)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ---
 
 ## 📋 TABLE OF CONTENTS
 
-1. [Project Overview](#overview)
-2. [Quick Start](#quick-start)
-3. [Features](#features)
-4. [File Structure](#file-structure)
-5. [Demo Accounts](#demo-accounts)
-6. [Installation Guide](#installation)
-7. [Database Schema](#schema)
+1. [🎯 Project Overview](#overview)
+2. [✨ What's New in v7.5](#whats-new)
+3. [🚀 Quick Start](#quick-start)
+4. [🔑 Demo Accounts](#demo-accounts)
+5. [🎨 UI/UX Features](#ui-ux)
+6. [⌨️ Keyboard Shortcuts](#shortcuts)
+7. [📊 Dashboard & Charts](#charts)
+8. [🗂️ Kanban Pipeline](#kanban)
+9. [🏗️ Architecture](#architecture)
+10. [🐳 Docker / Deployment](#deployment)
+11. [📁 File Structure](#file-structure)
 
 ---
 
-## <a name="overview"></a>📌 PROJECT OVERVIEW
+## <a name="overview"></a>🎯 PROJECT OVERVIEW
 
-**Golden Bird CRM** is a complete B2B fleet management and customer relationship management system for transportation companies like Bluebird Group (BigBird, GoldenBird, Cititrans, Executive).
+**Bluebird CRM** adalah sistem CRM enterprise untuk manajemen armada B2B perusahaan transportasi (BigBird, GoldenBird, Cititrans, Executive). Dibangun di atas Laravel 12 dengan UX-first philosophy — setiap pixel dirancang untuk produktivitas maksimal tim sales.
 
-### Key Statistics
-- **34 Files** created
-- **11 Models** with proper relationships
-- **4 Migrations** (11 tables total)
-- **4 Controllers** (Dashboard, Booking, Revenue)
-- **7 Blade Views** (Layout + 4 dashboards + 3 booking views)
-- **100+ Dummy Data** (6 users, 30 clients, 20 vehicles, 60 bookings, etc.)
-- **6 Demo Accounts** with role-based access control
+### 📐 System Stats v7.5
+
+| Kategori | Detail |
+|---|---|
+| 🏗️ Framework | Laravel 12 + PHP 8.2 |
+| 💾 Database | SQLite (WAL mode, ~50k–1M rows) |
+| 🎨 CSS System | CSS Custom Properties dual-theme |
+| ⚡ JS Modules | 10 global CRM_* modules |
+| 🖼️ Views | 25+ Blade components |
+| 🧪 Seeder | Scale 1–20 (50k–1M rows) |
+| 🚢 Deploy | Docker + Render.com ready |
+
+---
+
+## <a name="whats-new"></a>✨ WHAT'S NEW IN v7.5
+
+### 🎨 Theme System — Dual Dark/Light
+
+- **🌑 Dark Mode** (default): Deep space `#09090f` background, glass card effect `rgba(19,19,36,0.85)`
+- **☀️ Light Mode**: Near-white `#f0f0fa` dengan frosted-glass sidebar, bukan cream/kuning
+- **⚡ Instant toggle** — zero reload via CSS Custom Properties + JS `CRM_Theme`
+- **💾 Persistent** — preference disimpan di localStorage
+
+```
+html.dark  → --cc-bg: #09090f  | --cc-card: rgba(19,19,36,0.85)
+html.light → --cc-bg: #f0f0fa  | --cc-card: rgba(255,255,255,0.82)
+```
+
+### ⌨️ Command Palette ⌘K
+
+- **Spotlight-style** overlay dengan fuzzy search
+- Navigate ke semua halaman via keyboard
+- Server search `/search/global?q=` + fallback client-side
+- `⌘K` buka, `↑↓` navigasi, `Enter` execute, `Esc` tutup
+
+### 🔔 Notification Center
+
+- Bell icon dengan unread badge di topbar
+- Slide-in drawer dari kanan
+- Item dengan icon, waktu relatif, mark-as-read
+- `CRM_Notif.toggle()` via JS
+
+### 🎊 Konfetti Won!
+
+- Pure CSS animation — **120 partikel** warna-warni
+- Auto-trigger saat deal dipindah ke stage **Won**
+- Self-cleanup via `animationend` event
+- `CRM_Confetti.fire()` bisa dipanggil manual
+
+### ➕ FAB Quick-Add Deal
+
+- Floating Action Button ⊕ fixed bottom-right
+- Modal Alpine.js dengan 4 field: title, client, value, close date
+- Auto-focus pada title input saat buka
+- Link "Full form →" ke halaman create lengkap
+- Hanya tampil untuk role: director, gm, manager, sales
+
+### 💚 Deal Health Score
+
+- Visual badge per Kanban card: 💚 Sehat / 💛 Perlu Perhatian / ❤️ Bahaya
+- Formula: `daysSince + (stageDays × 0.5)`
+- `< 7` = green, `< 14` = yellow, `≥ 14` = red
+- `CRM_Health.score()` via global JS
+
+### 📊 7-Day KPI Charts
+
+4 chart visual di dashboard:
+1. **📈 Revenue & Deals** — Dual-axis: line (revenue) + bar (deals closed)
+2. **🗂️ Pipeline Distribution** — Donut chart 5 stage + legend
+3. **🏅 Sales Leaderboard** — Horizontal bar chart ranking tim sales
+4. **📋 Activity Breakdown** — Doughnut + progress bar per tipe aktivitas
+
+Semua chart **theme-aware** via `MutationObserver` → auto-rerender saat dark/light toggle.
+
+### 📐 Multi-View Kanban Toggle
+
+- **Board** 🗂️ (default), **List** 📋, **Table** 📊
+- State disimpan di localStorage per user
+- Smooth CSS transition saat switch view
+
+### 🌐 Global Keyboard Shortcuts (12 total)
+
+| Key | Aksi |
+|---|---|
+| `⌘K` | Command Palette |
+| `⌘B` | Focus / Presentation Mode |
+| `⌘D` | Toggle Dark/Light |
+| `N` | New Opportunity |
+| `E` | Inline Edit |
+| `W` | Mark Won |
+| `A` | Add Activity |
+| `V` | 360° View |
+| `F` | Filter Panel |
+| `1-7` | Jump to Nav |
+| `?` | Show Shortcuts Help |
+| `Esc` | Close Modals |
+
+### 🌱 Scalable Demo Seeder
+
+```bash
+DEMO_SCALE=1  php artisan db:seed   # ~50,000 rows
+DEMO_SCALE=5  php artisan db:seed   # ~250,000 rows
+DEMO_SCALE=20 php artisan db:seed   # ~1,000,000 rows
+```
+
+SQLite WAL mode aktif otomatis untuk performa optimal.
+
+### 🖥️ SPA Shell Layout
+
+- `html/body overflow:hidden` — hanya `#content-area` yang scroll
+- Sidebar collapsible dengan animasi `cubic-bezier(0.16,1,0.3,1)`
+- Focus Mode: sembunyikan sidebar untuk presentasi full-screen
+- Topbar center search bar (desktop) + mobile-responsive
 
 ---
 
 ## <a name="quick-start"></a>🚀 QUICK START
 
-### Option 1: Local Installation (Recommended for Development)
-
 ```bash
-# 1. Create a new Laravel 11 project
-composer create-project laravel/laravel golden-bird-crm
+# 1. Clone
+git clone https://github.com/neochemical/golden-bird-crm.git
+cd golden-bird-crm
 
-# 2. Copy all files from our golden-bird-crm folder into your project
-# (Replace existing files)
+# 2. Install dependencies
+composer install
+npm install
 
 # 3. Setup environment
 cp .env.example .env
 php artisan key:generate
 
-# 4. Configure database
-# Edit .env: DB_CONNECTION=sqlite
-# (SQLite file will be auto-created)
+# 4. Database + seed
+touch database/database.sqlite
+php artisan migrate
+php artisan db:seed                    # default scale=1
 
-# 5. Run migrations and seeders
-php artisan migrate:fresh --seed
+# 5. Build assets
+npm run build
 
-# 6. Serve the application
+# 6. Serve
 php artisan serve
-
-# 7. Open http://localhost:8000
-# Login with any demo account
+# → http://localhost:8000
 ```
-
-### Option 2: Direct File Integration
-
-If you already have Laravel 11 installed:
-
-1. Copy `app/` folder → replace your `app/`
-2. Copy `database/` → merge with your `database/`
-3. Copy `resources/views/` → merge with your `resources/views/`
-4. Copy `routes/web.php` → replace your `routes/web.php`
-5. Copy `.env` → merge with your `.env`
-6. Run: `php artisan migrate:fresh --seed`
 
 ---
 
-## <a name="features"></a>✨ FEATURES
+## <a name="demo-accounts"></a>🔑 DEMO ACCOUNTS
 
-### 1. **Role-Based Access Control (RBAC)**
-- **GM (Super Admin)**: View all data, see revenue per sales, no edit permissions
-- **Sales (3 users)**: Only see own clients and bookings, manage own revenue
-- **Operational**: Fleet, pool, and maintenance management
-- **Finance**: Invoice, payment, and financial reporting
+| 👤 Role | 📧 Email | 🔐 Password | 🎯 Access |
+|---|---|---|---|
+| 👑 **Director** | director@bluebird.id | password | Full system + approval |
+| 🏢 **GM** | gm@bluebird.id | password | Dashboard + reports + pipeline |
+| 📊 **Manager** | manager@bluebird.id | password | Team management + KPI |
+| 💼 **Sales** | sales@bluebird.id | password | Opportunities + activities |
+| 🔍 **Finance** | finance@bluebird.id | password | Revenue + approvals |
+| ⚙️ **Admin** | admin@bluebird.id | password | System settings |
 
-### 2. **Revenue Tracking (4 Periods)**
-- **Daily**: Last 30 days revenue tracking
-- **Weekly**: Last 12 weeks trend
-- **Monthly**: Last 12 months analysis
-- **Yearly**: Multi-year comparison
+---
 
-### 3. **Revenue per Sales (GM Only)**
-- View which sales person generates most revenue
-- Bar chart visualization
-- Detailed table with bookings count and average per booking
+## <a name="ui-ux"></a>🎨 UI/UX FEATURES
 
-### 4. **Booking Management**
-- Auto-assign sales when created by sales user
-- GM can assign any sales when creating booking
-- Full CRUD with proper validation
-- Detailed booking information display
+### 🎨 Design System
 
-### 5. **IDR Number Formatting**
-- All monetary values formatted as `Rp 1.500.000` (not `Rp 1,500,000`)
-- Auto-formatting in input fields
-- Proper parsing for database storage
+```css
+/* Dark Mode (default) */
+--cc-bg:         #09090f          /* Deep space */
+--cc-card:       rgba(19,19,36,0.85)  /* Glass card */
+--cc-sidebar:    rgba(14,14,26,0.92)  /* Sidebar */
+--cc-accent:     #00e5ff          /* Cyan accent */
+--cc-accent-2:   #7c3aed          /* Purple secondary */
 
-### 6. **4 Role-Specific Dashboards**
-- **GM Dashboard**: KPI cards, revenue charts, per-sales analysis
-- **Sales Dashboard**: My revenue, my bookings, my clients
-- **Operational Dashboard**: Fleet status, active bookings
-- **Finance Dashboard**: Revenue summary, invoices, payments
+/* Light Mode */
+--cc-bg:         #f0f0fa          /* Near-white */
+--cc-card:       rgba(255,255,255,0.82)
+--cc-sidebar:    rgba(248,248,255,0.92)
+```
 
-### 7. **Multi-Layer Popup System**
-- Stack up to 3 popup layers
-- Close with ESC key or click outside
-- Smooth animations
+### 💎 Glass Morphism Effect
 
-### 8. **100+ Dummy Data**
-- Real Indonesian company names
-- Multiple vehicle brands
-- Realistic booking scenarios
-- Complete financial records
+Semua card menggunakan `backdrop-filter: blur(20px)` dengan border subtle untuk efek kaca premium.
+
+### 🔤 Typography
+
+- Font: **Inter** (Google Fonts) — weight 400–900
+- Icons: **Material Symbols Outlined** (adjustable fill + weight)
+- Emoji: Digunakan secara strategis sebagai visual cue
+
+### 📱 Responsive Design
+
+- Desktop: Sidebar + topbar + content
+- Tablet: Sidebar collapsible
+- Mobile: Sidebar overlay dengan hamburger menu
+
+---
+
+## <a name="shortcuts"></a>⌨️ KEYBOARD SHORTCUTS
+
+Tekan `?` kapan saja untuk melihat overlay shortcuts. Semua shortcuts dihandle via global `CRM_Keys.init()`.
+
+```
+⌘K  → Command Palette (Spotlight-style search)
+⌘B  → Focus/Presentation Mode (sembunyikan sidebar)
+⌘D  → Toggle Dark ↔ Light mode
+N   → New Opportunity (buka FAB quick-add)
+E   → Inline Edit (deal yang sedang aktif)
+W   → Mark Won (konfetti! 🎊)
+A   → Add Activity Log
+V   → 360° Client View
+F   → Toggle Filter Panel
+1-7 → Jump langsung ke menu navigasi
+?   → Show/Hide Shortcuts Overlay
+Esc → Close semua modal/overlay
+```
+
+---
+
+## <a name="charts"></a>📊 DASHBOARD & CHARTS
+
+### 📈 Revenue & Deals 7-Day Timeline
+
+Dual-axis chart: line chart revenue + bar chart deals closed. Setiap hari ditampilkan dengan badge jumlah deal.
+
+### 🗂️ Pipeline Distribution
+
+Donut chart dengan 5 stage: Prospecting → Proposal → Negotiation → Won → Lost. Legend interaktif di kanan.
+
+### 🏅 Sales Leaderboard
+
+Horizontal bar chart ranking tim sales berdasarkan revenue bulan ini. Medal 🥇🥈🥉 untuk top 3.
+
+### 📋 Activity Breakdown
+
+Doughnut chart + progress bar per tipe: 📞 Call, 📧 Email, 🤝 Meeting, 📄 Proposal, 🔄 Follow-up.
+
+### ⚡ Theme-Aware Charts
+
+```javascript
+// Auto-rerender saat dark/light toggle
+const observer = new MutationObserver(() => {
+    Object.values(Chart.instances).forEach(c => c.update());
+});
+observer.observe(document.documentElement, { attributes: true });
+```
+
+---
+
+## <a name="kanban"></a>🗂️ KANBAN PIPELINE
+
+### 🎯 Deal Health Score Per Card
+
+```
+💚 Sehat      → Risk score < 7   (aktif dalam 7 hari)
+💛 Perhatian  → Risk score < 14  (aktif dalam 14 hari)
+❤️ Bahaya     → Risk score ≥ 14  (sudah lama tidak ada aktivitas)
+```
+
+### 🖱️ Drag & Drop
+
+SortableJS — drag antar kolom stage. Saat drop ke **Won** → konfetti otomatis! 🎊
+
+### 📐 Multi-View Toggle
+
+```
+[🗂️ Board] [📋 List] [📊 Table]
+```
+
+State tersimpan di localStorage, persist antar session.
+
+### 🔗 Clickable Data
+
+- Client name → Client 360° view
+- Deal title → Deal detail
+- Stage badge → Filter by stage
+- Health badge → Filter by health status
+
+---
+
+## <a name="architecture"></a>🏗️ ARCHITECTURE
+
+### 🧩 JS Module System
+
+```javascript
+window.CRM_Theme    // Dark/light toggle + persistence
+window.CRM_Focus    // Presentation/focus mode
+window.CRM_Toast    // Toast notifications (info/success/error/warning)
+window.CRM_Palette  // Command palette ⌘K
+window.CRM_Notif    // Notification center drawer
+window.CRM_Confetti // Konfetti animation (120 particles)
+window.CRM_Keys     // Global keyboard shortcuts
+window.CRM_Sparkline// Mini sparkline charts (canvas)
+window.CRM_Health   // Deal health score calculator
+```
+
+### 📁 Key Files
+
+```
+resources/
+├── css/app.css                         ← CSS custom properties + all components
+├── js/app.js                           ← 10 CRM_* global modules
+└── views/
+    ├── layouts/app.blade.php           ← SPA shell (sidebar + topbar + FAB)
+    ├── components/
+    │   ├── topbar.blade.php            ← Search + notif + theme toggle
+    │   ├── sidebar.blade.php           ← Navigation + role badge
+    │   ├── fab.blade.php               ← Floating action button
+    │   └── flash.blade.php             ← Flash messages
+    ├── dashboard/
+    │   ├── gm.blade.php                ← GM dashboard + charts
+    │   ├── director.blade.php          ← Director dashboard
+    │   ├── manager.blade.php           ← Manager dashboard
+    │   ├── sales.blade.php             ← Sales rep dashboard
+    │   └── charts.blade.php            ← Chart.js partials (reusable)
+    └── pipeline/
+        └── index.blade.php             ← Kanban board + health score
+```
+
+### 🗄️ Database Models
+
+```
+User → roles: director, gm, manager, sales, finance, admin
+Client → company_name, industry, status, tier
+Opportunity → stage (prospecting→won/lost), estimated_value, health
+ActivityLog → type (call/email/meeting/proposal/followup)
+SalesTarget → monthly targets per user
+Product → fleet types (bus charter, airport transfer, etc.)
+ApprovalRequest → multi-level approval workflow
+Subscription → recurring fleet contracts
+```
+
+---
+
+## <a name="deployment"></a>🐳 DOCKER / DEPLOYMENT
+
+### 🚀 Render.com (Recommended)
+
+```bash
+# render.yaml sudah dikonfigurasi
+# Push ke GitHub → auto-deploy via Render
+git push origin main
+```
+
+### 🐳 Docker
+
+```bash
+# Build
+docker build -t bluebird-crm .
+
+# Run
+docker run -p 8000:8000 \
+  -e APP_KEY=base64:xxx \
+  -e DEMO_SCALE=1 \
+  bluebird-crm
+```
+
+### ⚙️ Environment Variables
+
+```env
+APP_NAME="Bluebird CRM"
+APP_ENV=production
+APP_KEY=base64:...
+APP_URL=https://your-domain.com
+
+DB_CONNECTION=sqlite
+DB_DATABASE=/app/database/database.sqlite
+
+DEMO_SCALE=1          # 1=50k rows, 5=250k rows, 20=1M rows
+```
 
 ---
 
@@ -127,373 +406,115 @@ If you already have Laravel 11 installed:
 
 ```
 golden-bird-crm/
-├── .env                                # Environment configuration
-├── BUILD_SUMMARY.md                    # Build summary
-├── README.md                           # This file
-│
+├── 🐳 Dockerfile                      ← Multi-stage production build
+├── ⚙️ render.yaml                      ← Render.com deployment config
+├── 📦 nixpacks.toml                    ← Nixpacks build config
+├── 🔧 CLAUDE.md                        ← Claude Code instructions
+├── 🛠️ DEPLOYMENT.md                    ← Deployment guide
+├── 📜 scripts/
+│   └── init.sh                        ← Container init script
 ├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── DashboardController.php     # 4 different dashboards
-│   │   │   ├── BookingController.php       # Booking CRUD + auto-assign
-│   │   │   └── RevenueController.php       # Revenue tracking API
-│   │   └── Middleware/
-│   │       └── RoleMiddleware.php          # RBAC middleware
-│   ├── Models/                         # 11 models with relationships
-│   │   ├── User.php
-│   │   ├── Client.php
-│   │   ├── Vehicle.php
-│   │   ├── Driver.php
-│   │   ├── Booking.php
-│   │   ├── Invoice.php
-│   │   ├── Payment.php
-│   │   ├── PurchaseOrder.php
-│   │   ├── Pool.php
-│   │   ├── MaintenanceLog.php
-│   │   └── MeetingLog.php
-│   └── Helpers/
-│       └── FormatHelper.php            # IDR formatting helpers
-│
+│   ├── Http/Controllers/              ← DashboardController, OpportunityController, etc.
+│   └── Models/                        ← User, Client, Opportunity, ActivityLog, etc.
 ├── database/
-│   ├── migrations/                     # 4 migration files
-│   │   ├── 2024_01_01_000001_create_users_table.php
-│   │   ├── 2024_01_01_000002_create_master_tables.php
-│   │   ├── 2024_01_01_000003_create_transaction_tables.php
-│   │   └── 2024_01_01_000004_create_operational_tables.php
+│   ├── migrations/                    ← 11 tables
 │   └── seeders/
-│       └── DatabaseSeeder.php          # 100+ dummy data
-│
-├── resources/views/
-│   ├── layouts/
-│   │   └── app.blade.php               # Main layout with sidebar
-│   ├── dashboard/
-│   │   ├── gm.blade.php                # GM dashboard (KPI + charts)
-│   │   ├── sales.blade.php             # Sales dashboard
-│   │   ├── operational.blade.php       # Ops dashboard
-│   │   └── finance.blade.php           # Finance dashboard
-│   └── bookings/
-│       ├── index.blade.php             # Booking list
-│       ├── create.blade.php            # Create booking form
-│       └── show.blade.php              # Booking detail
-│
-└── routes/
-    └── web.php                         # All routes with RBAC
+│       ├── DatabaseSeeder.php
+│       └── DemoMassiveSeeder.php      ← Scalable seeder (50k–1M rows)
+├── resources/
+│   ├── css/app.css                    ← CSS Custom Properties dual-theme system
+│   ├── js/app.js                      ← 10 CRM_* global JS modules
+│   └── views/                         ← 25+ Blade components
+├── routes/web.php                     ← All routes
+└── vite.config.js                     ← Asset bundling
 ```
 
 ---
 
-## <a name="demo-accounts"></a>🔐 DEMO ACCOUNTS
+## 🏆 CHANGELOG
 
-All passwords: `password123`
+### v7.5 — UX Command Center Overhaul (Juni 2026)
 
-| Email | Role | Full Name |
-|-------|------|-----------|
-| gm@goldenbird.co.id | GM (Super Admin) | Budi Santoso |
-| sales1@goldenbird.co.id | Sales | Andi Pratama |
-| sales2@goldenbird.co.id | Sales | Sari Dewi |
-| sales3@goldenbird.co.id | Sales | Reza Firmansyah |
-| ops@goldenbird.co.id | Operational | Hendra Wijaya |
-| finance@goldenbird.co.id | Finance | Maya Kusuma |
+**🎨 Theme & Design**
+- ✅ Dual theme system: Dark (deep space) + Light (near-white glass)
+- ✅ CSS Custom Properties — semua warna via variabel, zero hardcode
+- ✅ Glass morphism effect pada semua card (`backdrop-filter: blur`)
+- ✅ Smooth theme toggle tanpa reload halaman
+- ✅ Near-white light mode `#f0f0fa` — bukan cream/kuning
 
-### Test Scenario:
+**⌨️ Keyboard & Navigation**
+- ✅ Command Palette ⌘K — Spotlight-style search
+- ✅ 12 global keyboard shortcuts via `CRM_Keys`
+- ✅ Shortcuts help overlay (tekan `?`)
+- ✅ Focus/Presentation Mode ⌘B
 
-1. **Login as GM** → See all revenue, all bookings, per-sales breakdown
-2. **Login as Sales1** → See only own clients and bookings
-3. **Login as Sales2** → Different data from Sales1
-4. **Login as Ops** → See fleet and pool management (no revenue)
-5. **Login as Finance** → See aggregate revenue and invoices (no per-sales breakdown)
+**📊 Charts & Visualization**
+- ✅ 7-day Revenue & Deals dual-axis chart
+- ✅ Pipeline Distribution donut chart
+- ✅ Sales Leaderboard horizontal bar
+- ✅ Activity Breakdown doughnut + progress bars
+- ✅ Theme-aware Chart.js (auto re-render on toggle)
+- ✅ Day-by-day timeline labels dengan deal count badges
+
+**🗂️ Kanban Pipeline**
+- ✅ Deal Health Score visual badge per card (💚💛❤️)
+- ✅ Konfetti animation saat Won (120 partikel pure CSS)
+- ✅ Multi-view toggle: Board / List / Table
+- ✅ Client name clickable → 360° view
+- ✅ `CRM_Health.score()` global calculator
+
+**🔔 Notifications & Feedback**
+- ✅ Notification center bell drawer
+- ✅ Toast notifications 4 tipe (info/success/error/warning)
+- ✅ FAB Quick-Add Deal dengan Alpine.js modal
+
+**🏗️ Architecture & Performance**
+- ✅ SPA Shell Layout — hanya content-area yang scroll
+- ✅ Sidebar collapsible dengan smooth CSS animation
+- ✅ Scalable demo seeder `DEMO_SCALE` 1–20
+- ✅ SQLite WAL mode untuk performa bulk insert
+- ✅ Chunked seeder (200–500 rows/batch) — no PHP OOM
+
+### v6.0 — Foundation
+
+- Initial Laravel 12 setup
+- Role-based authentication (6 roles)
+- Kanban drag & drop (SortableJS)
+- Basic dashboard per role
+- Docker + Render deployment
 
 ---
 
-## <a name="installation"></a>📥 INSTALLATION GUIDE
+## 👨‍💻 DEVELOPMENT
 
-### Prerequisites
-- PHP 8.3+
-- Composer
-- SQLite (included in PHP)
-
-### Step-by-Step Installation
-
-#### Step 1: Create Laravel Project
 ```bash
-composer create-project laravel/laravel golden-bird-crm
-cd golden-bird-crm
-```
-
-#### Step 2: Copy Project Files
-Copy all files from our `golden-bird-crm` folder:
-- `app/` → your `app/`
-- `database/` → your `database/`
-- `resources/views/` → your `resources/views/`
-- `routes/web.php` → your `routes/web.php`
-
-#### Step 3: Setup Environment
-```bash
-# Copy env template
-cp .env.example .env
-
-# Generate app key
-php artisan key:generate
-
-# Edit .env and set database
-# DB_CONNECTION=sqlite
-# DB_DATABASE=database/database.sqlite
-```
-
-#### Step 4: Run Migrations & Seeder
-```bash
-# Create database.sqlite and run migrations
-php artisan migrate:fresh --seed
-```
-
-#### Step 5: Serve Application
-```bash
+# Development server
+npm run dev
 php artisan serve
-```
 
-Visit `http://localhost:8000` and login with demo account
+# Re-seed database
+php artisan migrate:fresh --seed
 
-#### Step 6 (Optional): Install Composer Dependencies
-```bash
-composer install
-npm install
-npm run build  # if using Vite
-```
+# Scale up demo data
+DEMO_SCALE=5 php artisan migrate:fresh --seed
 
----
-
-## <a name="schema"></a>📊 DATABASE SCHEMA
-
-### 11 Tables with Proper Relationships
-
-```
-users
-├── id (pk)
-├── name
-├── email (unique)
-├── password
-└── role: enum(gm, sales, operational, finance)
-
-clients
-├── id (pk)
-├── company_name
-├── pic_name
-├── phone, email, address
-├── industry
-├── status: enum(active, prospect, inactive)
-└── assigned_sales_id (FK→users)
-
-vehicles
-├── id (pk)
-├── plate_number (unique)
-├── brand: enum(bigbird, goldenbird, cititrans, executive)
-├── model, capacity, year
-├── status: enum(available, on_trip, maintenance, inactive)
-└── pool_id (FK→pools)
-
-drivers
-├── id (pk)
-├── name, phone
-├── license_number (unique)
-└── status: enum(available, on_duty, off)
-
-bookings ⭐
-├── id (pk)
-├── booking_number (unique, auto-generate)
-├── client_id (FK→clients)
-├── sales_id (FK→users) ⭐ Auto-assigned
-├── created_by (FK→users)
-├── vehicle_id (FK→vehicles)
-├── driver_id (FK→drivers)
-├── pickup_datetime, dropoff_datetime
-├── destination
-├── price: decimal(15,2)
-├── status: enum(pending, confirmed, on_trip, completed, cancelled)
-└── notes
-
-invoices
-├── id (pk)
-├── invoice_number (unique, auto-generate)
-├── booking_id (FK→bookings)
-├── client_id (FK→clients)
-├── amount: decimal(15,2)
-├── status: enum(draft, sent, paid, overdue)
-├── due_date, paid_at
-└── notes
-
-payments
-├── id (pk)
-├── payment_number (unique, auto-generate)
-├── invoice_id (FK→invoices)
-├── amount: decimal(15,2)
-├── method: enum(transfer, cash, giro)
-├── payment_date
-└── notes
-
-purchase_orders
-├── id (pk)
-├── po_number (unique)
-├── vendor
-├── item_description
-├── amount: decimal(15,2)
-├── status: enum(pending, approved, received)
-└── notes
-
-pools
-├── id (pk)
-├── name, location
-├── capacity
-└── notes
-
-maintenance_logs
-├── id (pk)
-├── vehicle_id (FK→vehicles)
-├── type: enum(routine, repair, modification)
-├── description, cost
-├── vendor
-├── scheduled_date, completed_date
-├── status: enum(scheduled, in_progress, completed)
-└── notes
-
-meeting_logs
-├── id (pk)
-├── client_id (FK→clients)
-├── sales_id (FK→users)
-├── meeting_date
-├── notes, outcome
-├── follow_up_date
-└── status: enum(pending, done)
+# Build for production
+npm run build
 ```
 
 ---
 
-## 🔐 SECURITY FEATURES
+## 📄 LICENSE
 
-- ✅ Password hashing (Laravel bcrypt)
-- ✅ CSRF protection
-- ✅ SQL injection protection (Eloquent ORM)
-- ✅ XSS prevention (Blade escaping)
-- ✅ Role-based access control
-- ✅ Route middleware protection
-- ✅ Model policy authorization (ready to implement)
+MIT License — Free to use, modify, and distribute.
 
 ---
 
-## 🎯 TESTING CHECKLIST
+<div align="center">
 
-- [ ] Login with all 6 accounts
-- [ ] Verify GM sees all bookings
-- [ ] Verify Sales1 only sees own bookings
-- [ ] Create booking as Sales → sales_id auto-assigned
-- [ ] Create booking as GM → can select sales
-- [ ] View revenue chart (try daily/weekly/monthly/yearly)
-- [ ] GM view revenue per sales
-- [ ] Verify IDR formatting (Rp 1.500.000)
-- [ ] Test multi-layer popup (click detail 3 times)
-- [ ] Verify Ops cannot see revenue
-- [ ] Verify Finance sees aggregate revenue only
+**🚌 Bluebird CRM v7.5** — Built with ❤️ for Indonesia's fleet industry
 
----
+[![Made with Laravel](https://img.shields.io/badge/Made%20with-Laravel-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
+[![Powered by Alpine.js](https://img.shields.io/badge/Powered%20by-Alpine.js-8BC0D0?style=flat-square)](https://alpinejs.dev)
 
-## 📝 API ENDPOINTS
-
-### Public Routes
-```
-GET  /                  → Redirect to /dashboard
-POST /login             → Login (Laravel Breeze)
-POST /logout            → Logout
-```
-
-### Protected Routes (auth required)
-```
-GET  /dashboard         → Role-specific dashboard
-GET  /bookings          → List bookings (filtered by role)
-GET  /bookings/create   → Create booking form
-POST /bookings          → Store booking (with auto-assign)
-GET  /bookings/{id}     → Show booking detail
-```
-
-### API Endpoints (JSON responses)
-```
-GET  /api/revenue?period=daily|weekly|monthly|yearly
-GET  /api/revenue/per-sales  (GM only)
-```
-
----
-
-## 🛠️ TECHNOLOGY STACK
-
-| Component | Technology |
-|-----------|-----------|
-| Backend | Laravel 11 |
-| Language | PHP 8.3 |
-| Database | SQLite |
-| Frontend | Blade Templates |
-| Styling | Tailwind CSS |
-| Charts | Chart.js |
-| JavaScript | Alpine.js (minimal) |
-| Auth | Laravel Breeze |
-
----
-
-## 📚 ADDITIONAL DOCUMENTS
-
-In the same output folder:
-1. **BLUEBIRD_ERP_MASTERPLAN_v3.md** — Detailed technical specification
-2. **BLUEBIRD_ERP_MASTERPROMPT_v3.md** — Prompt for other AIs
-3. **GOLDEN_BIRD_CRM_BUILD_PLAN.md** — Build plan with agent breakdown
-
----
-
-## ✅ WHAT'S INCLUDED
-
-### Phase 1: Database & Models ✅
-- 11 models with relationships
-- 4 migration files
-- DatabaseSeeder with 100+ records
-
-### Phase 2: Backend Logic ✅
-- 4 controllers (Dashboard, Booking, Revenue)
-- RoleMiddleware for RBAC
-- FormatHelper for IDR formatting
-- Routes with permission checks
-
-### Phase 3: Frontend UI ✅
-- Main layout with sidebar
-- 4 role-specific dashboards
-- Booking management views
-- Chart.js integration
-- Multi-layer popup system
-
-### Phase 4: Ready for Testing ✅
-- All 6 demo accounts configured
-- 100+ dummy data ready
-- RBAC fully implemented
-- Revenue tracking working
-- IDR formatting active
-
----
-
-## 🚀 NEXT STEPS
-
-1. **Install & Run** → Follow installation guide
-2. **Test Accounts** → Login with all 6 demo accounts
-3. **Verify Features** → Test each feature from checklist
-4. **Add More Views** → Extend with Fleet, Finance, Pool modules
-5. **Deploy** → Push to GitHub and deploy to Railway/Vercel
-
----
-
-## 📞 SUPPORT
-
-For questions or issues:
-1. Check `BUILD_SUMMARY.md` for feature overview
-2. Review database schema above
-3. Check controller comments for logic
-4. Verify migration files for structure
-
----
-
-**Built with ❤️ using Multi-Agent Architecture for Token Efficiency**
-
-*Golden Bird CRM — Your Fleet Management Solution*
+</div>
