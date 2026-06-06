@@ -218,28 +218,16 @@
             @endphp
 
             @foreach($shortcuts as $s)
-            @can('access-route', $s['route'])
             <a href="{{ route($s['route']) }}"
                class="group flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-150 hover:scale-105 active:scale-95"
                style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}22;">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                     style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}33; box-shadow:0 0 12px {{ $s['color'] }}11;">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:shadow-lg"
+                     style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}44;">
                     <span class="material-symbols-outlined text-[18px]" style="color:{{ $s['color'] }};">{{ $s['icon'] }}</span>
                 </div>
                 <span class="text-[10px] font-semibold text-center leading-tight" style="color:#94a3b8;">{{ $s['label'] }}</span>
             </a>
-            @else
-            <a href="{{ route($s['route']) }}"
-               class="group flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-150 hover:scale-105 active:scale-95"
-               style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}22;">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                     style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}33; box-shadow:0 0 12px {{ $s['color'] }}11;">
-                    <span class="material-symbols-outlined text-[18px]" style="color:{{ $s['color'] }};">{{ $s['icon'] }}</span>
-                </div>
-                <span class="text-[10px] font-semibold text-center leading-tight" style="color:#94a3b8;">{{ $s['label'] }}</span>
-            </a>
-            @endcan
-        @endforeach
+            @endforeach
         </div>
     </div>
 
