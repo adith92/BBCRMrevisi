@@ -240,5 +240,8 @@ class DatabaseSeeder extends Seeder
                 'status' => random_int(0, 1) ? 'done' : 'pending',
             ]);
         }
+
+        // ==================== MASSIVE DEMO DATA ====================
+        $this->call(DemoMassiveSeeder::class);
     }
 }

@@ -4,9 +4,90 @@
 
 @push('styles')
 <style>
-    .kanban-board { display: flex; gap: 16px; min-width: max-content; }
-    .kanban-column { width: 288px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
-    .kanban-drop-zone { min-height: 96px; display: flex; flex-direction: column; gap: 10px; border-radius: 12px; padding: 4px; transition: background 0.15s, outline 0.15s; }
+    /* ── KANBAN SPA LAYOUT ──
+       The content-area (#content-area) handles vertical scroll.
+       The kanban board itself scrolls HORIZONTALLY inside a fixed-height wrapper.
+       Each column: header is sticky, cards scroll vertically inside the column.
+    ── */
+
+    /* Override content-area for kanban: no vertical overflow, board fills height */
+    .kanban-page-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 56px - 48px); /* viewport - topbar - page header */
+        min-height: 0;
+    }
+
+    .kanban-page-header {
+        flex-shrink: 0;
+        padding-bottom: 12px;
+    }
+
+    .kanban-summary-bar {
+        flex-shrink: 0;
+        padding-bottom: 12px;
+    }
+
+    /* Horizontal scroll container for the board */
+    .kanban-scroll-x {
+        flex: 1;
+        min-height: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 12px;
+        cursor: grab;
+    }
+    .kanban-scroll-x:active { cursor: grabbing; }
+    .kanban-scroll-x::-webkit-scrollbar { height: 6px; }
+    .kanban-scroll-x::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+    .kanban-scroll-x::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    .kanban-scroll-x::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* Board: full height of scroll container */
+    .kanban-board {
+        display: flex;
+        gap: 14px;
+        height: 100%;
+        min-width: max-content;
+        align-items: flex-start;
+    }
+
+    /* Each column: fixed width, full height, flex column */
+    .kanban-column {
+        width: 280px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 100%;
+    }
+
+    /* Column header: sticky at top of column, never scrolls */
+    .kanban-col-header {
+        flex-shrink: 0;
+        margin-bottom: 8px;
+    }
+
+    /* Drop zone: fills remaining column height, cards scroll here */
+    .kanban-drop-zone {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border-radius: 12px;
+        padding: 6px 4px 6px 4px;
+        transition: background 0.15s, outline 0.15s;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+    .kanban-drop-zone::-webkit-scrollbar { width: 3px; }
+    .kanban-drop-zone::-webkit-scrollbar-track { background: transparent; }
+    .kanban-drop-zone::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
     .kanban-drop-zone.sortable-over { background: rgba(0,229,255,0.04); outline: 2px dashed rgba(0,229,255,0.25); outline-offset: -2px; }
     .kanban-card { background: rgba(19,19,36,0.92); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; cursor: grab; user-select: none; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
     .kanban-card:hover { border-color: rgba(255,255,255,0.18); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
@@ -34,9 +115,17 @@
     #toast { position: fixed; bottom: 24px; right: 24px; z-index: 200; min-width: 240px; padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; display: none; }
     #toast.success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; }
     #toast.error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.3);  color: #f87171; }
-    @media (max-width: 768px) { .kanban-board { gap: 12px; } .kanban-column { width: 256px; } }
+    @media (max-width: 768px) {
+        .kanban-column { width: 256px; }
+        .kanban-page-wrapper { height: calc(100vh - 56px - 40px - 48px); }
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
     .animate-spin { animation: spin 1s linear infinite; }
+
+    /* Momentum scroll for board on touch */
+    @media (hover: none) {
+        .kanban-scroll-x { cursor: default; }
+    }
 </style>
 @endpush
 
@@ -45,11 +134,11 @@
     x-data="kanbanBoard()"
     x-init="init()"
     @keydown.escape.window="closeModal()"
-    class="space-y-5"
+    class="kanban-page-wrapper"
 >
 
     {{-- PAGE HEADER --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="kanban-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
             <h1 class="text-[22px] font-extrabold text-slate-100 tracking-tight flex items-center gap-2">
                 <span class="material-symbols-outlined text-[#00e5ff]">view_kanban</span>
@@ -68,9 +157,25 @@
                 <option value="{{ $s }}">{{ ucfirst($s) }}</option>
                 @endforeach
             </select>
-            <a href="{{ route('opportunities.create') }}" class="btn-primary">
+            {{-- View Toggle: Board / List / Table --}}
+            <div class="view-toggle">
+                <button class="view-btn active" id="view-board" onclick="setKanbanView('board')" title="Board view">
+                    <span class="material-symbols-outlined text-[15px]">view_kanban</span>
+                    <span class="hidden sm:inline">Board</span>
+                </button>
+                <button class="view-btn" id="view-list" onclick="setKanbanView('list')" title="List view">
+                    <span class="material-symbols-outlined text-[15px]">view_list</span>
+                    <span class="hidden sm:inline">List</span>
+                </button>
+                <button class="view-btn" id="view-table" onclick="setKanbanView('table')" title="Table view">
+                    <span class="material-symbols-outlined text-[15px]">table</span>
+                    <span class="hidden sm:inline">Table</span>
+                </button>
+            </div>
+
+            <a href="{{ route('opportunities.create') }}" class="btn-primary" data-add-activity id="fab-pipeline-add">
                 <span class="material-symbols-outlined text-[16px]">add</span>
-                Tambah Deal
+                <span class="hidden sm:inline">Tambah Deal</span>
             </a>
         </div>
     </div>
@@ -85,7 +190,7 @@
         'lost'        => ['label'=>'Kalah',       'color'=>'#ef4444','icon'=>'cancel'],
     ];
     @endphp
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div class="kanban-summary-bar grid grid-cols-2 md:grid-cols-5 gap-3">
         @foreach($stages as $s)
         @php $c = $stageConf[$s]; $col = $kanban[$s]; @endphp
         <div class="cc-card px-4 py-3 flex items-center gap-3">
@@ -100,8 +205,8 @@
         @endforeach
     </div>
 
-    {{-- KANBAN BOARD --}}
-    <div class="overflow-x-auto pb-4 -mx-6 px-6">
+    {{-- KANBAN BOARD: horizontal scroll wrapper --}}
+    <div class="kanban-scroll-x" id="kanban-scroll-x">
         <div class="kanban-board">
 
             @foreach($stages as $stage)
@@ -114,21 +219,23 @@
 
             <div class="kanban-column" x-show="filterStage === '' || filterStage === '{{ $stage }}'">
 
-                {{-- Column header --}}
-                <div class="{{ $stageClass }} stage-header flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]" style="color:{{ $c['color'] }}">{{ $c['icon'] }}</span>
-                        <span class="text-sm font-bold text-slate-100 uppercase tracking-wide">{{ $c['label'] }}</span>
+                {{-- Column header: fixed, does NOT scroll with cards --}}
+                <div class="kanban-col-header">
+                    <div class="{{ $stageClass }} stage-header flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]" style="color:{{ $c['color'] }}">{{ $c['icon'] }}</span>
+                            <span class="text-sm font-bold text-slate-100 uppercase tracking-wide">{{ $c['label'] }}</span>
+                        </div>
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                              style="background:rgba(255,255,255,0.1); color:{{ $c['color'] }}"
+                              id="badge-{{ $stage }}" data-count-badge="{{ $stage }}">{{ $col['count'] }}</span>
                     </div>
-                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                          style="background:rgba(255,255,255,0.1); color:{{ $c['color'] }}"
-                          id="badge-{{ $stage }}" data-count-badge="{{ $stage }}">{{ $col['count'] }}</span>
-                </div>
-                <div class="text-[11px] text-slate-500 font-semibold px-1">
-                    Rp {{ number_format($col['total_value'],0,',','.') }}
+                    <div class="text-[11px] text-slate-500 font-semibold px-1 pb-1">
+                        Rp {{ number_format($col['total_value'],0,',','.') }}
+                    </div>
                 </div>
 
-                {{-- Drop zone --}}
+                {{-- Drop zone: scrolls independently per column --}}
                 <div class="kanban-drop-zone" data-stage="{{ $stage }}" id="zone-{{ $stage }}">
                     @forelse($opps as $opp)
                     <div class="kanban-card"
@@ -136,31 +243,45 @@
                          data-stage="{{ $opp->stage }}"
                          x-show="matchesSearch('{{ addslashes($opp->title) }}','{{ addslashes($opp->client->company_name ?? '') }}')"
                     >
+                        @php
+                            $lastAct   = $opp->activityLogs->max('created_at');
+                            $daysSince = $lastAct ? now()->diffInDays($lastAct) : 99;
+                            $stageDays = $opp->updated_at->diffInDays(now());
+                            $risk      = $daysSince + ($stageDays * 0.5);
+                            $hlEmoji   = $risk < 7  ? '💚' : ($risk < 14 ? '💛' : '❤️');
+                            $hlClass   = $risk < 7  ? 'health-green' : ($risk < 14 ? 'health-yellow' : 'health-red');
+                            $hlLabel   = $risk < 7  ? 'Healthy' : ($risk < 14 ? 'Warming' : 'At Risk');
+                        @endphp
+
                         {{-- Card top row --}}
                         <div class="flex items-start justify-between gap-2 mb-2">
-                            <div class="text-[10px] text-slate-600 font-mono">{{ $opp->opp_number }}</div>
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <span class="text-[10px] text-slate-600 font-mono truncate">{{ $opp->opp_number }}</span>
+                                <span class="{{ $hlClass }}" title="{{ $hlLabel }} · Last activity: {{ $daysSince }}d ago · Stage: {{ $stageDays }}d">{{ $hlEmoji }}</span>
+                            </div>
                             <div class="flex items-center gap-1 flex-shrink-0">
                                 <button
                                     @click.stop="openEdit({{ $opp->id }},'{{ addslashes($opp->title) }}',{{ $opp->estimated_value ?? 'null' }},'{{ $opp->expected_close_date?->format('Y-m-d') ?? '' }}','{{ addslashes($opp->notes ?? '') }}',{{ $opp->pax ?? 'null' }})"
-                                    class="p-0.5 rounded text-slate-600 hover:text-slate-300 transition-colors" title="Edit">
+                                    class="p-0.5 rounded text-slate-600 hover:text-slate-300 transition-colors" title="Edit (E)" data-inline-edit>
                                     <span class="material-symbols-outlined text-[14px]">edit</span>
                                 </button>
                                 <button
                                     @click.stop="open360({{ $opp->id }})"
-                                    class="p-0.5 rounded text-slate-600 hover:text-[#00e5ff] transition-colors" title="360° View">
+                                    class="p-0.5 rounded text-slate-600 hover:text-[#00e5ff] transition-colors" title="360° View (V)" data-view-360>
                                     <span class="material-symbols-outlined text-[14px]">360</span>
                                 </button>
                             </div>
                         </div>
 
                         {{-- Title --}}
-                        <h3 class="text-[13px] font-semibold text-slate-200 leading-snug line-clamp-2 mb-2">{{ $opp->title }}</h3>
+                        <h3 class="text-[13px] font-semibold leading-snug line-clamp-2 mb-2" style="color:var(--cc-text)">{{ $opp->title }}</h3>
 
-                        {{-- Client --}}
-                        <div class="flex items-center gap-1.5 text-[12px] text-slate-500 mb-2">
+                        {{-- Client (clickable) --}}
+                        <a href="{{ route('clients.show', $opp->client_id) }}"
+                           class="flex items-center gap-1.5 text-[12px] mb-2 hover:opacity-80 transition-opacity" style="color:var(--cc-text-muted)" @click.stop>
                             <span class="material-symbols-outlined text-[13px]">corporate_fare</span>
                             <span class="truncate">{{ $opp->client->company_name ?? '-' }}</span>
-                        </div>
+                        </a>
 
                         {{-- Value --}}
                         @if($opp->estimated_value)
@@ -467,7 +588,34 @@ function kanbanBoard() {
         _toastTimer: null,
 
         init() {
-            this.$nextTick(() => this.initSortable());
+            this.$nextTick(() => {
+                this.initSortable();
+                this.initBoardDragScroll();
+            });
+        },
+
+        // Mouse drag-to-scroll on board (desktop)
+        initBoardDragScroll() {
+            const board = document.getElementById('kanban-scroll-x');
+            if (!board) return;
+            let isDragging = false, startX = 0, scrollLeft = 0;
+
+            board.addEventListener('mousedown', (e) => {
+                // Don't hijack if clicking a card or button
+                if (e.target.closest('.kanban-card') || e.target.closest('button') || e.target.closest('a')) return;
+                isDragging = true;
+                startX = e.pageX - board.offsetLeft;
+                scrollLeft = board.scrollLeft;
+                board.style.cursor = 'grabbing';
+            });
+            document.addEventListener('mouseup',   () => { isDragging = false; board.style.cursor = ''; });
+            document.addEventListener('mouseleave', () => { isDragging = false; board.style.cursor = ''; });
+            board.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX - board.offsetLeft;
+                board.scrollLeft = scrollLeft - (x - startX) * 1.2;
+            });
         },
 
         initSortable() {
@@ -524,6 +672,10 @@ function kanbanBoard() {
                 if (!res.ok || !data.ok) { revertFn && revertFn(); this.toast(data.message ?? 'Gagal.', 'error'); return; }
                 this.updateColumnCounts();
                 this.toast(data.message, 'success');
+                // 🎊 Konfetti celebration when deal moves to Won!
+                if (body.stage === 'won') {
+                    if (window.CRM_Confetti) CRM_Confetti.fire();
+                }
             } catch(e) {
                 revertFn && revertFn();
                 this.toast('Koneksi error. Coba lagi.', 'error');
@@ -613,7 +765,10 @@ function kanbanBoard() {
         },
 
         toast(msg, type='success') {
+            // Use global CRM_Toast if available, fallback to local
+            if (window.CRM_Toast) { CRM_Toast.show(msg, type); return; }
             const el = document.getElementById('toast');
+            if (!el) return;
             el.textContent = msg;
             el.className = type;
             el.style.display = 'block';
@@ -622,5 +777,48 @@ function kanbanBoard() {
         },
     };
 }
+
+/* ── Kanban Multi-View Toggle ── */
+function setKanbanView(view) {
+    const board  = document.getElementById('kanban-scroll-x');
+    const saved  = localStorage.getItem('kanban-view') || 'board';
+
+    // Update button states
+    ['board','list','table'].forEach(v => {
+        const btn = document.getElementById(`view-${v}`);
+        if (btn) btn.className = 'view-btn' + (v === view ? ' active' : '');
+    });
+    localStorage.setItem('kanban-view', view);
+
+    if (!board) return;
+
+    if (view === 'board') {
+        board.style.display = '';
+        board.style.flexDirection = '';
+        document.querySelectorAll('.kanban-column').forEach(c => {
+            c.style.width = '280px';
+            c.style.flexDirection = 'column';
+        });
+    } else if (view === 'list') {
+        board.style.display = 'flex';
+        board.style.flexDirection = 'column';
+        board.style.overflowX = 'hidden';
+        document.querySelectorAll('.kanban-column').forEach(c => {
+            c.style.width = '100%';
+            c.style.maxWidth = 'none';
+        });
+        CRM_Toast && CRM_Toast.show('📋 List view — deals per stage stacked vertically', 'info');
+    } else if (view === 'table') {
+        CRM_Toast && CRM_Toast.show('📊 Table view — redirecting to opportunities list...', 'info');
+        setTimeout(() => window.location.href = '/opportunities', 800);
+    }
+}
+
+// Restore saved view on load
+document.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('kanban-view') || 'board';
+    if (saved !== 'board') setKanbanView(saved);
+    initBoardDragScroll && initBoardDragScroll();
+});
 </script>
 @endpush

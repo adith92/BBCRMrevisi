@@ -373,6 +373,10 @@
     </div>
 
 </div>
+    {{-- ════ CHARTS SECTION ════ --}}
+    @include('dashboard.charts')
+
+</div>{{-- close outer space-y-5 --}}
 @endsection
 
 @push('scripts')
