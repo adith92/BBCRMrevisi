@@ -39,6 +39,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('opportunities', OpportunityController::class)->middleware('role:director,gm,manager,sales');
     Route::post('/opportunities/{opportunity}/advance-stage', [OpportunityController::class, 'advanceStage'])->name('opportunities.advance-stage')->middleware('role:director,gm,manager,sales');
     Route::post('/opportunities/{opportunity}/discount', [OpportunityController::class, 'storeDiscount'])->name('opportunities.discount')->middleware('role:sales,manager,gm');
+    // Kanban-specific endpoints
+    Route::patch('/opportunities/{opportunity}/move-stage', [OpportunityController::class, 'moveStage'])->name('opportunities.move-stage')->middleware('role:director,gm,manager,sales');
+    Route::patch('/opportunities/{opportunity}/quick-update', [OpportunityController::class, 'quickUpdate'])->name('opportunities.quick-update')->middleware('role:director,gm,manager,sales');
+    Route::get('/opportunities/{opportunity}/360', [OpportunityController::class, 'view360'])->name('opportunities.360')->middleware('role:director,gm,manager,sales');
 
     // Products
     Route::resource('products', ProductController::class)->middleware('role:director,gm,manager,finance');

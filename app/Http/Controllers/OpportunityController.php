@@ -305,6 +305,117 @@ class OpportunityController extends Controller
     }
 
     // ------------------------------------------------------------------
+    // Kanban drag-drop: move card to new stage (PATCH, JSON)
+    // ------------------------------------------------------------------
+
+    public function moveStage(Request $request, Opportunity $opportunity)
+    {
+        $this->authorizeEdit($opportunity);
+
+        $validated = $request->validate([
+            'stage'       => 'required|in:prospecting,proposal,negotiation,won,lost',
+            'lost_reason' => 'nullable|string|max:500',
+        ]);
+
+        $fromStage = $opportunity->stage;
+        $toStage   = $validated['stage'];
+
+        if ($fromStage === $toStage) {
+            return response()->json(['ok' => true, 'message' => 'No change.']);
+        }
+
+        if (!$this->pipelineService->canTransition($fromStage, $toStage)) {
+            return response()->json([
+                'ok'      => false,
+                'message' => "Transisi dari {$fromStage} ke {$toStage} tidak diizinkan.",
+            ], 422);
+        }
+
+        $updates = ['stage' => $toStage];
+
+        if ($toStage === 'lost') {
+            $updates['lost_reason']       = $validated['lost_reason'] ?? 'Dipindah via Kanban';
+            $updates['actual_close_date'] = now()->toDateString();
+        }
+
+        if ($toStage === 'won') {
+            $updates['actual_close_date'] = now()->toDateString();
+        }
+
+        $opportunity->update($updates);
+
+        ActivityLog::create([
+            'sales_id'       => auth()->id(),
+            'client_id'      => $opportunity->client_id,
+            'opportunity_id' => $opportunity->id,
+            'type'           => 'follow_up',
+            'subject'        => "Kanban: {$fromStage} → {$toStage}",
+            'notes'          => "Dipindah via drag-drop kanban",
+            'activity_date'  => now(),
+        ]);
+
+        if ($toStage === 'won') {
+            $this->pipelineService->triggerWonActions($opportunity->fresh());
+        }
+
+        return response()->json([
+            'ok'      => true,
+            'message' => "Deal dipindah ke {$toStage}.",
+            'stage'   => $toStage,
+        ]);
+    }
+
+    // ------------------------------------------------------------------
+    // Quick update (inline edit from Kanban card) — PATCH, JSON
+    // ------------------------------------------------------------------
+
+    public function quickUpdate(Request $request, Opportunity $opportunity)
+    {
+        $this->authorizeEdit($opportunity);
+
+        $validated = $request->validate([
+            'title'               => 'sometimes|required|string|max:255',
+            'estimated_value'     => 'sometimes|nullable|numeric|min:0',
+            'expected_close_date' => 'sometimes|nullable|date',
+            'notes'               => 'sometimes|nullable|string',
+            'pax'                 => 'sometimes|nullable|integer|min:1',
+        ]);
+
+        $opportunity->update($validated);
+
+        return response()->json([
+            'ok'          => true,
+            'opportunity' => $opportunity->fresh(['client', 'sales', 'product']),
+        ]);
+    }
+
+    // ------------------------------------------------------------------
+    // 360° view data (GET, JSON)
+    // ------------------------------------------------------------------
+
+    public function view360(Opportunity $opportunity)
+    {
+        $this->authorizeView($opportunity);
+
+        $opportunity->load([
+            'client',
+            'sales',
+            'product.category',
+            'approver',
+            'activityLogs' => fn($q) => $q->latest()->limit(20),
+            'activityLogs.sales',
+            'approvalRequests' => fn($q) => $q->latest(),
+            'booking',
+            'subscription',
+        ]);
+
+        return response()->json([
+            'ok'          => true,
+            'opportunity' => $opportunity,
+        ]);
+    }
+
+    // ------------------------------------------------------------------
     // Private helpers
     // ------------------------------------------------------------------
 
