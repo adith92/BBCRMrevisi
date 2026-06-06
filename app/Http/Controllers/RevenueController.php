@@ -9,6 +9,12 @@ use Carbon\Carbon;
 
 class RevenueController extends Controller
 {
+    /** Page view for /revenue — required by revenue.index route */
+    public function index()
+    {
+        return redirect()->route('analytics.index');
+    }
+
     public function getRevenue(Request $request)
     {
         $period = $request->get('period', 'monthly');

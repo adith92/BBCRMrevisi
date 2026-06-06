@@ -18,6 +18,8 @@ use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\WidgetController;
 
 Route::redirect('/', '/dashboard');
 
@@ -86,6 +88,9 @@ Route::middleware(['auth'])->group(function () {
     // Maintenance
     Route::resource('maintenance', MaintenanceController::class)->middleware('role:director,gm,manager,operational');
 
+    // Revenue (named route — referenced by views & tests)
+    Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue.index')->middleware('role:director,gm,manager,finance');
+
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index')->middleware('role:director,gm,manager');
     Route::get('/analytics/crosssell', [AnalyticsController::class, 'crosssell'])->name('analytics.crosssell')->middleware('role:director,gm,manager');
@@ -100,6 +105,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/revenue', [RevenueController::class, 'getRevenue']);
         Route::get('/revenue/per-sales', [RevenueController::class, 'getRevenuePerSales'])->middleware('role:director,gm,manager');
         Route::get('/products/search', [ProductController::class, 'apiSearch'])->name('api.products.search');
+        Route::get('/search/global', [SearchController::class, 'global'])->name('search.global');
+        Route::post('/widgets/save', [WidgetController::class, 'save'])->name('widgets.save');
+        Route::post('/widgets/reset', [WidgetController::class, 'reset'])->name('widgets.reset');
         Route::get('/activities/upcoming', [ActivityLogController::class, 'apiUpcoming'])->middleware('role:director,gm,manager,sales');
         Route::get('/opportunities/by-client/{client}', [OpportunityController::class, 'byClient'])->middleware('role:director,gm,manager,sales');
     });
