@@ -4,7 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
-    region: singapore
+    region: oregon
     healthCheckPath: /login
     envVars:
       - key: APP_NAME
@@ -16,27 +16,9 @@ services:
       - key: APP_KEY
         generateValue: true
       - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_HOST
-        fromDatabase:
-          name: golden-bird-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: golden-bird-db
-          property: port
+        value: sqlite
       - key: DB_DATABASE
-        fromDatabase:
-          name: golden-bird-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: golden-bird-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: golden-bird-db
-          property: password
+        value: /var/www/html/database/database.sqlite
       - key: SESSION_DRIVER
         value: file
       - key: CACHE_STORE
@@ -45,10 +27,3 @@ services:
         value: stderr
       - key: VITE_APP_NAME
         value: "Golden Bird CRM"
-
-databases:
-  - name: golden-bird-db
-    databaseName: golden_bird_crm
-    user: goldenbird
-    plan: free
-    region: singapore

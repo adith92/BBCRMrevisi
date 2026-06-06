@@ -12,21 +12,16 @@ RUN npm run build
 # ── Stage 2: PHP production image ─────────────────────────────────────────────
 FROM php:8.4-fpm-alpine
 
-# System deps + PHP extensions
+# System deps + PHP extensions (SQLite only — no PostgreSQL/MySQL needed)
 RUN apk add --no-cache \
         nginx \
         supervisor \
-        libpq-dev \
+        sqlite \
         libzip-dev \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        freetype-dev \
         oniguruma-dev \
-        icu-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
-        pdo pdo_pgsql pdo_mysql \
-        mbstring zip gd bcmath \
+        pdo pdo_sqlite \
+        mbstring zip bcmath \
         opcache tokenizer xml
 
 # Composer
@@ -64,8 +59,11 @@ RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini \
 EXPOSE 8080
 
 CMD ["/bin/sh", "-c", "\
+    touch /var/www/html/database/database.sqlite && \
+    chown www-data:www-data /var/www/html/database/database.sqlite && \
     php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache && \
     php artisan migrate --force && \
+    php artisan db:seed --force && \
     /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
