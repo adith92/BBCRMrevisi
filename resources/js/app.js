@@ -460,7 +460,143 @@ window.CRM_Health = {
 };
 
 /* ════════════════════════════════════════════════════════════
-   9. KANBAN BOARD DRAG-SCROLL
+   9. RIGHT-CLICK CONTEXT MENU (Kanban cards)
+   Usage: CRM_CtxMenu.init() — call once on kanban page
+   Cards need data-deal-id, data-deal-title, data-deal-stage attrs
+   ════════════════════════════════════════════════════════════ */
+window.CRM_CtxMenu = {
+    _el: null,
+    _current: null,
+
+    _menuItems: [
+        { icon: '✏️',  label: 'Edit Deal',        action: 'edit'    },
+        { icon: '🏆',  label: 'Mark as Won',       action: 'won'     },
+        { icon: '❌',  label: 'Mark as Lost',      action: 'lost'    },
+        { icon: '👤',  label: 'Reassign Sales',    action: 'assign'  },
+        { icon: '📋',  label: 'Copy Deal No.',     action: 'copy'    },
+        { icon: '➡️',  label: 'Move to Stage',     action: 'move'    },
+        { icon: '🗑️',  label: 'Delete',            action: 'delete', cls: 'ctx-danger' },
+    ],
+
+    init() {
+        if (this._el) return;
+        // Build menu DOM
+        this._el = document.createElement('div');
+        this._el.id = 'crm-ctx-menu';
+        this._el.style.cssText = `
+            position:fixed;z-index:9990;min-width:180px;
+            background:var(--cc-card);border:1px solid var(--cc-border-h);
+            border-radius:12px;padding:4px;
+            box-shadow:0 8px 32px rgba(0,0,0,0.5);
+            backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+            display:none;animation:slide-down 0.15s ease;
+        `;
+        this._el.innerHTML = this._menuItems.map(m => `
+            <div class="ctx-item ${m.cls || ''}" data-action="${m.action}"
+                 style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;
+                        font-size:13px;cursor:pointer;transition:background 0.1s;
+                        color:${m.cls === 'ctx-danger' ? 'var(--color-danger)' : 'var(--cc-text)'};"
+                 onmouseover="this.style.background='var(--cc-accent-dim)'"
+                 onmouseout="this.style.background='transparent'">
+                <span style="font-size:15px;">${m.icon}</span>
+                <span style="font-weight:500;">${m.label}</span>
+            </div>`).join('');
+
+        document.body.appendChild(this._el);
+
+        // Click handler
+        this._el.addEventListener('click', e => {
+            const item = e.target.closest('[data-action]');
+            if (!item || !this._current) return;
+            this._handle(item.dataset.action, this._current);
+            this.hide();
+        });
+
+        // Dismiss
+        document.addEventListener('click', e => {
+            if (!this._el.contains(e.target)) this.hide();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') this.hide();
+        });
+
+        // Attach to kanban cards (and future cards via delegation)
+        document.addEventListener('contextmenu', e => {
+            const card = e.target.closest('.kanban-card[data-deal-id]');
+            if (!card) return;
+            e.preventDefault();
+            this.show(e.clientX, e.clientY, {
+                id:    card.dataset.dealId,
+                title: card.dataset.dealTitle,
+                stage: card.dataset.dealStage,
+                num:   card.dataset.dealNum,
+                card,
+            });
+        });
+    },
+
+    show(x, y, data) {
+        this._current = data;
+        this._el.style.display = 'block';
+        // Keep menu inside viewport
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const mw = 190, mh = this._menuItems.length * 38 + 8;
+        this._el.style.left = (x + mw > vw ? x - mw : x) + 'px';
+        this._el.style.top  = (y + mh > vh ? y - mh : y) + 'px';
+    },
+
+    hide() {
+        if (this._el) this._el.style.display = 'none';
+        this._current = null;
+    },
+
+    _handle(action, deal) {
+        switch (action) {
+            case 'edit':
+                deal.card?.querySelector('[data-inline-edit]')?.click();
+                break;
+            case 'won':
+                deal.card?.querySelector('[data-mark-won]')?.click();
+                break;
+            case 'lost':
+                if (confirm(`Mark "${deal.title}" as Lost?`)) {
+                    fetch(`/pipeline/opportunities/${deal.id}/stage`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
+                        body: JSON.stringify({ stage: 'lost' }),
+                    }).then(() => {
+                        deal.card?.remove();
+                        CRM_Toast.show('❌ Marked as Lost', 'error');
+                    });
+                }
+                break;
+            case 'copy':
+                navigator.clipboard.writeText(deal.num || deal.id);
+                CRM_Toast.show('📋 Deal number copied!', 'success', 2000);
+                break;
+            case 'assign':
+                CRM_Toast.show('👤 Reassign — coming soon in v7.8', 'info');
+                break;
+            case 'move':
+                CRM_Toast.show('➡️ Drag card to move stage', 'info');
+                break;
+            case 'delete':
+                if (confirm(`Delete "${deal.title}"? This cannot be undone.`)) {
+                    fetch(`/pipeline/opportunities/${deal.id}`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
+                    }).then(() => {
+                        deal.card?.remove();
+                        CRM_Toast.show('🗑️ Deal deleted', 'error');
+                    });
+                }
+                break;
+        }
+    },
+};
+
+/* ════════════════════════════════════════════════════════════
+   10. KANBAN BOARD DRAG-SCROLL
    ════════════════════════════════════════════════════════════ */
 window.initBoardDragScroll = function() {
     const board = document.getElementById('kanban-scroll-x');
@@ -484,12 +620,131 @@ window.initBoardDragScroll = function() {
 };
 
 /* ════════════════════════════════════════════════════════════
+   11. DASHBOARD WIDGET CUSTOMIZER
+   Usage: CRM_Widget.open() from topbar button
+   Saves to /widgets/save — per-user via WidgetPreference model
+   ════════════════════════════════════════════════════════════ */
+window.CRM_Widget = {
+    _drawer: null,
+    widgets: [],
+
+    _defaults: [
+        { id: 'kpi-row',        label: '📊 KPI Cards',         visible: true,  order: 1 },
+        { id: 'exec-summary',   label: '🤖 Executive Summary',  visible: true,  order: 2 },
+        { id: 'fleet-league',   label: '🏆 Fleet League',       visible: true,  order: 3 },
+        { id: 'revenue-chart',  label: '📈 Revenue Chart',      visible: true,  order: 4 },
+        { id: 'sales-ranking',  label: '🥇 Sales Ranking',      visible: true,  order: 5 },
+        { id: 'recent-books',   label: '🚌 Recent Bookings',    visible: true,  order: 6 },
+        { id: 'approval-q',     label: '✅ Approval Queue',     visible: true,  order: 7 },
+        { id: 'charts-section', label: '📉 Analytics Charts',   visible: true,  order: 8 },
+    ],
+
+    init() {
+        const saved = localStorage.getItem('crm-widgets');
+        this.widgets = saved ? JSON.parse(saved) : [...this._defaults];
+        this._applyVisibility();
+    },
+
+    open() {
+        if (!this._drawer) this._buildDrawer();
+        this._renderList();
+        this._drawer.classList.add('open');
+    },
+
+    close() { this._drawer?.classList.remove('open'); },
+
+    toggle(id) {
+        const w = this.widgets.find(x => x.id === id);
+        if (w) { w.visible = !w.visible; this._renderList(); this._applyVisibility(); }
+    },
+
+    _applyVisibility() {
+        this.widgets.forEach(w => {
+            const el = document.getElementById('widget-' + w.id);
+            if (el) el.style.display = w.visible ? '' : 'none';
+        });
+    },
+
+    save() {
+        localStorage.setItem('crm-widgets', JSON.stringify(this.widgets));
+        const csrf = document.querySelector('meta[name=csrf-token]')?.content;
+        fetch('/widgets/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+            body: JSON.stringify({ widgets: this.widgets }),
+        }).then(() => {
+            CRM_Toast.show('🧩 Layout saved!', 'success', 2000);
+            this.close();
+        }).catch(() => {
+            CRM_Toast.show('✅ Saved locally', 'success', 2000);
+            this.close();
+        });
+    },
+
+    reset() {
+        this.widgets = [...this._defaults];
+        localStorage.removeItem('crm-widgets');
+        this._applyVisibility();
+        this._renderList();
+        CRM_Toast.show('↩ Reset to default layout', 'info', 2000);
+    },
+
+    _renderList() {
+        const list = document.getElementById('widget-list');
+        if (!list) return;
+        list.innerHTML = this.widgets.map(w => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--cc-border);">
+                <span style="color:var(--cc-text-muted);font-size:16px;cursor:default;">⠿</span>
+                <span style="flex:1;font-size:13px;font-weight:500;color:var(--cc-text);">${w.label}</span>
+                <div onclick="CRM_Widget.toggle('${w.id}')" style="
+                    width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;transition:background 0.2s;
+                    background:${w.visible ? 'var(--cc-accent)' : 'rgba(255,255,255,0.1)'};flex-shrink:0;">
+                    <div style="position:absolute;top:2px;${w.visible ? 'right:2px' : 'left:2px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:all 0.2s;"></div>
+                </div>
+            </div>`).join('');
+    },
+
+    _buildDrawer() {
+        this._drawer = document.createElement('div');
+        this._drawer.id = 'widget-drawer';
+        this._drawer.style.cssText = `
+            position:fixed;top:0;right:0;height:100vh;width:300px;z-index:9980;
+            background:var(--cc-card);border-left:1px solid var(--cc-border-h);
+            backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+            transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.16,1,0.3,1);
+            display:flex;flex-direction:column;`;
+        this._drawer.innerHTML = `
+            <div style="padding:20px;border-bottom:1px solid var(--cc-border);display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:var(--cc-text);">🧩 Customize Dashboard</div>
+                    <div style="font-size:11px;color:var(--cc-text-muted);margin-top:2px;">Show/hide widgets</div>
+                </div>
+                <button onclick="CRM_Widget.close()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--cc-text-muted);">✕</button>
+            </div>
+            <div id="widget-list" style="flex:1;overflow-y:auto;padding:0 20px;"></div>
+            <div style="padding:16px 20px;border-top:1px solid var(--cc-border);display:flex;gap:8px;">
+                <button onclick="CRM_Widget.reset()" style="flex:1;padding:9px;border-radius:8px;border:1px solid var(--cc-border);background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--cc-text-muted);">↩ Reset</button>
+                <button onclick="CRM_Widget.save()" style="flex:2;padding:9px;border-radius:8px;border:none;background:var(--cc-accent);cursor:pointer;font-size:13px;font-weight:700;color:#000;">Save Layout</button>
+            </div>`;
+        const s = document.createElement('style');
+        s.textContent = `#widget-drawer.open{transform:translateX(0)!important;}`;
+        document.head.appendChild(s);
+        document.body.appendChild(this._drawer);
+        document.addEventListener('click', e => {
+            if (this._drawer.classList.contains('open') &&
+                !this._drawer.contains(e.target) &&
+                !e.target.closest('[data-widget-toggle]')) this.close();
+        });
+    },
+};
+
+/* ════════════════════════════════════════════════════════════
    INIT — runs after Alpine stores are registered
    ════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
     CRM_Keys.init();
-    // Badge init via store proxy
     Alpine.store('notif')._updateBadge();
+    CRM_Widget.init();
 });
 
 Alpine.start();

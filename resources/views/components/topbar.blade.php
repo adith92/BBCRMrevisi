@@ -48,6 +48,11 @@
             <span class="material-symbols-outlined text-[19px]">fullscreen</span>
         </button>
 
+        {{-- Widget Customizer --}}
+        <button class="topbar-icon-btn hidden md:flex" data-widget-toggle onclick="CRM_Widget && CRM_Widget.open()" title="Customize dashboard widgets">
+            <span class="material-symbols-outlined text-[19px]">dashboard_customize</span>
+        </button>
+
         {{-- Keyboard shortcuts hint --}}
         <button class="topbar-icon-btn hidden md:flex" onclick="CRM_Toast.show('⌨️ Shortcuts: ⌘K=search · N=new · E=edit · W=won · A=activity · 1-7=nav · ⌘B=focus · ?=help', 'info', 6000)" title="Keyboard shortcuts ?">
             <span class="material-symbols-outlined text-[19px]">keyboard</span>

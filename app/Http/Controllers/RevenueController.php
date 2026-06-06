@@ -62,10 +62,42 @@ class RevenueController extends Controller
         return response()->json($data);
     }
 
+    /**
+     * Cross-DB date format helper.
+     * SQLite  → STRFTIME(fmt, col)
+     * MySQL   → DATE_FORMAT(col, fmt)  [%Y-%m-%d / %Y-%m / %Y-%u / %Y]
+     * PgSQL   → TO_CHAR(col, fmt)      [YYYY-MM-DD / YYYY-MM / YYYY]
+     */
+    private function dateExpr(string $type): string
+    {
+        $driver = \DB::connection()->getDriverName();
+
+        return match (true) {
+            $driver === 'pgsql' => match ($type) {
+                'day'   => "TO_CHAR(created_at, 'YYYY-MM-DD')",
+                'week'  => "TO_CHAR(created_at, 'IYYY-IW')",
+                'month' => "TO_CHAR(created_at, 'YYYY-MM')",
+                'year'  => "TO_CHAR(created_at, 'YYYY')",
+            },
+            $driver === 'mysql' || $driver === 'mariadb' => match ($type) {
+                'day'   => "DATE_FORMAT(created_at, '%Y-%m-%d')",
+                'week'  => "DATE_FORMAT(created_at, '%Y-%u')",
+                'month' => "DATE_FORMAT(created_at, '%Y-%m')",
+                'year'  => "DATE_FORMAT(created_at, '%Y')",
+            },
+            default => match ($type) { // sqlite
+                'day'   => "STRFTIME('%Y-%m-%d', created_at)",
+                'week'  => "STRFTIME('%Y-%W', created_at)",
+                'month' => "STRFTIME('%Y-%m', created_at)",
+                'year'  => "STRFTIME('%Y', created_at)",
+            },
+        };
+    }
+
     private function getDailyRevenue($query)
     {
         return $query->where('created_at', '>=', Carbon::now()->subDays(30))
-            ->selectRaw("DATE(created_at) as date, SUM(price) as total")
+            ->selectRaw($this->dateExpr('day') . " as date, SUM(price) as total")
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -74,7 +106,7 @@ class RevenueController extends Controller
     private function getWeeklyRevenue($query)
     {
         return $query->where('created_at', '>=', Carbon::now()->subWeeks(12))
-            ->selectRaw("STRFTIME('%Y-%W', created_at) as week, SUM(price) as total")
+            ->selectRaw($this->dateExpr('week') . " as week, SUM(price) as total")
             ->groupBy('week')
             ->orderBy('week')
             ->get();
@@ -83,7 +115,7 @@ class RevenueController extends Controller
     private function getMonthlyRevenue($query)
     {
         return $query->where('created_at', '>=', Carbon::now()->subMonths(12))
-            ->selectRaw("STRFTIME('%Y-%m', created_at) as month, SUM(price) as total")
+            ->selectRaw($this->dateExpr('month') . " as month, SUM(price) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -91,7 +123,7 @@ class RevenueController extends Controller
 
     private function getYearlyRevenue($query)
     {
-        return $query->selectRaw("STRFTIME('%Y', created_at) as year, SUM(price) as total")
+        return $query->selectRaw($this->dateExpr('year') . " as year, SUM(price) as total")
             ->groupBy('year')
             ->orderBy('year')
             ->get();

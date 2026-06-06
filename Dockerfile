@@ -62,9 +62,9 @@ EXPOSE 8080
 CMD ["/bin/sh", "-c", "\
     touch /var/www/html/database/database.sqlite && \
     chown www-data:www-data /var/www/html/database/database.sqlite && \
+    php artisan migrate --force && \
     php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache && \
-    php artisan migrate --force && \
-    (php artisan db:seed --force || true) & \
-    /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+    (php artisan db:seed --force >> /tmp/seed.log 2>&1 || true) & \
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]

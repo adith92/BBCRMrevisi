@@ -192,6 +192,7 @@
         <div class="mt-4 text-sm text-gray-500">Total: <span class="font-semibold text-gray-800">{{ $totalActivities }}</span> aktivitas</div>
     </div>
 
+    @include('analytics.charts')
 </div>
 @endsection
 

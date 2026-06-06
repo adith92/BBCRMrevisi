@@ -66,10 +66,9 @@ Route::middleware(['auth'])->group(function () {
     // Subscriptions
     Route::resource('subscriptions', SubscriptionController::class)->middleware('role:director,gm,manager,finance');
     Route::post('/subscriptions/{subscription}/terminate', [SubscriptionController::class, 'terminate'])->name('subscriptions.terminate')->middleware('role:director,gm,finance');
-    Route::post('/subscriptions/billing/run', function () {
-        $results = SubscriptionController::processMonthlyBilling();
-        return back()->with('success', "Billing selesai: {$results['processed']} diproses, {$results['skipped']} dilewati, {$results['errors']} error.");
-    })->middleware('role:gm,finance,manager')->name('subscriptions.billing.run');
+    Route::post('/subscriptions/billing/run', [SubscriptionController::class, 'runBilling'])
+        ->middleware('role:gm,finance,manager')
+        ->name('subscriptions.billing.run');
 
     // Vouchers
     Route::resource('vouchers', VoucherController::class)->middleware('role:director,gm,manager,finance');

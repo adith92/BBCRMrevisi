@@ -18,6 +18,9 @@ yarn-error.log
 /.idea
 /.vscode
 database/database.sqlite
+
+# Master docs — private, jangan di-clone
+/master
 *.sqlite
 *.sqlite-journal
 /storage/framework/sessions/*

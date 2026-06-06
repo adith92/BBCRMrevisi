@@ -37,9 +37,7 @@ services:
         value: sync
       - key: SESSION_LIFETIME
         value: "120"
-      # Security
+      # Security — hardcoded URL so APP_URL always has https:// scheme
+      # fromService.host returns bare hostname without scheme — causes 500
       - key: APP_URL
-        fromService:
-          type: web
-          name: golden-bird-crm
-          property: host
+        value: https://goldenbirdcrm.onrender.com

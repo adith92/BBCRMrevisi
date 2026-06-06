@@ -111,5 +111,7 @@
     </div>
 
     <div class="mt-4">{{ $invoices->links() }}</div>
+
+    @include('finance.charts')
 </div>
 @endsection

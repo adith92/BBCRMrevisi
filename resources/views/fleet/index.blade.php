@@ -90,5 +90,7 @@
     </div>
 
     <div class="mt-4">{{ $vehicles->links() }}</div>
+
+    @include('fleet.charts')
 </div>
 @endsection

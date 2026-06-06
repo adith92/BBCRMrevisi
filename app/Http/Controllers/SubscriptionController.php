@@ -218,4 +218,16 @@ class SubscriptionController extends Controller
 
         return $results;
     }
+
+    /**
+     * HTTP handler for manual billing run (POST /subscriptions/billing/run).
+     * Extracted from route Closure so route:cache works in production.
+     */
+    public function runBilling()
+    {
+        $results = static::processMonthlyBilling();
+        return back()->with('success',
+            "Billing selesai: {$results['processed']} diproses, {$results['skipped']} dilewati, {$results['errors']} error."
+        );
+    }
 }

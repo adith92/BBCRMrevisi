@@ -104,11 +104,11 @@
     </div>
 
     {{-- ===== KPI CARDS ROW ===== --}}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div id="widget-kpi-row" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
 
         {{-- KPI 1: Revenue --}}
-        <div class="kpi-card kpi-cyan col-span-2 md:col-span-1 lg:col-span-1">
-            <div class="flex items-start justify-between mb-3">
+        <div class="kpi-card kpi-cyan col-span-2 md:col-span-1 lg:col-span-1" style="position:relative;overflow:hidden;">
+            <div class="flex items-start justify-between mb-2">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(0,229,255,0.1);">
                     <span class="material-symbols-outlined text-[17px]" style="color:#00e5ff;">payments</span>
                 </div>
@@ -116,11 +116,12 @@
             </div>
             <div class="text-lg font-black text-white leading-tight">Rp 2,84 M</div>
             <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Monthly Revenue</div>
+            <canvas id="spark-revenue" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
         </div>
 
         {{-- KPI 2: Bookings --}}
-        <div class="kpi-card kpi-blue">
-            <div class="flex items-start justify-between mb-3">
+        <div class="kpi-card kpi-blue" style="position:relative;overflow:hidden;">
+            <div class="flex items-start justify-between mb-2">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,0.1);">
                     <span class="material-symbols-outlined text-[17px]" style="color:#60a5fa;">route</span>
                 </div>
@@ -128,11 +129,12 @@
             </div>
             <div class="text-lg font-black text-white leading-tight">{{ $pendingDispatch ?? 248 }}</div>
             <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Active Bookings</div>
+            <canvas id="spark-bookings" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
         </div>
 
         {{-- KPI 3: Fleet --}}
-        <div class="kpi-card kpi-emerald">
-            <div class="flex items-start justify-between mb-3">
+        <div class="kpi-card kpi-emerald" style="position:relative;overflow:hidden;">
+            <div class="flex items-start justify-between mb-2">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,0.1);">
                     <span class="material-symbols-outlined text-[17px]" style="color:#34d399;">local_shipping</span>
                 </div>
@@ -140,11 +142,12 @@
             </div>
             <div class="text-lg font-black text-white leading-tight">{{ $availableVehicles ?? 72 }}%</div>
             <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Fleet Utilization</div>
+            <canvas id="spark-fleet" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
         </div>
 
         {{-- KPI 4: Clients --}}
-        <div class="kpi-card kpi-purple">
-            <div class="flex items-start justify-between mb-3">
+        <div class="kpi-card kpi-purple" style="position:relative;overflow:hidden;">
+            <div class="flex items-start justify-between mb-2">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(139,92,246,0.1);">
                     <span class="material-symbols-outlined text-[17px]" style="color:#a78bfa;">corporate_fare</span>
                 </div>
@@ -152,11 +155,12 @@
             </div>
             <div class="text-lg font-black text-white leading-tight">128</div>
             <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Corp. Clients</div>
+            <canvas id="spark-clients" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
         </div>
 
         {{-- KPI 5: Outstanding --}}
-        <div class="kpi-card kpi-gold">
-            <div class="flex items-start justify-between mb-3">
+        <div class="kpi-card kpi-gold" style="position:relative;overflow:hidden;">
+            <div class="flex items-start justify-between mb-2">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(245,158,11,0.1);">
                     <span class="material-symbols-outlined text-[17px]" style="color:#fbbf24;">receipt_long</span>
                 </div>
@@ -164,11 +168,12 @@
             </div>
             <div class="text-lg font-black text-white leading-tight">Rp 420 Jt</div>
             <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Outstanding Inv.</div>
+            <canvas id="spark-invoice" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
         </div>
 
         {{-- KPI 6: Approval --}}
-        <div class="kpi-card kpi-red">
-            <div class="flex items-start justify-between mb-3">
+        <div class="kpi-card kpi-red" style="position:relative;overflow:hidden;">
+            <div class="flex items-start justify-between mb-2">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(239,68,68,0.1);">
                     <span class="material-symbols-outlined text-[17px]" style="color:#f87171;">pending_actions</span>
                 </div>
@@ -176,12 +181,70 @@
             </div>
             <div class="text-lg font-black text-white leading-tight">{{ $pendingPO ?? 14 }}</div>
             <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Pending Approval</div>
+            <canvas id="spark-approvals" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
         </div>
 
     </div>
 
+    {{-- ===== QUICK SHORTCUTS ===== --}}
+    <div id="widget-quick-shortcuts">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-bold uppercase tracking-widest" style="color:#475569;">
+                <span class="material-symbols-outlined text-[13px] align-middle mr-1" style="color:#0066ff;">bolt</span>
+                Quick Shortcuts
+            </h2>
+            <span class="text-[10px]" style="color:#334155;">Akses cepat semua modul</span>
+        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            @php
+            $shortcuts = [
+                ['icon'=>'groups',         'label'=>'Clients',       'route'=>'clients.index',       'color'=>'#3385ff', 'bg'=>'rgba(0,82,204,0.12)'],
+                ['icon'=>'local_shipping', 'label'=>'Pipeline',      'route'=>'pipeline.index',      'color'=>'#60a5fa', 'bg'=>'rgba(96,165,250,0.1)'],
+                ['icon'=>'book_online',    'label'=>'Bookings',      'route'=>'bookings.index',      'color'=>'#34d399', 'bg'=>'rgba(52,211,153,0.1)'],
+                ['icon'=>'directions_bus', 'label'=>'Fleet',         'route'=>'fleet.index',         'color'=>'#fbbf24', 'bg'=>'rgba(251,191,36,0.1)'],
+                ['icon'=>'build',          'label'=>'Maintenance',   'route'=>'maintenance.index',   'color'=>'#f97316', 'bg'=>'rgba(249,115,22,0.1)'],
+                ['icon'=>'receipt_long',   'label'=>'Finance',       'route'=>'finance.index',       'color'=>'#a78bfa', 'bg'=>'rgba(167,139,250,0.1)'],
+                ['icon'=>'subscriptions',  'label'=>'Subscriptions', 'route'=>'subscriptions.index', 'color'=>'#38bdf8', 'bg'=>'rgba(56,189,248,0.1)'],
+                ['icon'=>'redeem',         'label'=>'Vouchers',      'route'=>'vouchers.index',      'color'=>'#fb7185', 'bg'=>'rgba(251,113,133,0.1)'],
+                ['icon'=>'query_stats',    'label'=>'Analytics',     'route'=>'analytics.index',     'color'=>'#00e5ff', 'bg'=>'rgba(0,229,255,0.08)'],
+                ['icon'=>'fact_check',     'label'=>'Approvals',     'route'=>'approvals.index',     'color'=>'#4ade80', 'bg'=>'rgba(74,222,128,0.1)'],
+                ['icon'=>'inventory_2',    'label'=>'Products',      'route'=>'products.index',      'color'=>'#e879f9', 'bg'=>'rgba(232,121,249,0.1)'],
+                ['icon'=>'bar_chart',      'label'=>'KPI',           'route'=>'kpi.index',           'color'=>'#fde047', 'bg'=>'rgba(253,224,71,0.1)'],
+                ['icon'=>'event_note',     'label'=>'Activities',    'route'=>'activities.index',    'color'=>'#94a3b8', 'bg'=>'rgba(148,163,184,0.08)'],
+                ['icon'=>'description',    'label'=>'Opportunities', 'route'=>'opportunities.index', 'color'=>'#7dd3fc', 'bg'=>'rgba(125,211,252,0.1)'],
+                ['icon'=>'contract',       'label'=>'V. Contracts',  'route'=>'vehicle-contracts.index', 'color'=>'#86efac', 'bg'=>'rgba(134,239,172,0.1)'],
+                ['icon'=>'dashboard',      'label'=>'GM View',       'route'=>'dashboard.gm',        'color'=>'#c084fc', 'bg'=>'rgba(192,132,252,0.1)'],
+            ];
+            @endphp
+
+            @foreach($shortcuts as $s)
+            @can('access-route', $s['route'])
+            <a href="{{ route($s['route']) }}"
+               class="group flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-150 hover:scale-105 active:scale-95"
+               style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}22;">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                     style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}33; box-shadow:0 0 12px {{ $s['color'] }}11;">
+                    <span class="material-symbols-outlined text-[18px]" style="color:{{ $s['color'] }};">{{ $s['icon'] }}</span>
+                </div>
+                <span class="text-[10px] font-semibold text-center leading-tight" style="color:#94a3b8;">{{ $s['label'] }}</span>
+            </a>
+            @else
+            <a href="{{ route($s['route']) }}"
+               class="group flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-150 hover:scale-105 active:scale-95"
+               style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}22;">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                     style="background:{{ $s['bg'] }}; border:1px solid {{ $s['color'] }}33; box-shadow:0 0 12px {{ $s['color'] }}11;">
+                    <span class="material-symbols-outlined text-[18px]" style="color:{{ $s['color'] }};">{{ $s['icon'] }}</span>
+                </div>
+                <span class="text-[10px] font-semibold text-center leading-tight" style="color:#94a3b8;">{{ $s['label'] }}</span>
+            </a>
+            @endcan
+        @endforeach
+        </div>
+    </div>
+
     {{-- ===== MAIN GRID: Executive + Fleet League ===== --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div id="widget-exec-summary" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {{-- Executive Summary (2/3) --}}
         <div class="lg:col-span-2 exec-summary-card p-6">
@@ -258,7 +321,7 @@
     </div>
 
     {{-- ===== BOTTOM GRID: Revenue Chart + Sales Ranking + Bookings + Approvals ===== --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div id="widget-revenue-chart" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {{-- Revenue Chart (2/3) --}}
         <div class="lg:col-span-2 cc-card p-5">
@@ -305,7 +368,7 @@
     </div>
 
     {{-- ===== BOTTOM ROW: Recent Bookings + Approval Queue ===== --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div id="widget-recent-books" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {{-- Recent Bookings --}}
         <div class="cc-card p-5">
@@ -374,7 +437,9 @@
 
 </div>
     {{-- ════ CHARTS SECTION ════ --}}
-    @include('dashboard.charts')
+    <div id="widget-charts-section">
+        @include('dashboard.charts')
+    </div>
 
 </div>{{-- close outer space-y-5 --}}
 @endsection
@@ -446,6 +511,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
+    });
+
+    // ── KPI Sparklines ──
+    const sparks = [
+        { id: 'spark-revenue',   data: [210,240,285,310,295,340,380,395,420,440,460,484], color: '#00e5ff' },
+        { id: 'spark-bookings',  data: [180,195,210,230,225,248,260,255,270,248,265,280], color: '#60a5fa' },
+        { id: 'spark-fleet',     data: [65,68,70,72,69,71,74,72,75,73,72,74],            color: '#34d399' },
+        { id: 'spark-clients',   data: [100,104,108,110,112,115,116,118,120,122,125,128], color: '#a78bfa' },
+        { id: 'spark-invoice',   data: [280,310,340,360,395,420,410,430,440,420,415,420], color: '#fbbf24' },
+        { id: 'spark-approvals', data: [8,10,12,9,11,14,12,15,13,14,16,14],              color: '#f87171' },
+    ];
+    sparks.forEach(s => {
+        if (window.CRM_Sparkline) CRM_Sparkline.render(s.id, s.data, s.color);
     });
 });
 </script>

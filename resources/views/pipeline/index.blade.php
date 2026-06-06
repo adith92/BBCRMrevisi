@@ -240,6 +240,10 @@
                     @forelse($opps as $opp)
                     <div class="kanban-card"
                          data-id="{{ $opp->id }}"
+                         data-deal-id="{{ $opp->id }}"
+                         data-deal-title="{{ addslashes($opp->title) }}"
+                         data-deal-stage="{{ $opp->stage }}"
+                         data-deal-num="{{ $opp->opp_number }}"
                          data-stage="{{ $opp->stage }}"
                          x-show="matchesSearch('{{ addslashes($opp->title) }}','{{ addslashes($opp->client->company_name ?? '') }}')"
                     >
@@ -819,6 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('kanban-view') || 'board';
     if (saved !== 'board') setKanbanView(saved);
     initBoardDragScroll && initBoardDragScroll();
+    CRM_CtxMenu && CRM_CtxMenu.init();
 });
 </script>
 @endpush

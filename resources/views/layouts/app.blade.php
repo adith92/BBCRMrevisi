@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="csrf-token" content="{{ csrf_token() }}"/>
-    <title>{{ $title ?? 'Bluebird CRM | Command Center' }}</title>
+    <title>{{ $title ?? 'Golden Bird CRM | Command Center' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -93,7 +93,7 @@
                      style="background:var(--cc-accent-dim);border:1px solid rgba(0,229,255,0.2)">
                     <span class="material-symbols-outlined text-[16px]" style="color:var(--cc-accent)">directions_bus</span>
                 </div>
-                <span class="text-sm font-bold" style="color:var(--cc-text)">Bluebird CRM</span>
+                <span class="text-sm font-bold" style="color:var(--cc-text)">Golden Bird CRM</span>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="CRM_Palette.toggle()" class="topbar-icon-btn w-8 h-8" title="Search ⌘K">

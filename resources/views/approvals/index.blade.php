@@ -315,6 +315,8 @@
             </div>
         </form>
     </div>
+
+    @include('approvals.charts')
 </div>
 @endsection
 

@@ -201,5 +201,7 @@
     <div class="mt-4">
         {{ $subscriptions->appends(request()->query())->links() }}
     </div>
+
+    @include('subscriptions.charts')
 </div>
 @endsection
