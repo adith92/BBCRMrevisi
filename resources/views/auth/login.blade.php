@@ -8,137 +8,204 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <style>
-        :root {
-            /* Bluebird Blue palette */
-            --bb-blue-900: #001a3a;
-            --bb-blue-800: #002d6b;
-            --bb-blue-700: #003f99;
-            --bb-blue-600: #0052cc;
-            --bb-blue-500: #0066ff;
-            --bb-blue-400: #3385ff;
-            --bb-blue-300: #66a3ff;
-            --bb-blue-200: #99c2ff;
-            --bb-blue-glow: rgba(0, 102, 255, 0.18);
-            --bb-blue-glow-sm: rgba(0, 102, 255, 0.08);
-        }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #000d1f;
             min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
             overflow: hidden;
         }
-        /* Bluebird background atmosphere */
-        body::before {
-            content: '';
-            position: fixed;
+
+        /* ── LEFT PANEL ─────────────────────────────────── */
+        .left-panel {
+            flex: 1;
+            position: relative;
+            display: none; /* hidden on mobile */
+            overflow: hidden;
+        }
+        @media (min-width: 900px) { .left-panel { display: flex; flex-direction: column; } }
+
+        /* Armada background — deep blue fleet atmosphere */
+        .left-bg {
+            position: absolute;
             inset: 0;
             background:
-                radial-gradient(ellipse 70% 70% at 20% 10%, rgba(0,82,204,0.18) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 50% at 80% 90%, rgba(0,41,128,0.22) 0%, transparent 60%),
-                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(0,66,204,0.08) 0%, transparent 60%);
-            pointer-events: none;
+                radial-gradient(ellipse 80% 60% at 30% 40%, rgba(0,82,204,0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 80% at 70% 70%, rgba(0,30,100,0.6) 0%, transparent 60%),
+                linear-gradient(160deg, #000d1f 0%, #001a3a 40%, #002052 70%, #000d1f 100%);
         }
-        /* Subtle grid */
-        body::after {
-            content: '';
-            position: fixed;
+
+        /* Grid overlay */
+        .left-grid {
+            position: absolute;
             inset: 0;
             background-image:
-                linear-gradient(rgba(0,102,255,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,102,255,0.04) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
+                linear-gradient(rgba(0,102,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,102,255,0.06) 1px, transparent 1px);
+            background-size: 50px 50px;
         }
 
-        /* Animated floating orbs */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.35;
-            animation: float 8s ease-in-out infinite;
-            pointer-events: none;
-        }
-        .orb-1 { width: 400px; height: 400px; background: #0052cc; top: -100px; left: -100px; animation-delay: 0s; }
-        .orb-2 { width: 300px; height: 300px; background: #003f99; bottom: -80px; right: -80px; animation-delay: -4s; }
-        @keyframes float {
-            0%,100% { transform: translate(0,0) scale(1); }
-            50% { transform: translate(20px, -20px) scale(1.05); }
+        /* Perspective road/fleet lines */
+        .fleet-lines {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 45%;
+            background:
+                linear-gradient(to bottom,
+                    transparent 0%,
+                    rgba(0,60,180,0.08) 40%,
+                    rgba(0,60,180,0.18) 100%
+                );
+            clip-path: polygon(0% 100%, 100% 100%, 80% 0%, 20% 0%);
         }
 
-        .login-card {
-            background: rgba(0, 8, 24, 0.88);
-            border: 1px solid rgba(0, 102, 255, 0.2);
-            border-radius: 22px;
-            padding: 42px 40px;
-            width: 100%;
-            max-width: 420px;
+        /* Floating bus silhouettes */
+        .bus-fleet {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        .bus {
+            background: rgba(0,60,180,0.3);
+            border: 1px solid rgba(0,102,255,0.25);
+            border-radius: 8px 8px 4px 4px;
             position: relative;
-            backdrop-filter: blur(24px);
-            box-shadow:
-                0 30px 60px rgba(0,0,0,0.6),
-                0 0 0 1px rgba(0,102,255,0.08),
-                0 0 60px rgba(0,52,204,0.12) inset;
+            box-shadow: 0 0 30px rgba(0,82,204,0.15);
         }
-        /* Top blue glow line */
-        .login-card::before {
+        .bus::after {
             content: '';
             position: absolute;
-            top: 0; left: 50%; transform: translateX(-50%);
-            width: 70%; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0,102,255,0.6), rgba(51,133,255,0.8), rgba(0,102,255,0.6), transparent);
+            bottom: -6px; left: 10%; right: 10%;
+            height: 6px;
+            background: rgba(0,102,255,0.3);
+            border-radius: 0 0 4px 4px;
+        }
+        .bus-lg { width: 110px; height: 50px; }
+        .bus-md { width: 90px; height: 44px; }
+        .bus-sm { width: 70px; height: 36px; opacity: 0.6; }
+
+        /* Window strips on buses */
+        .bus-windows {
+            position: absolute;
+            top: 10px; left: 8px; right: 8px;
+            display: flex; gap: 5px;
+        }
+        .bus-win {
+            height: 16px;
+            background: rgba(0,150,255,0.35);
+            border-radius: 2px;
+            flex: 1;
+            box-shadow: 0 0 6px rgba(0,150,255,0.2);
         }
 
-        /* Logo icon */
-        .logo-ring {
-            width: 60px; height: 60px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, rgba(0,82,204,0.25), rgba(0,41,128,0.35));
-            border: 1px solid rgba(0,102,255,0.35);
-            box-shadow: 0 0 20px rgba(0,102,255,0.2);
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 16px;
+        /* Glow orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+        }
+        .orb-1 { width: 350px; height: 350px; background: #0052cc; opacity: 0.2; top: -60px; left: -60px; }
+        .orb-2 { width: 250px; height: 250px; background: #001f6e; opacity: 0.35; bottom: 100px; right: -40px; }
+        .orb-3 { width: 180px; height: 180px; background: #0066ff; opacity: 0.12; top: 40%; left: 30%; }
+
+        /* Left panel content */
+        .left-content {
+            position: relative;
+            z-index: 10;
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .left-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: auto;
+        }
+        .left-tagline {
+            margin-bottom: 48px;
         }
 
-        /* Input fields */
-        .input-field {
+        /* Stat chips */
+        .stat-chip {
+            background: rgba(0,30,80,0.6);
+            border: 1px solid rgba(0,102,255,0.2);
+            border-radius: 12px;
+            padding: 14px 18px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* ── RIGHT PANEL ─────────────────────────────────── */
+        .right-panel {
             width: 100%;
-            background: rgba(0, 30, 80, 0.3);
-            border: 1px solid rgba(0, 82, 204, 0.2);
+            max-width: 480px;
+            background: rgba(0, 6, 20, 0.95);
+            border-left: 1px solid rgba(0,102,255,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 36px;
+            position: relative;
+            overflow-y: auto;
+        }
+        @media (min-width: 900px) { .right-panel { width: 480px; flex-shrink: 0; } }
+
+        /* Blue top accent line */
+        .right-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 20%; right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #0066ff, #3385ff, #0066ff, transparent);
+            border-radius: 0 0 2px 2px;
+        }
+
+        /* Form card */
+        .form-wrap { width: 100%; max-width: 380px; }
+
+        /* Input */
+        .inp {
+            width: 100%;
+            background: rgba(0,20,60,0.4);
+            border: 1px solid rgba(0,82,204,0.22);
             border-radius: 10px;
             padding: 12px 14px;
             color: #e2e8f0;
             font-size: 14px;
             font-family: 'Inter', sans-serif;
             transition: all 0.2s;
-        }
-        .input-field:focus {
             outline: none;
-            border-color: rgba(0, 102, 255, 0.55);
-            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.12);
-            background: rgba(0, 40, 100, 0.25);
         }
-        .input-field::placeholder { color: #2d4a7a; }
-        .input-label {
+        .inp:focus {
+            border-color: rgba(0,102,255,0.6);
+            box-shadow: 0 0 0 3px rgba(0,82,204,0.12);
+            background: rgba(0,40,100,0.3);
+        }
+        .inp::placeholder { color: #1e3a6e; }
+
+        .lbl {
             display: block;
             font-size: 10px;
             font-weight: 700;
-            color: #4a6fa5;
+            color: #3d5a99;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 6px;
         }
 
-        /* Login button — Bluebird Blue */
-        .btn-login {
+        /* Primary blue button */
+        .btn-primary {
             width: 100%;
-            background: linear-gradient(135deg, #0052cc, #0066ff, #1a75ff);
-            color: white;
+            background: linear-gradient(135deg, #0052cc 0%, #0066ff 50%, #1a75ff 100%);
+            color: #fff;
             font-weight: 800;
             font-size: 14px;
             padding: 14px;
@@ -148,171 +215,265 @@
             transition: all 0.2s;
             letter-spacing: 0.02em;
             box-shadow: 0 4px 20px rgba(0,82,204,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn-login:hover {
+        .btn-primary:hover {
             background: linear-gradient(135deg, #0066ff, #3385ff, #4d94ff);
             transform: translateY(-1px);
-            box-shadow: 0 8px 28px rgba(0,102,255,0.45);
+            box-shadow: 0 8px 28px rgba(0,102,255,0.5);
         }
-        .btn-login:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,82,204,0.3); }
+        .btn-primary:active { transform: translateY(0); }
+
+        /* 1-click demo button */
+        .btn-demo {
+            width: 100%;
+            background: rgba(0,50,150,0.2);
+            color: #66a3ff;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(0,102,255,0.25);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-demo:hover {
+            background: rgba(0,82,204,0.25);
+            border-color: rgba(0,102,255,0.45);
+            color: #99c2ff;
+            box-shadow: 0 0 16px rgba(0,82,204,0.15);
+        }
+
+        /* Demo account pills */
+        .demo-pill {
+            background: rgba(0,25,70,0.5);
+            border: 1px solid rgba(0,82,204,0.18);
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .demo-pill:hover {
+            background: rgba(0,82,204,0.18);
+            border-color: rgba(0,102,255,0.35);
+        }
 
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
         }
-        .pulse-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: #10b981;
-            display: inline-block;
-            animation: pulse 2s ease-in-out infinite;
-        }
+        .pulse { animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
 
-        .demo-account {
-            background: rgba(0, 30, 80, 0.25);
-            border: 1px solid rgba(0, 82, 204, 0.15);
-            border-radius: 8px;
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: all 0.15s;
+        .divider {
+            display: flex; align-items: center; gap: 12px;
+            color: #1a3060; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
         }
-        .demo-account:hover {
-            background: rgba(0, 82, 204, 0.12);
-            border-color: rgba(0, 102, 255, 0.3);
-            box-shadow: 0 0 12px rgba(0,82,204,0.1);
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px; background: rgba(0,82,204,0.15);
         }
 
-        /* Version badge */
-        .badge-bb {
-            background: rgba(0,82,204,0.15);
-            color: var(--bb-blue-300);
-            border: 1px solid rgba(0,102,255,0.25);
-            font-size: 9px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .badge-live {
-            background: rgba(16,185,129,0.1);
-            color: #10b981;
-            border: 1px solid rgba(16,185,129,0.2);
-            font-size: 9px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .divider { border: none; border-top: 1px solid rgba(0,82,204,0.12); margin: 20px 0; }
+        /* Animate buses gently */
+        @keyframes drift { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(-8px);} }
+        .bus-fleet { animation: drift 6s ease-in-out infinite; }
     </style>
 </head>
 <body>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
 
-    <div class="relative z-10 w-full max-w-md px-4">
-        <div class="login-card">
+    {{-- ═══ LEFT PANEL — Fleet Armada Visual ═══ --}}
+    <div class="left-panel">
+        <div class="left-bg"></div>
+        <div class="left-grid"></div>
+        <div class="fleet-lines"></div>
 
-            {{-- Brand Header --}}
-            <div class="text-center mb-8">
-                <div class="logo-ring">
-                    <span class="material-symbols-outlined text-[30px]" style="color:#3385ff;">directions_bus</span>
+        {{-- Glow orbs --}}
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+
+        {{-- Bus fleet silhouettes --}}
+        <div class="bus-fleet">
+            <div class="bus bus-sm">
+                <div class="bus-windows">
+                    <div class="bus-win"></div><div class="bus-win"></div><div class="bus-win"></div>
                 </div>
-                <h1 class="text-2xl font-black tracking-tight" style="color:#ffffff;">
-                    Bluebird <span style="color:#3385ff;">CRM</span>
-                </h1>
-                <p class="text-[11px] font-semibold uppercase tracking-widest mt-1" style="color:#2d4a7a;">
-                    Command Center · B2B Fleet Management
-                </p>
-                <div class="flex items-center justify-center gap-2 mt-3">
-                    <span class="badge-live flex items-center gap-1.5">
-                        <span class="pulse-dot"></span>
-                        Live
-                    </span>
-                    <span class="badge-bb">v7.7</span>
-                    <span class="badge-bb">Render</span>
+            </div>
+            <div class="bus bus-lg">
+                <div class="bus-windows">
+                    <div class="bus-win"></div><div class="bus-win"></div><div class="bus-win"></div><div class="bus-win"></div><div class="bus-win"></div>
+                </div>
+            </div>
+            <div class="bus bus-md">
+                <div class="bus-windows">
+                    <div class="bus-win"></div><div class="bus-win"></div><div class="bus-win"></div><div class="bus-win"></div>
+                </div>
+            </div>
+            <div class="bus bus-sm" style="opacity:0.5;">
+                <div class="bus-windows">
+                    <div class="bus-win"></div><div class="bus-win"></div><div class="bus-win"></div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Left content --}}
+        <div class="left-content">
+            {{-- Logo --}}
+            <div class="left-logo">
+                <img src="/images/golden-bird-logo.svg" alt="Golden Bird" style="width:52px;height:52px;border-radius:14px;background:rgba(0,82,204,0.15);border:1px solid rgba(0,102,255,0.3);padding:6px;">
+                <div>
+                    <div class="text-lg font-black text-white tracking-tight">Golden Bird <span style="color:#3385ff;">CRM</span></div>
+                    <div class="text-[10px] font-semibold uppercase tracking-widest" style="color:#1e4080;">Command Center</div>
                 </div>
             </div>
 
-            {{-- Error Alert --}}
+            {{-- Tagline --}}
+            <div class="left-tagline">
+                <h2 class="text-3xl font-black text-white leading-tight mb-3">
+                    Kelola Armada<br>
+                    <span style="color:#3385ff;">B2B Fleet</span><br>
+                    dari Satu Dashboard
+                </h2>
+                <p class="text-sm leading-relaxed mb-6" style="color:#2d4a7a;">
+                    Tracking kendaraan, pipeline sales, invoice & approval — semua terintegrasi real-time.
+                </p>
+
+                {{-- Stats --}}
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="stat-chip text-center">
+                        <div class="text-xl font-black" style="color:#3385ff;">500+</div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#1e4080;">Armada</div>
+                    </div>
+                    <div class="stat-chip text-center">
+                        <div class="text-xl font-black" style="color:#3385ff;">128</div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#1e4080;">Klien Korporat</div>
+                    </div>
+                    <div class="stat-chip text-center">
+                        <div class="text-xl font-black" style="color:#3385ff;">99%</div>
+                        <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#1e4080;">Uptime</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bottom badges --}}
+            <div class="flex items-center gap-2 flex-wrap">
+                <span style="background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);font-size:9px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.05em;" class="flex items-center gap-1.5">
+                    <span class="pulse" style="width:5px;height:5px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                    Live on Render
+                </span>
+                <span style="background:rgba(0,82,204,0.15);color:#66a3ff;border:1px solid rgba(0,102,255,0.2);font-size:9px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.05em;">v7.7</span>
+                <span style="background:rgba(0,82,204,0.15);color:#66a3ff;border:1px solid rgba(0,102,255,0.2);font-size:9px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.05em;">Laravel 12</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══ RIGHT PANEL — Login Form ═══ --}}
+    <div class="right-panel">
+        <div class="form-wrap">
+
+            {{-- Mobile logo (hidden on desktop) --}}
+            <div class="flex items-center gap-3 mb-8" style="display:flex;" @media(min-width:900px){display:none!important;}>
+                <img src="/images/golden-bird-logo.svg" alt="Logo"
+                     style="width:40px;height:40px;border-radius:10px;background:rgba(0,82,204,0.15);border:1px solid rgba(0,102,255,0.3);padding:5px;">
+                <div>
+                    <div class="text-base font-black text-white">Golden Bird <span style="color:#3385ff;">CRM</span></div>
+                    <div class="text-[9px] uppercase tracking-widest font-semibold" style="color:#1e4080;">Command Center</div>
+                </div>
+            </div>
+
+            {{-- Header --}}
+            <div class="mb-7">
+                <h1 class="text-2xl font-black text-white tracking-tight mb-1">Selamat Datang 👋</h1>
+                <p class="text-sm" style="color:#2d4a7a;">Masuk ke Golden Bird CRM Command Center</p>
+            </div>
+
+            {{-- ⚡ 1-CLICK DEMO LOGIN --}}
+            <button type="button" class="btn-demo mb-5"
+                onclick="document.querySelector('[name=email]').value='director@goldenbird.co.id';document.querySelector('[name=password]').value='password123';document.getElementById('login-form').submit();">
+                <span class="material-symbols-outlined text-[16px]">bolt</span>
+                1-Click Demo Login (Director)
+            </button>
+
+            {{-- Error --}}
             @if($errors->any())
             <div class="mb-4 flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-semibold"
                  style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;">
-                <span class="material-symbols-outlined text-[16px]">error</span>
+                <span class="material-symbols-outlined text-[15px]">error</span>
                 {{ $errors->first() }}
             </div>
             @endif
 
             {{-- Login Form --}}
-            <form method="POST" action="{{ route('login') }}" class="space-y-4">
+            <form id="login-form" method="POST" action="{{ route('login') }}" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="input-label">Email Address</label>
+                    <label class="lbl">Email</label>
                     <input type="email" name="email" value="{{ old('email') }}" required
-                           autocomplete="email" autofocus
-                           class="input-field" placeholder="you@bluebird.co.id"/>
+                           autocomplete="email" autofocus class="inp"
+                           placeholder="you@goldenbird.co.id"/>
                 </div>
                 <div>
-                    <label class="input-label">Password</label>
+                    <label class="lbl">Password</label>
                     <input type="password" name="password" required
-                           autocomplete="current-password"
-                           class="input-field" placeholder="••••••••"/>
+                           autocomplete="current-password" class="inp"
+                           placeholder="••••••••"/>
                 </div>
                 <div class="flex items-center justify-between">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="remember"
                                style="accent-color:#0066ff;width:14px;height:14px;">
-                        <span class="text-xs font-medium" style="color:#4a6fa5;">Remember me</span>
+                        <span class="text-xs" style="color:#2d4a7a;">Remember me</span>
                     </label>
                 </div>
-                <button type="submit" class="btn-login mt-1">
-                    <span class="flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]">login</span>
-                        Masuk Command Center
-                    </span>
+                <button type="submit" class="btn-primary">
+                    <span class="material-symbols-outlined text-[17px]">login</span>
+                    Masuk Command Center
                 </button>
             </form>
 
-            <hr class="divider">
+            {{-- Divider --}}
+            <div class="divider my-5">atau demo lainnya</div>
 
-            {{-- Demo Accounts --}}
-            <div>
-                <div class="text-[10px] font-bold uppercase tracking-widest mb-3 text-center"
-                     style="color:#2d4a7a;">Demo Access — Klik untuk isi otomatis</div>
-                <div class="grid grid-cols-2 gap-2">
-                    @php
-                    $demos = [
-                        ['label' => 'Director HQ',   'email' => 'director@goldenbird.co.id', 'icon' => '👔', 'color' => '#99c2ff'],
-                        ['label' => 'General Manager','email' => 'gm@goldenbird.co.id',       'icon' => '🏢', 'color' => '#66a3ff'],
-                        ['label' => 'Manager',        'email' => 'manager@goldenbird.co.id',  'icon' => '📊', 'color' => '#34d399'],
-                        ['label' => 'Sales Officer',  'email' => 'sales@goldenbird.co.id',    'icon' => '💼', 'color' => '#fbbf24'],
-                    ];
-                    @endphp
-                    @foreach($demos as $d)
-                    <div class="demo-account"
-                         onclick="document.querySelector('[name=email]').value='{{ $d['email'] }}';document.querySelector('[name=password]').value='password123';">
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm">{{ $d['icon'] }}</span>
-                            <div>
-                                <div class="text-[10px] font-bold" style="color:{{ $d['color'] }};">{{ $d['label'] }}</div>
-                                <div class="text-[9px] font-mono" style="color:#2d4a7a;">password123</div>
-                            </div>
-                        </div>
+            {{-- Demo Accounts Grid --}}
+            <div class="grid grid-cols-2 gap-2">
+                @php
+                $demos = [
+                    ['label'=>'Director HQ',    'email'=>'director@goldenbird.co.id', 'icon'=>'👔', 'color'=>'#99c2ff'],
+                    ['label'=>'General Manager', 'email'=>'gm@goldenbird.co.id',       'icon'=>'🏢', 'color'=>'#66a3ff'],
+                    ['label'=>'Manager',         'email'=>'manager@goldenbird.co.id',  'icon'=>'📊', 'color'=>'#34d399'],
+                    ['label'=>'Sales Officer',   'email'=>'sales@goldenbird.co.id',    'icon'=>'💼', 'color'=>'#fbbf24'],
+                ];
+                @endphp
+                @foreach($demos as $d)
+                <div class="demo-pill"
+                     onclick="document.querySelector('[name=email]').value='{{ $d['email'] }}';document.querySelector('[name=password]').value='password123';">
+                    <span class="text-sm">{{ $d['icon'] }}</span>
+                    <div>
+                        <div class="text-[10px] font-bold" style="color:{{ $d['color'] }};">{{ $d['label'] }}</div>
+                        <div class="text-[9px] font-mono" style="color:#1e3a6e;">password123</div>
                     </div>
-                    @endforeach
                 </div>
+                @endforeach
             </div>
 
             {{-- Footer --}}
-            <div class="mt-5 text-center">
-                <p class="text-[10px]" style="color:#1a3060;">
+            <div class="mt-6 text-center">
+                <p class="text-[10px]" style="color:#0f2040;">
                     PT Blue Bird Group · B2B Fleet CRM · Jakarta 2026
                 </p>
             </div>
         </div>
     </div>
+
 </body>
 </html>
