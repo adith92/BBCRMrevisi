@@ -38,8 +38,11 @@ COPY --from=node-builder /app/public/build public/build
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Permissions
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+RUN mkdir -p storage bootstrap/cache database \
+    && touch database/database.sqlite \
+    && chown -R www-data:www-data storage bootstrap/cache database \
+    && chmod -R 775 storage bootstrap/cache database \
+    && chmod 664 database/database.sqlite
 
 # Nginx config
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
@@ -60,8 +63,11 @@ RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini \
 EXPOSE 8080
 
 CMD ["/bin/sh", "-c", "\
+    mkdir -p /var/www/html/storage/framework/cache /var/www/html/storage/framework/views /var/www/html/storage/framework/sessions /var/www/html/bootstrap/cache /var/www/html/database && \
     touch /var/www/html/database/database.sqlite && \
-    chown www-data:www-data /var/www/html/database/database.sqlite && \
+    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database && \
+    chmod 664 /var/www/html/database/database.sqlite && \
     php artisan migrate --force && \
     php artisan config:cache && \
     php artisan route:cache && \

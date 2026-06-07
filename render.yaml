@@ -5,7 +5,7 @@ services:
     dockerfilePath: ./Dockerfile
     plan: free
     region: oregon
-    healthCheckPath: /login
+    healthCheckPath: /up
     envVars:
       - key: APP_NAME
         value: "Bluebird CRM"
