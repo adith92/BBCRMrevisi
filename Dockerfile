@@ -73,4 +73,5 @@ CMD ["/bin/sh", "-c", "\
     php artisan route:cache && \
     php artisan view:cache && \
     (php artisan db:seed --force >> /tmp/seed.log 2>&1 || true) & \
+    (php artisan db:seed --class=MassiveVehicleBookingSeeder --force >> /tmp/seed_massive.log 2>&1 || true) & \
     exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]

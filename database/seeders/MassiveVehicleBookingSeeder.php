@@ -126,8 +126,8 @@ class MassiveVehicleBookingSeeder extends Seeder
 
     public function run(): void
     {
-        $this->command->info('🚀 MassiveVehicleBookingSeeder starting...');
-        $this->command->info('   This will seed 100k vehicles, 500k bookings, 50k vouchers, KPI targets.');
+        $this->command?->info('🚀 MassiveVehicleBookingSeeder starting...');
+        $this->command?->info('   This will seed 100k vehicles, 500k bookings, 50k vouchers, KPI targets.');
 
         $this->ensurePools();
         $this->seedVehicles();
@@ -135,7 +135,7 @@ class MassiveVehicleBookingSeeder extends Seeder
         $this->seedVouchers();
         $this->seedKpiTargets();
 
-        $this->command->info('✅ MassiveVehicleBookingSeeder complete!');
+        $this->command?->info('✅ MassiveVehicleBookingSeeder complete!');
         $this->printSummary();
     }
 
@@ -162,7 +162,7 @@ class MassiveVehicleBookingSeeder extends Seeder
         }
 
         $this->pools5 = DB::table('pools')->pluck('id')->toArray();
-        $this->command->info('  ✓ Pools ready: ' . count($this->pools5));
+        $this->command?->info('  ✓ Pools ready: ' . count($this->pools5));
     }
 
     // ── Vehicles ─────────────────────────────────────────────────────────────
@@ -174,11 +174,11 @@ class MassiveVehicleBookingSeeder extends Seeder
         $toCreate = max(0, $target - $existing);
 
         if ($toCreate === 0) {
-            $this->command->info("  ↳ Vehicles already at {$target}, skipping.");
+            $this->command?->info("  ↳ Vehicles already at {$target}, skipping.");
             return;
         }
 
-        $this->command->info("  → Seeding {$toCreate} vehicles (in 1,000-row chunks)...");
+        $this->command?->info("  → Seeding {$toCreate} vehicles (in 1,000-row chunks)...");
 
         $models      = array_keys($this->vehicleModels);
         $plateTrack  = []; // avoid duplicates in this batch
@@ -229,10 +229,10 @@ class MassiveVehicleBookingSeeder extends Seeder
                     DB::table('vehicles')->insertOrIgnore($rows);
                     $done += count($rows);
                     if ($done % 10_000 === 0) {
-                        $this->command->info("    ... {$done}/{$toCreate} vehicles inserted");
+                        $this->command?->info("    ... {$done}/{$toCreate} vehicles inserted");
                     }
                 } catch (\Exception $e) {
-                    $this->command->warn("    chunk error: " . $e->getMessage());
+                    $this->command?->warn("    chunk error: " . $e->getMessage());
                 }
                 $rows = [];
             }
@@ -242,7 +242,7 @@ class MassiveVehicleBookingSeeder extends Seeder
             DB::table('vehicles')->insertOrIgnore($rows);
         }
 
-        $this->command->info('  ✓ Vehicles: ' . DB::table('vehicles')->count());
+        $this->command?->info('  ✓ Vehicles: ' . DB::table('vehicles')->count());
     }
 
     private function randomPlate(array &$track): string
@@ -269,11 +269,11 @@ class MassiveVehicleBookingSeeder extends Seeder
         $toCreate = max(0, $target - $existing);
 
         if ($toCreate === 0) {
-            $this->command->info("  ↳ Bookings already at {$target}, skipping.");
+            $this->command?->info("  ↳ Bookings already at {$target}, skipping.");
             return;
         }
 
-        $this->command->info("  → Seeding {$toCreate} bookings (in 2,000-row chunks)...");
+        $this->command?->info("  → Seeding {$toCreate} bookings (in 2,000-row chunks)...");
 
         // Load IDs
         $clientIds  = DB::table('clients')->pluck('id')->toArray();
@@ -336,10 +336,10 @@ class MassiveVehicleBookingSeeder extends Seeder
                     DB::table('bookings')->insertOrIgnore($rows);
                     $done += count($rows);
                     if ($done % 50_000 === 0) {
-                        $this->command->info("    ... {$done}/{$toCreate} bookings inserted");
+                        $this->command?->info("    ... {$done}/{$toCreate} bookings inserted");
                     }
                 } catch (\Exception $e) {
-                    $this->command->warn("    chunk error: " . $e->getMessage());
+                    $this->command?->warn("    chunk error: " . $e->getMessage());
                 }
                 $rows = [];
             }
@@ -349,7 +349,7 @@ class MassiveVehicleBookingSeeder extends Seeder
             DB::table('bookings')->insertOrIgnore($rows);
         }
 
-        $this->command->info('  ✓ Bookings: ' . DB::table('bookings')->count());
+        $this->command?->info('  ✓ Bookings: ' . DB::table('bookings')->count());
     }
 
     // ── Vouchers ─────────────────────────────────────────────────────────────
@@ -361,11 +361,11 @@ class MassiveVehicleBookingSeeder extends Seeder
         $toCreate = max(0, $target - $existing);
 
         if ($toCreate === 0) {
-            $this->command->info("  ↳ Vouchers already at {$target}, skipping.");
+            $this->command?->info("  ↳ Vouchers already at {$target}, skipping.");
             return;
         }
 
-        $this->command->info("  → Seeding {$toCreate} e-vouchers...");
+        $this->command?->info("  → Seeding {$toCreate} e-vouchers...");
 
         $clientIds  = DB::table('clients')->pluck('id')->toArray();
         $userIds    = DB::table('users')->pluck('id')->toArray();
@@ -411,7 +411,7 @@ class MassiveVehicleBookingSeeder extends Seeder
                 try {
                     DB::table('vouchers')->insertOrIgnore($rows);
                 } catch (\Exception $e) {
-                    $this->command->warn("    voucher chunk error: " . $e->getMessage());
+                    $this->command?->warn("    voucher chunk error: " . $e->getMessage());
                 }
                 $rows = [];
             }
@@ -421,7 +421,7 @@ class MassiveVehicleBookingSeeder extends Seeder
             DB::table('vouchers')->insertOrIgnore($rows);
         }
 
-        $this->command->info('  ✓ Vouchers: ' . DB::table('vouchers')->count());
+        $this->command?->info('  ✓ Vouchers: ' . DB::table('vouchers')->count());
     }
 
     private function randomVoucherCode(array &$track): string
@@ -440,7 +440,7 @@ class MassiveVehicleBookingSeeder extends Seeder
 
     private function seedKpiTargets(): void
     {
-        $this->command->info('  → Seeding KPI targets (all sales, 2024–2026)...');
+        $this->command?->info('  → Seeding KPI targets (all sales, 2024–2026)...');
 
         $salesUsers = DB::table('users')
             ->whereIn('role', ['sales', 'manager'])
@@ -448,7 +448,7 @@ class MassiveVehicleBookingSeeder extends Seeder
             ->toArray();
 
         if (empty($salesUsers)) {
-            $this->command->warn('  ↳ No sales users found, skipping KPI.');
+            $this->command?->warn('  ↳ No sales users found, skipping KPI.');
             return;
         }
 
@@ -502,14 +502,14 @@ class MassiveVehicleBookingSeeder extends Seeder
             DB::table('sales_targets')->insertOrIgnore($rows);
         }
 
-        $this->command->info('  ✓ KPI targets: ' . DB::table('sales_targets')->count());
+        $this->command?->info('  ✓ KPI targets: ' . DB::table('sales_targets')->count());
     }
 
     // ── Summary ──────────────────────────────────────────────────────────────
 
     private function printSummary(): void
     {
-        $this->command->table(
+        $this->command?->table(
             ['Table', 'Count'],
             [
                 ['vehicles',     number_format(DB::table('vehicles')->count())],
