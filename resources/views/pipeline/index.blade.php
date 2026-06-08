@@ -131,21 +131,24 @@
     /* Stage column headers — lighter background, darker text for readability */
     .stage-header { border-radius: 12px; padding: 14px 16px; }
     /* Dark mode: subtle tint */
-    html.dark .stage-pro  { background: rgba(59,130,246,0.08);  border: 1px solid rgba(59,130,246,0.18); }
-    html.dark .stage-prop { background: rgba(245,158,11,0.08);  border: 1px solid rgba(245,158,11,0.18); }
-    html.dark .stage-neg  { background: rgba(249,115,22,0.08);  border: 1px solid rgba(249,115,22,0.18); }
+    html.dark .stage-call { background: rgba(20,104,168,0.05);  border: 1px solid rgba(20,104,168,0.15); }
+    html.dark .stage-pro  { background: rgba(20,104,168,0.10);  border: 1px solid rgba(20,104,168,0.20); }
+    html.dark .stage-prop { background: rgba(20,104,168,0.15);  border: 1px solid rgba(20,104,168,0.25); }
+    html.dark .stage-neg  { background: rgba(20,104,168,0.20);  border: 1px solid rgba(20,104,168,0.30); }
     html.dark .stage-won  { background: rgba(16,185,129,0.08);  border: 1px solid rgba(16,185,129,0.18); }
     html.dark .stage-lost { background: rgba(239,68,68,0.06);   border: 1px solid rgba(239,68,68,0.14); }
     /* Light mode: very light pastel — high contrast text */
-    html.light .stage-pro  { background: rgba(59,130,246,0.07);  border: 1px solid rgba(59,130,246,0.20); }
-    html.light .stage-prop { background: rgba(245,158,11,0.07);  border: 1px solid rgba(245,158,11,0.20); }
-    html.light .stage-neg  { background: rgba(249,115,22,0.07);  border: 1px solid rgba(249,115,22,0.20); }
+    html.light .stage-call { background: rgba(20,104,168,0.04);  border: 1px solid rgba(20,104,168,0.12); }
+    html.light .stage-pro  { background: rgba(20,104,168,0.07);  border: 1px solid rgba(20,104,168,0.18); }
+    html.light .stage-prop { background: rgba(20,104,168,0.10);  border: 1px solid rgba(20,104,168,0.24); }
+    html.light .stage-neg  { background: rgba(20,104,168,0.13);  border: 1px solid rgba(20,104,168,0.30); }
     html.light .stage-won  { background: rgba(16,185,129,0.07);  border: 1px solid rgba(16,185,129,0.20); }
     html.light .stage-lost { background: rgba(239,68,68,0.05);   border: 1px solid rgba(239,68,68,0.16); }
     /* Fallback for when no class set */
-    .stage-pro  { background: rgba(59,130,246,0.08);  border: 1px solid rgba(59,130,246,0.18); }
-    .stage-prop { background: rgba(245,158,11,0.08);  border: 1px solid rgba(245,158,11,0.18); }
-    .stage-neg  { background: rgba(249,115,22,0.08);  border: 1px solid rgba(249,115,22,0.18); }
+    .stage-call { background: rgba(20,104,168,0.05);  border: 1px solid rgba(20,104,168,0.15); }
+    .stage-pro  { background: rgba(20,104,168,0.10);  border: 1px solid rgba(20,104,168,0.20); }
+    .stage-prop { background: rgba(20,104,168,0.15);  border: 1px solid rgba(20,104,168,0.25); }
+    .stage-neg  { background: rgba(20,104,168,0.20);  border: 1px solid rgba(20,104,168,0.30); }
     .stage-won  { background: rgba(16,185,129,0.08);  border: 1px solid rgba(16,185,129,0.18); }
     .stage-lost { background: rgba(239,68,68,0.06);   border: 1px solid rgba(239,68,68,0.14); }
     /* Stage header text — force readable contrast */
@@ -297,14 +300,15 @@
     {{-- SUMMARY BAR --}}
     @php
     $stageConf = [
-        'prospecting' => ['label'=>'Prospekting','color'=>'#3b82f6','icon'=>'radar'],
-        'proposal'    => ['label'=>'Proposal',   'color'=>'#f59e0b','icon'=>'description'],
-        'negotiation' => ['label'=>'Negosiasi',  'color'=>'#f97316','icon'=>'handshake'],
-        'won'         => ['label'=>'Menang',      'color'=>'#10b981','icon'=>'emoji_events'],
-        'lost'        => ['label'=>'Kalah',       'color'=>'#ef4444','icon'=>'cancel'],
+        'call_meeting'=> ['label'=>'Call/Meeting','color'=>'#38bdf8','icon'=>'phone_in_talk'],
+        'prospecting' => ['label'=>'Prospekting','color'=>'#0ea5e9','icon'=>'radar'],
+        'proposal'    => ['label'=>'Proposal',   'color'=>'#0284c7','icon'=>'description'],
+        'negotiation' => ['label'=>'Negosiasi',  'color'=>'#0369a1','icon'=>'handshake'],
+        'won'         => ['label'=>'Menang',     'color'=>'#10b981','icon'=>'emoji_events'],
+        'lost'        => ['label'=>'Kalah',      'color'=>'#ef4444','icon'=>'cancel'],
     ];
     @endphp
-    <div class="kanban-summary-bar grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div class="kanban-summary-bar grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         @foreach($stages as $s)
         @php $c = $stageConf[$s]; $col = $kanban[$s]; @endphp
         <div class="cc-card px-4 py-3 flex items-center gap-3">
@@ -329,7 +333,7 @@
             $c = $stageConf[$stage];
             $col = $kanban[$stage];
             $opps = $col['opportunities'];
-            $stageClass = ['prospecting'=>'stage-pro','proposal'=>'stage-prop','negotiation'=>'stage-neg','won'=>'stage-won','lost'=>'stage-lost'][$stage];
+            $stageClass = ['call_meeting'=>'stage-call','prospecting'=>'stage-pro','proposal'=>'stage-prop','negotiation'=>'stage-neg','won'=>'stage-won','lost'=>'stage-lost'][$stage];
             @endphp
 
             <div class="kanban-column" x-show="filterStage === '' || filterStage === '{{ $stage }}'">
@@ -489,8 +493,8 @@
             <tbody>
                 @php
                 $allOpps = collect($kanban)->flatMap(fn($col) => $col['opportunities'])->sortByDesc('estimated_value');
-                $stageColors = ['prospecting'=>['bg'=>'rgba(59,130,246,0.15)','color'=>'#3b82f6'],'proposal'=>['bg'=>'rgba(245,158,11,0.15)','color'=>'#f59e0b'],'negotiation'=>['bg'=>'rgba(249,115,22,0.15)','color'=>'#f97316'],'won'=>['bg'=>'rgba(16,185,129,0.15)','color'=>'#10b981'],'lost'=>['bg'=>'rgba(239,68,68,0.12)','color'=>'#ef4444']];
-                $stageLabels = ['prospecting'=>'Prospekting','proposal'=>'Proposal','negotiation'=>'Negosiasi','won'=>'Menang','lost'=>'Kalah'];
+                $stageColors = ['call_meeting'=>['bg'=>'rgba(20,104,168,0.05)','color'=>'#38bdf8'],'prospecting'=>['bg'=>'rgba(20,104,168,0.10)','color'=>'#0ea5e9'],'proposal'=>['bg'=>'rgba(20,104,168,0.15)','color'=>'#0284c7'],'negotiation'=>['bg'=>'rgba(20,104,168,0.20)','color'=>'#0369a1'],'won'=>['bg'=>'rgba(16,185,129,0.15)','color'=>'#10b981'],'lost'=>['bg'=>'rgba(239,68,68,0.12)','color'=>'#ef4444']];
+                $stageLabels = ['call_meeting'=>'Call/Meeting','prospecting'=>'Prospekting','proposal'=>'Proposal','negotiation'=>'Negosiasi','won'=>'Menang','lost'=>'Kalah'];
                 @endphp
                 @forelse($allOpps as $opp)
                 @php

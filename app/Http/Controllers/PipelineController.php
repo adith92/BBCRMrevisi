@@ -18,11 +18,15 @@ class PipelineController extends Controller
     {
         $user = auth()->user();
 
-        $stages = ['prospecting', 'proposal', 'negotiation', 'won', 'lost'];
+        $stages = ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost'];
 
         // Build base query scoped by role
         $baseQuery = Opportunity::with(['client', 'sales', 'product', 'activityLogs'])
-            ->when($user->isSales(), fn ($q) => $q->where('sales_id', $user->id));
+            ->when($user->isSales(), fn ($q) => $q->where('sales_id', $user->id))
+            ->when($user->isManager(), function ($q) use ($user) {
+                $teamIds = User::where('manager_id', $user->id)->where('role', 'sales')->pluck('id');
+                $q->whereIn('sales_id', $teamIds);
+            });
 
         // Filter by sales (manager/gm/director only)
         if (!$user->isSales() && $request->filled('filter_sales')) {

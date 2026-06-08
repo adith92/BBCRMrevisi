@@ -98,12 +98,12 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Stage</label>
                 <select
                     name="stage"
-                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer bg-white"
+                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 text-slate-500 cursor-not-allowed"
+                    disabled
                 >
-                    <option value="prospecting" {{ old('stage','prospecting') === 'prospecting' ? 'selected' : '' }}>Prospekting</option>
-                    <option value="proposal"    {{ old('stage') === 'proposal' ? 'selected' : '' }}>Proposal</option>
-                    <option value="negotiation" {{ old('stage') === 'negotiation' ? 'selected' : '' }}>Negosiasi</option>
+                    <option value="call_meeting" selected>Call/Meeting</option>
                 </select>
+                <input type="hidden" name="stage" value="call_meeting">
             </div>
         </div>
 

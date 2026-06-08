@@ -13,20 +13,21 @@ class PipelineService
      * Any stage can move to any other — won/lost are soft exits only.
      */
     protected array $allStages = [
-        'prospecting', 'proposal', 'negotiation', 'won', 'lost',
+        'call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost',
     ];
 
     /**
      * @deprecated Kept for backward compat; use $allStages for kanban.
      */
     protected array $transitions = [
-        'prospecting'   => ['proposal', 'negotiation', 'won', 'lost'],
-        'proposal'      => ['prospecting', 'negotiation', 'won', 'lost'],
-        'negotiation'   => ['prospecting', 'proposal', 'won', 'lost'],
-        'won'           => ['prospecting', 'proposal', 'negotiation', 'lost'],
-        'lost'          => ['prospecting', 'proposal', 'negotiation', 'won'],
-        'qualification' => ['prospecting', 'proposal', 'negotiation', 'won', 'lost'],
-        'closed'        => ['prospecting', 'proposal', 'negotiation', 'won', 'lost'],
+        'call_meeting'  => ['prospecting', 'proposal', 'negotiation', 'won', 'lost'],
+        'prospecting'   => ['call_meeting', 'proposal', 'negotiation', 'won', 'lost'],
+        'proposal'      => ['call_meeting', 'prospecting', 'negotiation', 'won', 'lost'],
+        'negotiation'   => ['call_meeting', 'prospecting', 'proposal', 'won', 'lost'],
+        'won'           => ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'lost'],
+        'lost'          => ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won'],
+        'qualification' => ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost'],
+        'closed'        => ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost'],
     ];
 
     /**

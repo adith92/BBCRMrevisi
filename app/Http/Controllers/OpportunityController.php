@@ -35,6 +35,13 @@ class OpportunityController extends Controller
                 fn ($q) => $q->where('sales_id', $user->id)
             )
             ->when(
+                $user->isManager(),
+                function ($q) use ($user) {
+                    $teamIds = User::where('manager_id', $user->id)->where('role', 'sales')->pluck('id');
+                    $q->whereIn('sales_id', $teamIds);
+                }
+            )
+            ->when(
                 $request->filled('stage'),
                 fn ($q) => $q->where('stage', $request->stage)
             )
@@ -89,21 +96,18 @@ class OpportunityController extends Controller
             'title'               => 'required|string|max:255',
             'client_id'           => 'required|exists:clients,id',
             'product_id'          => 'nullable|exists:products,id',
-            'stage'               => 'in:prospecting,proposal,negotiation,won,lost',
+            'stage'               => 'in:call_meeting,prospecting,proposal,negotiation,won,lost',
             'estimated_value'     => 'nullable|numeric|min:0',
             'pax'                 => 'nullable|integer|min:1',
             'expected_close_date' => 'nullable|date',
             'notes'               => 'nullable|string',
         ]);
 
-        // Force sales role to own record; manager/gm/director may assign
-        if ($user->isSales()) {
-            $validated['sales_id'] = $user->id;
-        } else {
-            $validated['sales_id'] = $request->input('sales_id', $user->id);
-        }
+        // Force sales role to own record; managers/GMs shouldn't be creating them based on spec
+        abort_if(! $user->isSales(), 403, 'Hanya Sales yang dapat membuat Opportunity baru.');
+        $validated['sales_id'] = $user->id;
 
-        $validated['stage'] = $validated['stage'] ?? 'prospecting';
+        $validated['stage'] = 'call_meeting';
 
         $opportunity = Opportunity::create($validated);
 
@@ -161,7 +165,7 @@ class OpportunityController extends Controller
             'title'               => 'required|string|max:255',
             'client_id'           => 'required|exists:clients,id',
             'product_id'          => 'nullable|exists:products,id',
-            'stage'               => 'required|in:prospecting,proposal,negotiation,won,lost',
+            'stage'               => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
             'estimated_value'     => 'nullable|numeric|min:0',
             'final_value'         => 'nullable|numeric|min:0',
             'pax'                 => 'nullable|integer|min:1',
@@ -227,7 +231,7 @@ class OpportunityController extends Controller
         $this->authorizeEdit($opportunity);
 
         $validated = $request->validate([
-            'stage'       => 'required|in:prospecting,proposal,negotiation,won,lost',
+            'stage'       => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
             'lost_reason' => 'required_if:stage,lost|nullable|string',
             'notes'       => 'nullable|string',
         ]);
@@ -313,7 +317,7 @@ class OpportunityController extends Controller
         $this->authorizeEdit($opportunity);
 
         $validated = $request->validate([
-            'stage'       => 'required|in:prospecting,proposal,negotiation,won,lost',
+            'stage'       => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
             'lost_reason' => 'nullable|string|max:500',
         ]);
 
@@ -439,8 +443,8 @@ class OpportunityController extends Controller
     protected function authorizeEdit(Opportunity $opportunity): void
     {
         $user = auth()->user();
-        if ($user->isSales() && $opportunity->sales_id !== $user->id) {
-            abort(403);
+        if ($user->role !== 'sales' || $opportunity->sales_id !== $user->id) {
+            abort(403, 'Akses ditolak: Hanya Sales pemilik yang dapat mengedit.');
         }
     }
 }

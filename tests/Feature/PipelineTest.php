@@ -66,7 +66,7 @@ class PipelineTest extends TestCase
         $this->assertDatabaseHas('opportunities', [
             'title'    => 'New Fleet Deal',
             'sales_id' => $sales->id,
-            'stage'    => 'prospecting',
+            'stage'    => 'call_meeting',
         ]);
     }
 

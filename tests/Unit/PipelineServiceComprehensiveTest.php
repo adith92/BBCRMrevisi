@@ -23,49 +23,49 @@ class PipelineServiceComprehensiveTest extends TestCase
     {
         $stages = $this->service->getNextStages('prospecting');
 
-        expect($stages)->toBe(['proposal', 'negotiation', 'won', 'lost']);
+        expect($stages)->toBe(['call_meeting', 'proposal', 'negotiation', 'won', 'lost']);
     }
 
     public function test_get_next_stages_from_qualification()
     {
         $stages = $this->service->getNextStages('qualification');
 
-        expect($stages)->toBe(['prospecting', 'proposal', 'negotiation', 'won', 'lost']);
+        expect($stages)->toBe(['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost']);
     }
 
     public function test_get_next_stages_from_proposal()
     {
         $stages = $this->service->getNextStages('proposal');
 
-        expect($stages)->toBe(['prospecting', 'negotiation', 'won', 'lost']);
+        expect($stages)->toBe(['call_meeting', 'prospecting', 'negotiation', 'won', 'lost']);
     }
 
     public function test_get_next_stages_from_negotiation()
     {
         $stages = $this->service->getNextStages('negotiation');
 
-        expect($stages)->toBe(['prospecting', 'proposal', 'won', 'lost']);
+        expect($stages)->toBe(['call_meeting', 'prospecting', 'proposal', 'won', 'lost']);
     }
 
     public function test_get_next_stages_from_won()
     {
         $stages = $this->service->getNextStages('won');
 
-        expect($stages)->toBe(['prospecting', 'proposal', 'negotiation', 'lost']);
+        expect($stages)->toBe(['call_meeting', 'prospecting', 'proposal', 'negotiation', 'lost']);
     }
 
     public function test_get_next_stages_from_lost()
     {
         $stages = $this->service->getNextStages('lost');
 
-        expect($stages)->toBe(['prospecting', 'proposal', 'negotiation', 'won']);
+        expect($stages)->toBe(['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won']);
     }
 
     public function test_get_next_stages_from_closed()
     {
         $stages = $this->service->getNextStages('closed');
 
-        expect($stages)->toBe(['prospecting', 'proposal', 'negotiation', 'won', 'lost']);
+        expect($stages)->toBe(['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost']);
     }
 
     public function test_get_next_stages_from_invalid_stage_returns_empty()
@@ -239,11 +239,11 @@ class PipelineServiceComprehensiveTest extends TestCase
     {
         // Won has valid next states in free movement
         $wonStages = $this->service->getNextStages('won');
-        expect($wonStages)->toBe(['prospecting', 'proposal', 'negotiation', 'lost']);
+        expect($wonStages)->toBe(['call_meeting', 'prospecting', 'proposal', 'negotiation', 'lost']);
 
         // Lost has valid next states in free movement
         $lostStages = $this->service->getNextStages('lost');
-        expect($lostStages)->toBe(['prospecting', 'proposal', 'negotiation', 'won']);
+        expect($lostStages)->toBe(['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won']);
     }
 
     // =========================================================================
@@ -282,10 +282,10 @@ class PipelineServiceComprehensiveTest extends TestCase
     public function test_all_valid_transitions_defined()
     {
         // Free movement kanban: every stage can reach every other stage
-        $reachableFromProspecting = ['proposal', 'negotiation', 'won', 'lost'];
-        $reachableFromQualification = ['prospecting', 'proposal', 'negotiation', 'won', 'lost'];
-        $reachableFromProposal = ['prospecting', 'negotiation', 'won', 'lost'];
-        $reachableFromNegotiation = ['prospecting', 'proposal', 'won', 'lost'];
+        $reachableFromProspecting = ['call_meeting', 'proposal', 'negotiation', 'won', 'lost'];
+        $reachableFromQualification = ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost'];
+        $reachableFromProposal = ['call_meeting', 'prospecting', 'negotiation', 'won', 'lost'];
+        $reachableFromNegotiation = ['call_meeting', 'prospecting', 'proposal', 'won', 'lost'];
 
         expect($this->service->getNextStages('prospecting'))->toBe($reachableFromProspecting);
         expect($this->service->getNextStages('qualification'))->toBe($reachableFromQualification);
