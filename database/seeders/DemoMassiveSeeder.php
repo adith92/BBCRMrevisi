@@ -228,7 +228,7 @@ class DemoMassiveSeeder extends Seeder
         $clientIds  = Client::pluck('id')->toArray();
         $salesIds   = User::where('role', 'sales')->pluck('id')->toArray();
         $productIds = Product::pluck('id')->toArray();
-        $stages     = ['prospecting', 'prospecting', 'prospecting', 'proposal', 'proposal', 'negotiation', 'won', 'lost'];
+        $stages     = ['prospecting', 'prospecting', 'call_meeting', 'call_meeting', 'proposal', 'proposal', 'negotiation', 'won', 'lost'];
 
         if (empty($clientIds)) { $this->command->warn('No clients, skip opportunities.'); return; }
         if (empty($salesIds))  $salesIds = [1];

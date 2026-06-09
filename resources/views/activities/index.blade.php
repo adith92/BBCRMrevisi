@@ -49,7 +49,7 @@
     @endif
 
     {{-- Type Filter Tabs --}}
-    <div class="bg-white rounded-xl border border-gray-200 mb-4">
+    <div class="cc-card rounded-xl border border-gray-200 mb-4">
         <div class="flex overflow-x-auto">
             @php
                 $types = [
@@ -82,7 +82,7 @@
             {{-- Sales filter (non-sales roles) --}}
             @if(isset($salesUsers) && $salesUsers->isNotEmpty())
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Sales</label>
+                <label class="block text-xs font-medium text-cc-muted mb-1">Sales</label>
                 <select name="sales_id" class="dark-input text-sm px-3 py-2 rounded-lg min-w-36">
                     <option value="">Semua Sales</option>
                     @foreach($salesUsers as $su)
@@ -93,7 +93,7 @@
             @endif
 
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Klien</label>
+                <label class="block text-xs font-medium text-cc-muted mb-1">Klien</label>
                 <select name="client_id" class="dark-input text-sm px-3 py-2 rounded-lg min-w-36">
                     <option value="">Semua Klien</option>
                     @foreach($clients as $c)
@@ -103,19 +103,19 @@
             </div>
 
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Dari Tanggal</label>
+                <label class="block text-xs font-medium text-cc-muted mb-1">Dari Tanggal</label>
                 <input type="date" name="date_from" value="{{ request('date_from') }}"
                        class="dark-input text-sm px-3 py-2 rounded-lg">
             </div>
 
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Sampai Tanggal</label>
+                <label class="block text-xs font-medium text-cc-muted mb-1">Sampai Tanggal</label>
                 <input type="date" name="date_to" value="{{ request('date_to') }}"
                        class="dark-input text-sm px-3 py-2 rounded-lg">
             </div>
 
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Urutkan</label>
+                <label class="block text-xs font-medium text-cc-muted mb-1">Urutkan</label>
                 <select name="sort_by" class="dark-input text-sm px-3 py-2 rounded-lg">
                     <option value="newest"  {{ ($sortBy ?? 'newest') === 'newest'  ? 'selected' : '' }}>Terbaru</option>
                     <option value="oldest"  {{ ($sortBy ?? '') === 'oldest'  ? 'selected' : '' }}>Terlama</option>
@@ -125,7 +125,7 @@
             </div>
 
             <button type="submit" class="btn-primary text-sm px-4 py-2">Filter</button>
-            <a href="{{ route('activities.index') }}" class="text-slate-500 hover:text-slate-300 text-sm px-3 py-2">Reset</a>
+            <a href="{{ route('activities.index') }}" class="text-cc-muted hover:text-cc font-medium text-sm px-3 py-2">Reset</a>
         </form>
     </div>
 
@@ -134,7 +134,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-white/5 text-[11px] uppercase text-slate-500 font-semibold">
+                    <tr class="border-b border-[var(--cc-border)] text-[11px] uppercase text-cc-muted font-semibold">
                         <th class="text-left px-4 py-3">Tanggal</th>
                         <th class="text-left px-4 py-3">Tipe</th>
                         <th class="text-left px-4 py-3">Klien</th>
@@ -147,7 +147,7 @@
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">
+                <tbody class="divide-y divide-[var(--cc-border)]">
                     @forelse($activities as $activity)
                     @php
                         $typeBadge = match($activity->type) {
@@ -155,15 +155,15 @@
                             'call'      => ['bg-green-900/40 text-green-300',  '📞', 'Panggilan'],
                             'visit'     => ['bg-purple-900/40 text-purple-300','🚗', 'Kunjungan'],
                             'follow_up' => ['bg-yellow-900/40 text-yellow-300','🔄', 'Follow-up'],
-                            'email'     => ['bg-slate-700/60 text-slate-300',  '📧', 'Email'],
+                            'email'     => ['bg-slate-700/60 text-cc font-medium',  '📧', 'Email'],
                             'demo'      => ['bg-indigo-900/40 text-indigo-300','💻', 'Demo'],
-                            default     => ['bg-slate-700/60 text-slate-300',  '📌', ucfirst($activity->type)],
+                            default     => ['bg-slate-700/60 text-cc font-medium',  '📌', ucfirst($activity->type)],
                         };
                     @endphp
-                    <tr class="hover:bg-white/5 transition-colors">
+                    <tr class="hover:bg-[var(--cc-row-hover)] transition-colors">
                         <td class="px-4 py-3 whitespace-nowrap">
-                            <div class="font-medium text-slate-200">{{ $activity->activity_date->format('d M Y') }}</div>
-                            <div class="text-xs text-slate-500">{{ $activity->activity_date->format('H:i') }}</div>
+                            <div class="font-medium text-cc font-medium">{{ $activity->activity_date->format('d M Y') }}</div>
+                            <div class="text-xs text-cc-muted">{{ $activity->activity_date->format('H:i') }}</div>
                         </td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold {{ $typeBadge[0] }}">
@@ -172,47 +172,47 @@
                         </td>
                         <td class="px-4 py-3">
                             @if($activity->client)
-                            <div class="font-medium text-slate-200">{{ $activity->client->company_name }}</div>
-                            <div class="text-xs text-slate-500">{{ $activity->client->pic_name }}</div>
+                            <div class="font-medium text-cc font-medium">{{ $activity->client->company_name }}</div>
+                            <div class="text-xs text-cc-muted">{{ $activity->client->pic_name }}</div>
                             @else
-                            <span class="text-slate-600 text-xs">—</span>
+                            <span class="text-cc-muted text-xs">—</span>
                             @endif
                         </td>
                         <td class="px-4 py-3">
                             @if($activity->opportunity)
                             <a href="{{ route('opportunities.show', $activity->opportunity_id) }}"
                                class="text-blue-400 hover:underline text-xs font-mono">{{ $activity->opportunity->opp_number }}</a>
-                            <div class="text-xs text-slate-500 truncate max-w-28">{{ $activity->opportunity->title }}</div>
+                            <div class="text-xs text-cc-muted truncate max-w-28">{{ $activity->opportunity->title }}</div>
                             @else
-                            <span class="text-slate-600 text-xs">—</span>
+                            <span class="text-cc-muted text-xs">—</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 max-w-xs">
-                            <div class="font-medium text-slate-200 truncate">{{ $activity->subject }}</div>
+                            <div class="font-medium text-cc font-medium truncate">{{ $activity->subject }}</div>
                             @if($activity->outcome)
-                            <div class="text-xs text-slate-500 truncate mt-0.5">{{ Str::limit($activity->outcome, 60) }}</div>
+                            <div class="text-xs text-cc-muted truncate mt-0.5">{{ Str::limit($activity->outcome, 60) }}</div>
                             @endif
                             @if($activity->duration_minutes)
-                            <div class="text-xs text-slate-600 mt-0.5">⏱ {{ $activity->duration_minutes }} menit</div>
+                            <div class="text-xs text-cc-muted mt-0.5">⏱ {{ $activity->duration_minutes }} menit</div>
                             @endif
                         </td>
                         <td class="px-4 py-3">
                             @if($activity->next_action)
-                            <div class="text-xs text-slate-400">{{ Str::limit($activity->next_action, 50) }}</div>
+                            <div class="text-xs text-cc-muted">{{ Str::limit($activity->next_action, 50) }}</div>
                             @if($activity->next_action_date)
                             @php
                                 $daysLeft = now()->startOfDay()->diffInDays($activity->next_action_date, false);
-                                $dateColor = $daysLeft < 0 ? 'text-red-400 font-semibold' : ($daysLeft <= 2 ? 'text-orange-400 font-medium' : 'text-slate-500');
+                                $dateColor = $daysLeft < 0 ? 'text-red-400 font-semibold' : ($daysLeft <= 2 ? 'text-orange-400 font-medium' : 'text-cc-muted');
                             @endphp
                             <div class="text-xs {{ $dateColor }} mt-0.5">{{ $activity->next_action_date->format('d M Y') }}</div>
                             @endif
                             @else
-                            <span class="text-slate-600 text-xs">—</span>
+                            <span class="text-cc-muted text-xs">—</span>
                             @endif
                         </td>
                         @if(!auth()->user()->isSales())
                         <td class="px-4 py-3">
-                            <div class="text-xs text-slate-400">{{ $activity->sales?->name ?? '—' }}</div>
+                            <div class="text-xs text-cc-muted">{{ $activity->sales?->name ?? '—' }}</div>
                         </td>
                         @endif
                         <td class="px-4 py-3 text-right">
@@ -233,9 +233,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isSales() ? 7 : 8 }}" class="px-4 py-12 text-center text-slate-500">
+                        <td colspan="{{ auth()->user()->isSales() ? 7 : 8 }}" class="px-4 py-12 text-center text-cc-muted">
                             <div class="text-4xl mb-3">📋</div>
-                            <div class="font-medium text-slate-300">Belum ada aktivitas tercatat</div>
+                            <div class="font-medium text-cc font-medium">Belum ada aktivitas tercatat</div>
                             <div class="text-sm mt-1">Mulai catat aktivitas pertama Anda</div>
                             <a href="{{ route('activities.create') }}"
                                class="inline-block mt-3 btn-primary text-sm font-medium px-4 py-2 rounded-lg">
@@ -249,7 +249,7 @@
         </div>
 
         @if($activities->hasPages())
-        <div class="px-4 py-3 border-t border-white/5">
+        <div class="px-4 py-3 border-t border-[var(--cc-border)]">
             {{ $activities->links() }}
         </div>
         @endif

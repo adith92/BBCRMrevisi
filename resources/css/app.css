@@ -87,8 +87,18 @@ html.dark {
 
 @layer components {
 
-    /* ===== LAYOUT ===== */
+    /* ===== LAYOUT & CARDS ===== */
     .app-shell { transition: all var(--theme-speed) ease; }
+    
+    .cc-card {
+        background: var(--cc-card);
+        color: var(--cc-text);
+        border-color: var(--cc-border);
+        transition: background var(--theme-speed) ease, border-color var(--theme-speed) ease, color var(--theme-speed) ease;
+    }
+    
+    .text-cc { color: var(--cc-text); }
+    .text-cc-muted { color: var(--cc-text-muted); }
 
     /* ===== SIDEBAR ===== */
     .sidebar {

@@ -48,7 +48,7 @@
 </div>
 
 {{-- Revenue Chart --}}
-<div class="bg-white rounded-lg shadow p-6 mb-6">
+<div class="cc-card rounded-lg shadow p-6 mb-6">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold text-gray-900">Revenue Trend</h3>
         <div class="flex gap-2 text-sm">
@@ -67,7 +67,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
     {{-- Assigned Clients --}}
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="cc-card rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Assigned Clients</h3>
             <a href="{{ route('clients.index') }}" class="text-blue-600 hover:text-blue-800 text-sm">View all →</a>
@@ -94,7 +94,7 @@
     </div>
 
     {{-- Recent Bookings --}}
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="cc-card rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Recent Bookings</h3>
             <a href="{{ route('bookings.index', ['sales_id' => $user->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm">View all →</a>

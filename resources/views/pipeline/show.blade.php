@@ -61,7 +61,7 @@ $stageBadge = [
     @endif
 
     {{-- Header --}}
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+    <div class="cc-card rounded-2xl border border-slate-100 shadow-sm p-6">
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
                 <div class="flex items-center gap-3 flex-wrap">
@@ -127,7 +127,7 @@ $stageBadge = [
                         'bg-emerald-500 border-emerald-500 text-white' => $stageIndex > $idx,
                         'bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100' => $stageIndex === $idx && $opportunity->stage !== 'lost',
                         'bg-red-500 border-red-500 text-white' => $opportunity->stage === 'lost',
-                        'bg-white border-slate-200 text-slate-400' => $stageIndex < $idx && $opportunity->stage !== 'lost',
+                        'cc-card border-slate-200 text-slate-400' => $stageIndex < $idx && $opportunity->stage !== 'lost',
                     ])>
                         @if($stageIndex > $idx)
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +160,7 @@ $stageBadge = [
     </div>
 
     {{-- Advance Stage Form --}}
-    <div x-show="showAdvanceForm" x-transition class="bg-white rounded-2xl border border-blue-100 shadow-sm p-6">
+    <div x-show="showAdvanceForm" x-transition class="cc-card rounded-2xl border border-blue-100 shadow-sm p-6">
         <h3 class="text-sm font-bold text-slate-800 mb-4">Advance Stage</h3>
         <form action="{{ route('opportunities.advance-stage', $opportunity->id) }}" method="POST">
             @csrf
@@ -186,7 +186,7 @@ $stageBadge = [
     </div>
 
     {{-- Mark Lost Form --}}
-    <div x-show="showLostForm" x-transition class="bg-white rounded-2xl border border-red-100 shadow-sm p-6">
+    <div x-show="showLostForm" x-transition class="cc-card rounded-2xl border border-red-100 shadow-sm p-6">
         <h3 class="text-sm font-bold text-red-700 mb-4">Tandai sebagai Kalah</h3>
         <form action="{{ route('opportunities.advance-stage', $opportunity->id) }}" method="POST">
             @csrf
@@ -208,7 +208,7 @@ $stageBadge = [
         {{-- Left: Opportunity Info --}}
         <div class="lg:col-span-1 space-y-5">
 
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div class="cc-card rounded-2xl border border-slate-100 shadow-sm p-5">
                 <h2 class="text-sm font-bold text-slate-700 mb-4">Informasi Deal</h2>
                 <dl class="space-y-3">
                     @if($opportunity->product)
@@ -305,7 +305,7 @@ $stageBadge = [
 
             {{-- Notes --}}
             @if($opportunity->notes)
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div class="cc-card rounded-2xl border border-slate-100 shadow-sm p-5">
                 <h2 class="text-sm font-bold text-slate-700 mb-3">Catatan</h2>
                 <p class="text-sm text-slate-600 leading-relaxed">{{ $opportunity->notes }}</p>
             </div>
@@ -318,7 +318,7 @@ $stageBadge = [
 
             {{-- Approval Requests --}}
             @if($approvalRequests->isNotEmpty())
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div class="cc-card rounded-2xl border border-slate-100 shadow-sm p-5">
                 <h2 class="text-sm font-bold text-slate-700 mb-4">Approval Diskon</h2>
                 <div class="space-y-3">
                     @foreach($approvalRequests as $ar)
@@ -358,7 +358,7 @@ $stageBadge = [
             @endif
 
             {{-- Activity Logs --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div class="cc-card rounded-2xl border border-slate-100 shadow-sm p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-sm font-bold text-slate-700">Log Aktivitas</h2>
                     <a href="{{ route('activities.create', ['opportunity_id' => $opportunity->id]) }}"

@@ -10,7 +10,7 @@
 ]" />
 
 {{-- Hero --}}
-<div class="bg-white rounded-lg shadow p-6 mb-6">
+<div class="cc-card rounded-lg shadow p-6 mb-6">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h2 class="text-2xl font-bold text-gray-900">{{ $client->company_name }}</h2>
@@ -71,7 +71,7 @@
 </div>
 
 {{-- Booking History --}}
-<div class="bg-white rounded-lg shadow p-6 mb-6">
+<div class="cc-card rounded-lg shadow p-6 mb-6">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold text-gray-900">Booking History</h3>
         <a href="{{ route('bookings.index', ['client_id' => $client->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View all →</a>
@@ -125,7 +125,7 @@
 </div>
 
 {{-- Invoice Summary --}}
-<div class="bg-white rounded-lg shadow p-6 mb-6">
+<div class="cc-card rounded-lg shadow p-6 mb-6">
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Invoice History</h3>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -159,7 +159,7 @@
 
 {{-- Meeting Logs --}}
 @if($client->meetingLogs->count())
-<div class="bg-white rounded-lg shadow p-6">
+<div class="cc-card rounded-lg shadow p-6">
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Meeting Log</h3>
     <div class="space-y-3">
         @foreach($client->meetingLogs->sortByDesc('meeting_date')->take(5) as $meeting)

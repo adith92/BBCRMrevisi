@@ -72,6 +72,15 @@ class SalesTargetController extends Controller
         // Overall achievement (average of all KPIs for own target)
         $overallScore = $this->computeOverallScore($ownTarget);
 
+        // Data for Radar Chart (Competency)
+        $radarData = [
+            $ownTarget->target_meetings > 0 ? min(100, round(($ownTarget->actual_meetings / $ownTarget->target_meetings) * 100)) : 0,
+            $ownTarget->target_calls > 0 ? min(100, round(($ownTarget->actual_calls / $ownTarget->target_calls) * 100)) : 0,
+            $ownTarget->target_visits > 0 ? min(100, round(($ownTarget->actual_visits / $ownTarget->target_visits) * 100)) : 0,
+            $ownTarget->target_opportunities > 0 ? min(100, round(($ownTarget->actual_opportunities / $ownTarget->target_opportunities) * 100)) : 0,
+            $ownTarget->target_won > 0 ? min(100, round(($ownTarget->actual_won / $ownTarget->target_won) * 100)) : 0,
+        ];
+
         // Sales users list for the "Set Target" modal
         $salesUsers = User::whereIn('role', ['sales', 'manager'])->orderBy('name')->get();
 
@@ -82,6 +91,7 @@ class SalesTargetController extends Controller
             'sortTeam',
             'teamUsers',
             'overallScore',
+            'radarData',
             'salesUsers',
             'year',
             'month'

@@ -29,8 +29,8 @@
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Performa & Target KPI</h1>
-            <p class="text-sm text-gray-500 mt-0.5">{{ $monthNames[$month] }} {{ $year }}</p>
+            <h1 class="text-2xl font-bold text-[var(--cc-text)]">Performa & Target KPI</h1>
+            <p class="text-sm text-[var(--cc-text-muted)] mt-0.5">{{ $monthNames[$month] }} {{ $year }}</p>
         </div>
         <div class="flex items-center gap-3">
             {{-- Month/Year selector --}}
@@ -66,29 +66,29 @@
             <div class="text-blue-200 text-sm font-medium mb-1">Skor Keseluruhan</div>
             <div class="text-4xl font-bold">{{ $overallScore }}%</div>
             <div class="mt-3 bg-blue-500/50 rounded-full h-2">
-                <div class="bg-white rounded-full h-2 transition-all" style="width: {{ min(100, $overallScore) }}%"></div>
+                <div class="cc-card rounded-full h-2 transition-all" style="width: {{ min(100, $overallScore) }}%"></div>
             </div>
             <div class="text-blue-200 text-xs mt-2">Rata-rata pencapaian semua KPI</div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-gray-200 p-5">
-            <div class="text-gray-500 text-sm mb-1">Total Aktivitas</div>
-            <div class="text-3xl font-bold text-gray-900">
+        <div class="cc-card rounded-2xl border border-gray-200 p-5">
+            <div class="text-[var(--cc-text-muted)] text-sm mb-1">Total Aktivitas</div>
+            <div class="text-3xl font-bold text-[var(--cc-text)]">
                 {{ $ownTarget->actual_meetings + $ownTarget->actual_calls + $ownTarget->actual_visits }}
             </div>
             <div class="text-xs text-gray-400 mt-1">Meeting + Panggilan + Kunjungan</div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-gray-200 p-5">
-            <div class="text-gray-500 text-sm mb-1">Deals Won</div>
+        <div class="cc-card rounded-2xl border border-gray-200 p-5">
+            <div class="text-[var(--cc-text-muted)] text-sm mb-1">Deals Won</div>
             <div class="text-3xl font-bold text-green-600">{{ $ownTarget->actual_won }}</div>
             <div class="text-xs text-gray-400 mt-1">dari target {{ $ownTarget->target_won }}</div>
         </div>
     </div>
 
     {{-- KPI Progress Bars --}}
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-        <h3 class="text-lg font-bold text-gray-900 mb-5">Pencapaian KPI Bulan Ini</h3>
+    <div class="cc-card rounded-2xl border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-bold text-[var(--cc-text)] mb-5">Pencapaian KPI Bulan Ini</h3>
 
         <div class="space-y-5">
             @php
@@ -120,11 +120,11 @@
                 <div class="flex items-center justify-between mb-1.5">
                     <div class="flex items-center gap-2">
                         <span class="text-lg">{{ $kpi['icon'] }}</span>
-                        <span class="font-medium text-gray-800 text-sm">{{ $kpi['label'] }}</span>
+                        <span class="font-medium text-[var(--cc-text)] text-sm">{{ $kpi['label'] }}</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="text-sm text-gray-600">
-                            <span class="font-bold text-gray-900">{{ $kpi['actual'] }}</span>
+                        <span class="text-sm text-[var(--cc-text-muted)]">
+                            <span class="font-bold text-[var(--cc-text)]">{{ $kpi['actual'] }}</span>
                             / {{ $kpi['target'] }} {{ $kpi['unit'] }}
                         </span>
                         <span class="text-sm font-bold {{ $pct >= 100 ? 'text-green-600' : ($pct >= 70 ? $c['text'] : 'text-orange-600') }}">
@@ -149,11 +149,11 @@
                 <div class="flex items-center justify-between mb-1.5">
                     <div class="flex items-center gap-2">
                         <span class="text-lg">💰</span>
-                        <span class="font-medium text-gray-800 text-sm">Revenue</span>
+                        <span class="font-medium text-[var(--cc-text)] text-sm">Revenue</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="text-sm text-gray-600">
-                            <span class="font-bold text-gray-900">{{ rupiah($revActual) }}</span>
+                        <span class="text-sm text-[var(--cc-text-muted)]">
+                            <span class="font-bold text-[var(--cc-text)]">{{ rupiah($revActual) }}</span>
                             / {{ rupiah($revTarget) }}
                         </span>
                         <span class="text-sm font-bold {{ $revPct >= 100 ? 'text-green-600' : ($revPct >= 70 ? 'text-blue-700' : 'text-orange-600') }}">
@@ -168,9 +168,21 @@
         </div>
     </div>
 
+    {{-- Radar & Gauge Charts --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-6">
+            <h3 class="text-lg font-bold text-[var(--cc-text)] mb-4">Analisis Kompetensi</h3>
+            <div id="radarChart" class="min-h-[320px] flex justify-center"></div>
+        </div>
+        <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-6">
+            <h3 class="text-lg font-bold text-[var(--cc-text)] mb-4">Skor Pencapaian KPI</h3>
+            <div id="gaugeChart" class="min-h-[320px] flex justify-center items-center"></div>
+        </div>
+    </div>
+
     {{-- Last 6 Months Chart --}}
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Tren 6 Bulan Terakhir</h3>
+    <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-6 mb-6">
+        <h3 class="text-lg font-bold text-[var(--cc-text)] mb-4">Tren 6 Bulan Terakhir</h3>
         <div class="h-64">
             <canvas id="kpiTrendChart"></canvas>
         </div>
@@ -179,14 +191,14 @@
     {{-- Team KPI Table (Manager/GM/Director) --}}
     @if($isManager && $teamUsers->isNotEmpty())
     <div class="cc-card rounded-2xl overflow-hidden mb-6">
-        <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-3">
-            <h3 class="text-[15px] font-bold text-slate-200">KPI Tim Sales — {{ $monthNames[$month] }} {{ $year }}</h3>
+        <div class="px-6 py-4 border-b border-[var(--cc-border)] flex items-center justify-between flex-wrap gap-3">
+            <h3 class="text-[15px] font-bold text-[var(--cc-text)]">KPI Tim Sales — {{ $monthNames[$month] }} {{ $year }}</h3>
             <div class="flex items-center gap-3">
-                <span class="text-sm text-slate-500">{{ $teamUsers->count() }} anggota</span>
+                <span class="text-sm text-[var(--cc-text-muted)]">{{ $teamUsers->count() }} anggota</span>
                 <form method="GET" action="{{ route('kpi.index') }}" class="flex items-center gap-1">
                     <input type="hidden" name="year" value="{{ $year }}">
                     <input type="hidden" name="month" value="{{ $month }}">
-                    <label class="text-xs text-slate-500">Urutkan:</label>
+                    <label class="text-xs text-[var(--cc-text-muted)]">Urutkan:</label>
                     <select name="sort_team" onchange="this.form.submit()"
                             class="dark-input text-[12px] py-1 px-2 rounded-lg ml-1">
                         <option value="revenue" {{ ($sortTeam ?? 'revenue') === 'revenue' ? 'selected' : '' }}>Revenue ↓</option>
@@ -199,7 +211,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-white/5 text-[11px] uppercase text-slate-500 font-semibold">
+                    <tr class="border-b border-[var(--cc-border)] text-[11px] uppercase text-[var(--cc-text-muted)] font-semibold">
                         <th class="text-left px-4 py-3">Sales</th>
                         <th class="text-center px-3 py-3">Meeting</th>
                         <th class="text-center px-3 py-3">Panggilan</th>
@@ -210,7 +222,7 @@
                         <th class="text-center px-4 py-3">Skor</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">
+                <tbody class="divide-y divide-[var(--cc-border)]">
                     @foreach($teamTargets as $tt)
                     @php
                         if (!$tt->user) continue;
@@ -225,25 +237,25 @@
                         $teamScore = count($scores) > 0 ? round(array_sum($scores) / count($scores), 1) : 0;
                         $scoreColor = $teamScore >= 80 ? 'text-green-400 bg-green-900/40' : ($teamScore >= 50 ? 'text-yellow-400 bg-yellow-900/40' : 'text-red-400 bg-red-900/40');
                     @endphp
-                    <tr class="hover:bg-white/3 transition-colors">
+                    <tr class="hover:bg-[var(--cc-row-hover)] transition-colors">
                         <td class="px-4 py-3">
-                            <div class="font-semibold text-slate-200">{{ $tu->name }}</div>
-                            <div class="text-xs text-slate-500 uppercase">{{ $tu->role }}</div>
+                            <div class="font-semibold text-[var(--cc-text)]">{{ $tu->name }}</div>
+                            <div class="text-xs text-[var(--cc-text-muted)] uppercase">{{ $tu->role }}</div>
                         </td>
                         <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-slate-200">{{ $tt->actual_meetings }}</span>
+                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_meetings }}</span>
                             <span class="text-slate-600">/{{ $tt->target_meetings }}</span>
                         </td>
                         <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-slate-200">{{ $tt->actual_calls }}</span>
+                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_calls }}</span>
                             <span class="text-slate-600">/{{ $tt->target_calls }}</span>
                         </td>
                         <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-slate-200">{{ $tt->actual_visits }}</span>
+                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_visits }}</span>
                             <span class="text-slate-600">/{{ $tt->target_visits }}</span>
                         </td>
                         <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-slate-200">{{ $tt->actual_opportunities }}</span>
+                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_opportunities }}</span>
                             <span class="text-slate-600">/{{ $tt->target_opportunities }}</span>
                         </td>
                         <td class="px-3 py-3 text-center">
@@ -251,7 +263,7 @@
                             <span class="text-slate-600">/{{ $tt->target_won }}</span>
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <div class="text-xs font-semibold text-slate-200">{{ rupiah((float)$tt->actual_revenue) }}</div>
+                            <div class="text-xs font-semibold text-[var(--cc-text)]">{{ rupiah((float)$tt->actual_revenue) }}</div>
                             <div class="text-xs text-slate-600">/ {{ rupiah((float)$tt->target_revenue) }}</div>
                         </td>
                         <td class="px-4 py-3 text-center">
@@ -279,7 +291,7 @@
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
          @click.self="showSetTargetModal = false">
 
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
+        <div class="cc-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
              @click.stop>
             <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-5 flex items-center justify-between">
                 <h3 class="text-lg font-bold text-white">Set Target KPI</h3>
@@ -295,7 +307,7 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                     <div class="sm:col-span-1">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Sales / Manager</label>
+                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">Sales / Manager</label>
                         <select name="user_id" x-model="targetUserId" required
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
                             <option value="">-- Pilih --</option>
@@ -305,7 +317,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tahun</label>
+                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">Tahun</label>
                         <select name="period_year" x-model="targetYear" required
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
                             @for($y = now()->year; $y >= now()->year - 2; $y--)
@@ -314,7 +326,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Bulan</label>
+                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">Bulan</label>
                         <select name="period_month" x-model="targetMonth" required
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
                             @foreach($monthNames as $m => $mn)
@@ -337,7 +349,7 @@
                     @endphp
                     @foreach($targetFields as $tf)
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">{{ $tf['icon'] }} {{ $tf['label'] }}</label>
+                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">{{ $tf['icon'] }} {{ $tf['label'] }}</label>
                         <input type="{{ $tf['type'] }}" name="{{ $tf['name'] }}" min="0"
                                placeholder="0"
                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
@@ -347,7 +359,7 @@
 
                 <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                     <button type="button" @click="showSetTargetModal = false"
-                            class="px-5 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                            class="px-5 py-2 text-sm font-medium text-[var(--cc-text-muted)] border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
                         Batal
                     </button>
                     <button type="submit"
@@ -364,6 +376,64 @@
     @endif
 
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var isDark = document.documentElement.classList.contains('dark');
+    var textColor = isDark ? '#94a3b8' : '#64748b';
+    var gridColor = isDark ? '#334155' : '#e2e8f0';
+
+    // Radar Chart
+    var radarOptions = {
+        series: [{
+            name: 'Pencapaian Target (%)',
+            data: {!! json_encode($radarData ?? [0,0,0,0,0]) !!},
+        }],
+        chart: { height: 320, type: 'radar', background: 'transparent', toolbar: { show: false } },
+        labels: ['Meeting', 'Panggilan', 'Kunjungan', 'Opportunity', 'Deals Won'],
+        stroke: { width: 2, colors: ['#3b82f6'] },
+        fill: { opacity: 0.2, colors: ['#3b82f6'] },
+        markers: { size: 4, colors: ['#fff'], strokeColors: '#3b82f6', strokeWidth: 2 },
+        yaxis: { show: false, min: 0, max: 100 },
+        xaxis: {
+            labels: {
+                style: { colors: [textColor, textColor, textColor, textColor, textColor], fontSize: '11px', fontFamily: 'inherit' }
+            }
+        },
+        plotOptions: { radar: { polygons: { strokeColors: gridColor, connectorColors: gridColor } } }
+    };
+    new ApexCharts(document.querySelector("#radarChart"), radarOptions).render();
+
+    // Gauge Chart
+    var gaugeOptions = {
+        series: [{{ $overallScore }}],
+        chart: { type: 'radialBar', height: 350, background: 'transparent' },
+        plotOptions: {
+            radialBar: {
+                startAngle: -135,
+                endAngle: 135,
+                hollow: { margin: 15, size: '65%', background: 'transparent', image: undefined },
+                track: { background: gridColor, strokeWidth: '100%', margin: 0, dropShadow: { enabled: false } },
+                dataLabels: {
+                    show: true,
+                    name: { offsetY: 20, show: true, color: textColor, fontSize: '14px' },
+                    value: { offsetY: -10, color: isDark ? '#fff' : '#1e293b', fontSize: '36px', show: true, formatter: function(val) { return val + "%"; } }
+                }
+            }
+        },
+        fill: {
+            type: 'gradient',
+            gradient: { shade: 'dark', type: 'horizontal', shadeIntensity: 0.5, gradientToColors: ['#10b981'], inverseColors: true, opacityFrom: 1, opacityTo: 1, stops: [0, 100] }
+        },
+        stroke: { lineCap: 'round' },
+        colors: ['#3b82f6'],
+        labels: ['Skor Keseluruhan']
+    };
+    new ApexCharts(document.querySelector("#gaugeChart"), gaugeOptions).render();
+});
+</script>
 
 {{-- Chart.js --}}
 <script>

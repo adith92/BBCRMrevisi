@@ -55,7 +55,7 @@
                 this.productDropdownOpen = false;
             }
         }"
-        class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5"
+        class="cc-card rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5"
     >
         @csrf
 
@@ -83,7 +83,7 @@
                 <select
                     name="client_id"
                     required
-                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer bg-white"
+                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer cc-card"
                 >
                     <option value="">-- Pilih Client --</option>
                     @foreach($clients as $client)
@@ -131,7 +131,7 @@
                 x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
-                class="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden"
+                class="absolute z-20 left-0 right-0 mt-1 cc-card border border-slate-200 rounded-xl shadow-lg overflow-hidden"
             >
                 <template x-for="p in products" :key="p.id">
                     <button
@@ -208,7 +208,7 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Sales</label>
                 <select
                     name="sales_id"
-                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer bg-white"
+                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer cc-card"
                 >
                     <option value="{{ auth()->id() }}">{{ auth()->user()->name }} (saya)</option>
                     @foreach($salesUsers as $su)

@@ -15,7 +15,7 @@
     <div class="lg:col-span-2 space-y-6">
 
         {{-- Header --}}
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="cc-card rounded-lg shadow p-6">
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900 font-mono">{{ $booking->booking_number }}</h2>
@@ -61,7 +61,7 @@
         </div>
 
         {{-- Trip Details --}}
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="cc-card rounded-lg shadow p-6">
             <h3 class="font-semibold text-gray-900 mb-4">Trip Details</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 <div>
@@ -97,7 +97,7 @@
 
         {{-- Notes --}}
         @if($booking->notes)
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="cc-card rounded-lg shadow p-6">
             <h3 class="font-semibold text-gray-900 mb-2">Notes</h3>
             <p class="text-gray-600 text-sm">{{ $booking->notes }}</p>
         </div>
@@ -108,7 +108,7 @@
     <div class="space-y-6">
 
         {{-- Financial --}}
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="cc-card rounded-lg shadow p-6">
             <h3 class="font-semibold text-gray-900 mb-4">Financial</h3>
             <div class="bg-blue-50 rounded-lg p-4 text-center">
                 <p class="text-xs text-gray-500">Booking Price</p>
@@ -132,7 +132,7 @@
         </div>
 
         {{-- Quick Links --}}
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="cc-card rounded-lg shadow p-6">
             <h3 class="font-semibold text-gray-900 mb-4">Quick Links</h3>
             <div class="space-y-2 text-sm">
                 <a href="{{ route('clients.show', $booking->client_id) }}"

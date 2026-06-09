@@ -22,37 +22,37 @@
 
 {{-- Quick Stats Cards --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Total Tersedia</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($stats['available']) }}</p>
+    <div class="cc-card rounded-lg shadow p-4 border-l-4 border-green-500">
+        <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide">Total Tersedia</p>
+        <p class="text-2xl font-bold text-[var(--cc-text)] mt-1">{{ number_format($stats['available']) }}</p>
         <p class="text-xs text-green-600 mt-0.5">voucher aktif</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Sudah Digunakan</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($stats['used']) }}</p>
+    <div class="cc-card rounded-lg shadow p-4 border-l-4 border-blue-500">
+        <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide">Sudah Digunakan</p>
+        <p class="text-2xl font-bold text-[var(--cc-text)] mt-1">{{ number_format($stats['used']) }}</p>
         <p class="text-xs text-blue-600 mt-0.5">voucher terpakai</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Nilai Tersedia</p>
-        <p class="text-lg font-bold text-gray-900 mt-1">Rp {{ number_format((float)$stats['value_available'], 0, ',', '.') }}</p>
+    <div class="cc-card rounded-lg shadow p-4 border-l-4 border-purple-500">
+        <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide">Nilai Tersedia</p>
+        <p class="text-lg font-bold text-[var(--cc-text)] mt-1">Rp {{ number_format((float)$stats['value_available'], 0, ',', '.') }}</p>
         <p class="text-xs text-purple-600 mt-0.5">total denominasi</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-4 border-l-4 border-gray-400">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Kedaluwarsa</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($stats['expired']) }}</p>
-        <p class="text-xs text-gray-500 mt-0.5">voucher expired</p>
+    <div class="cc-card rounded-lg shadow p-4 border-l-4 border-gray-400">
+        <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide">Kedaluwarsa</p>
+        <p class="text-2xl font-bold text-[var(--cc-text)] mt-1">{{ number_format($stats['expired']) }}</p>
+        <p class="text-xs text-[var(--cc-text-muted)] mt-0.5">voucher expired</p>
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow p-6">
+<div class="cc-card rounded-lg shadow p-6">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-            <h2 class="text-xl font-semibold text-gray-900">E-Voucher</h2>
-            <p class="text-sm text-gray-500 mt-0.5">Kelola voucher transportasi klien</p>
+            <h2 class="text-xl font-semibold text-[var(--cc-text)]">E-Voucher</h2>
+            <p class="text-sm text-[var(--cc-text-muted)] mt-0.5">Kelola voucher transportasi klien</p>
         </div>
         @can('role:gm,finance,manager')
         <a href="{{ route('vouchers.create') }}"
@@ -63,7 +63,7 @@
     </div>
 
     {{-- Status Filter Tabs --}}
-    <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
+    <div class="flex flex-wrap gap-2 mb-6 border-b border-[var(--cc-border)] pb-4">
         @php
         $tabs = [
             ''          => 'Semua',
@@ -76,7 +76,7 @@
         @foreach($tabs as $val => $label)
         <a href="{{ route('vouchers.index', ['status' => $val]) }}"
            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-           {{ $status === $val ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+           {{ $status === $val ? 'bg-blue-600 text-white' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] hover:bg-gray-200' }}">
             {{ $label }}
         </a>
         @endforeach
@@ -85,8 +85,8 @@
     {{-- Table --}}
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b">
-                <tr class="text-gray-600 text-left">
+            <thead class="bg-[var(--cc-bg-muted)] border-b">
+                <tr class="text-[var(--cc-text-muted)] text-left">
                     <th class="py-3 px-4">Kode Voucher</th>
                     <th class="py-3 px-4">Judul</th>
                     <th class="py-3 px-4">Client</th>
@@ -101,26 +101,26 @@
                 @php
                 $isExpiringSoon = $voucher->status === 'available' && $voucher->valid_until->diffInDays(today()) <= 7 && $voucher->valid_until->isFuture();
                 @endphp
-                <tr class="border-b hover:bg-gray-50 transition-colors">
+                <tr class="border-b hover:bg-[var(--cc-row-hover)] transition-colors">
                     <td class="py-3 px-4">
                         {{-- Prominent code for scanning --}}
                         <a href="{{ route('vouchers.show', $voucher) }}"
                            class="inline-flex items-center gap-2 group">
-                            <span class="font-mono font-bold text-gray-900 text-base tracking-widest group-hover:text-blue-600 transition-colors">
+                            <span class="font-mono font-bold text-[var(--cc-text)] text-base tracking-widest group-hover:text-blue-600 transition-colors">
                                 {{ $voucher->voucher_code }}
                             </span>
                             <span class="text-gray-400 text-xs">📱</span>
                         </a>
                         <div class="text-xs text-gray-400 mt-0.5">Issued: {{ $voucher->issuedBy?->name ?? '—' }}</div>
                     </td>
-                    <td class="py-3 px-4 text-gray-700">{{ $voucher->title }}</td>
-                    <td class="py-3 px-4 text-gray-600">
+                    <td class="py-3 px-4 text-[var(--cc-text)]">{{ $voucher->title }}</td>
+                    <td class="py-3 px-4 text-[var(--cc-text-muted)]">
                         {{ $voucher->client?->company_name ?? '<em class="text-gray-400">Umum</em>' }}
                     </td>
-                    <td class="py-3 px-4 text-right font-semibold text-gray-900">
+                    <td class="py-3 px-4 text-right font-semibold text-[var(--cc-text)]">
                         Rp {{ number_format((float)$voucher->denomination, 0, ',', '.') }}
                     </td>
-                    <td class="py-3 px-4 text-xs text-gray-600">
+                    <td class="py-3 px-4 text-xs text-[var(--cc-text-muted)]">
                         <div>{{ $voucher->valid_from->format('d M Y') }}</div>
                         <div class="text-gray-400">s/d {{ $voucher->valid_until->format('d M Y') }}
                             @if($isExpiringSoon)
@@ -133,9 +133,9 @@
                         $badge = match($voucher->status) {
                             'available' => 'bg-green-100 text-green-700',
                             'used'      => 'bg-blue-100 text-blue-700',
-                            'expired'   => 'bg-gray-100 text-gray-500',
+                            'expired'   => 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)]',
                             'cancelled' => 'bg-red-100 text-red-600',
-                            default     => 'bg-gray-100 text-gray-500',
+                            default     => 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)]',
                         };
                         $statusLabel = match($voucher->status) {
                             'available' => 'Tersedia',
@@ -158,7 +158,7 @@
                                 @csrf
                                 <button type="submit"
                                         onclick="return confirm('Expire voucher {{ $voucher->voucher_code }}?')"
-                                        class="text-gray-500 hover:text-red-600 text-xs hover:underline">
+                                        class="text-[var(--cc-text-muted)] hover:text-red-600 text-xs hover:underline">
                                     Expire
                                 </button>
                             </form>

@@ -7,7 +7,7 @@
 
     {{-- Team Overview Cards --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <div class="cc-card rounded-xl border border-gray-200 p-5 shadow-sm">
             <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Pipeline Tim</p>
             <p class="text-2xl font-bold text-blue-700 mt-1">
                 Rp {{ number_format($teamPipelineValue, 0, ',', '.') }}
@@ -15,13 +15,13 @@
             <p class="text-xs text-gray-400 mt-1">Total value aktif</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <div class="cc-card rounded-xl border border-gray-200 p-5 shadow-sm">
             <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Won (All Time)</p>
             <p class="text-2xl font-bold text-green-600 mt-1">{{ $teamWon }}</p>
             <p class="text-xs text-gray-400 mt-1">{{ $teamLost }} lost</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <div class="cc-card rounded-xl border border-gray-200 p-5 shadow-sm">
             <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Approval Level-1</p>
             <p class="text-2xl font-bold {{ $pendingApprovals > 0 ? 'text-red-600' : 'text-gray-700' }} mt-1">
                 {{ $pendingApprovals }}
@@ -29,11 +29,17 @@
             <p class="text-xs text-gray-400 mt-1">Menunggu keputusan Anda</p>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <div class="cc-card rounded-xl border border-gray-200 p-5 shadow-sm">
             <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Anggota Tim</p>
-            <p class="text-2xl font-bold text-gray-700 mt-1">{{ $teamMembers->count() }}</p>
+            <p class="text-2xl font-bold text-gray-700 mt-1" style="color:var(--cc-text)">{{ $teamMembers->count() }}</p>
             <p class="text-xs text-gray-400 mt-1">Sales aktif</p>
         </div>
+    </div>
+
+    {{-- Charts Section --}}
+    <div class="cc-card rounded-xl border border-gray-200 shadow-sm p-5 mb-6">
+        <h3 class="font-semibold text-gray-800 mb-4" style="color:var(--cc-text)">Revenue Trend (6 Months) - Seluruh Tim</h3>
+        <div id="revenueChart" class="min-h-[300px]"></div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -41,7 +47,7 @@
         {{-- Pipeline Stage Bars per Sales --}}
         <div class="lg:col-span-2 space-y-6">
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100">
                     <h3 class="font-semibold text-gray-800">Pipeline per Sales (Stage Breakdown)</h3>
                 </div>
@@ -100,7 +106,7 @@
             </div>
 
             {{-- KPI Achievement Table --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100">
                     <h3 class="font-semibold text-gray-800">KPI Tim - {{ now()->format('F Y') }}</h3>
                 </div>
@@ -150,7 +156,7 @@
         <div class="space-y-6">
 
             {{-- Pending Approvals (level-1) --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h3 class="font-semibold text-gray-800">Approval Level-1</h3>
                     @if($pendingApprovals > 0)
@@ -179,7 +185,7 @@
             </div>
 
             {{-- Recent Team Activities --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100">
                     <h3 class="font-semibold text-gray-800">Aktivitas Terbaru Tim</h3>
                 </div>
@@ -223,4 +229,29 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var isDark = document.documentElement.classList.contains('dark');
+    var textColor = isDark ? '#94a3b8' : '#64748b';
+
+    // Revenue Trend
+    var revData = {!! json_encode($revenueTrend ?? ['labels'=>[],'data'=>[]]) !!};
+    var revenueOptions = {
+        series: [{ name: "Revenue Tim", data: revData.data }],
+        chart: { type: 'area', height: 320, toolbar: { show: false }, background: 'transparent' },
+        colors: ['#3b82f6'],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [50, 100] } },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        xaxis: { categories: revData.labels, labels: { style: { colors: textColor } } },
+        yaxis: { labels: { style: { colors: textColor }, formatter: function (val) { return "Rp " + (val/1000000).toFixed(0) + "M"; } } },
+        tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: function (val) { return "Rp " + new Intl.NumberFormat('id-ID').format(val); } } }
+    };
+    new ApexCharts(document.querySelector("#revenueChart"), revenueOptions).render();
+});
+</script>
+@endpush
 @endsection

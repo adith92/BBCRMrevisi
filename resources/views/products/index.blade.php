@@ -42,7 +42,7 @@
     @endif
 
     {{-- Search + Filter Bar --}}
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+    <div class="cc-card rounded-2xl border border-slate-100 shadow-sm p-4">
         <form method="GET" action="{{ route('products.index') }}" class="flex flex-col sm:flex-row gap-3">
 
             {{-- Search --}}
@@ -84,14 +84,14 @@
         @endphp
         @foreach($tabs as $val => $label)
         <a href="{{ route('products.index', array_merge(request()->except('type','page'), $val ? ['type' => $val] : [])) }}"
-           class="flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors cursor-pointer {{ request('type', '') === $val ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+           class="flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors cursor-pointer {{ request('type', '') === $val ? 'bg-blue-600 text-white shadow-sm' : 'cc-card border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
             {{ $label }}
         </a>
         @endforeach
     </div>
 
     {{-- Table --}}
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="cc-card rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>

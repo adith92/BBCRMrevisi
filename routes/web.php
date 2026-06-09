@@ -38,8 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/gm', [DashboardController::class, 'gm'])->name('dashboard.gm')->middleware('role:gm');
 
     // Bookings
-    Route::resource('bookings', BookingController::class)->middleware('role:gm,sales,operational');
-    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index')->withoutMiddleware('role:gm,sales,operational');
+    Route::resource('bookings', BookingController::class)->middleware('role:gm,manager,sales,operational');
+    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index')->withoutMiddleware('role:gm,manager,sales,operational');
 
     // Clients
     // View (index/show) — gm, manager, sales, finance. Write (create/edit/dll) — HANYA sales.
@@ -95,8 +95,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('vehicle-contracts', App\Http\Controllers\VehicleContractController::class)->middleware('role:gm,operational,manager');
 
     // Finance
-    Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index')->middleware('role:gm,finance');
-    Route::get('/finance/invoices/{invoice}', [FinanceController::class, 'show'])->name('invoices.show')->middleware('role:gm,finance');
+    Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index')->middleware('role:gm,manager,finance');
+    Route::get('/finance/invoices/{invoice}', [FinanceController::class, 'show'])->name('invoices.show')->middleware('role:gm,manager,finance');
 
     // Maintenance
     Route::resource('maintenance', MaintenanceController::class)->middleware('role:gm,manager,operational');

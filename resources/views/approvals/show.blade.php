@@ -29,7 +29,7 @@
     @endif
 
     {{-- ===== HEADER CARD ===== --}}
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+    <div class="cc-card rounded-xl border border-gray-200 shadow-sm p-6">
         <div class="flex items-start justify-between gap-4 flex-wrap">
             <div>
                 <div class="flex items-center gap-2 mb-1">
@@ -65,7 +65,7 @@
         <div class="lg:col-span-2 space-y-5">
 
             {{-- Opportunity Summary --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
                     <h2 class="font-semibold text-gray-800 text-sm">Ringkasan Opportunity</h2>
                 </div>
@@ -112,7 +112,7 @@
             </div>
 
             {{-- Discount Request Details --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
                     <h2 class="font-semibold text-gray-800 text-sm">Detail Permintaan Diskon</h2>
                 </div>
@@ -175,7 +175,7 @@
 
             {{-- Action Buttons --}}
             @if($canAct)
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm p-5">
                 <h2 class="font-semibold text-gray-800 text-sm mb-4">Ambil Tindakan</h2>
                 <div class="flex gap-3">
                     <button @click="showApproveForm = true; showRejectForm = false"
@@ -186,7 +186,7 @@
                         Setujui Permintaan
                     </button>
                     <button @click="showRejectForm = true; showApproveForm = false"
-                        class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-800 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
+                        class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 cc-card border-2 border-red-300 hover:border-red-500 text-red-600 hover:text-red-800 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -202,7 +202,7 @@
                         <div class="mb-3">
                             <label class="block text-xs font-medium text-green-700 mb-1">Catatan (opsional)</label>
                             <textarea name="notes" rows="3" placeholder="Tambahkan catatan..."
-                                class="w-full border border-green-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"></textarea>
+                                class="w-full border border-green-300 rounded-lg px-3 py-2 text-sm cc-card focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"></textarea>
                         </div>
                         <div class="flex gap-2">
                             <button type="button" @click="showApproveForm = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">Batal</button>
@@ -222,7 +222,7 @@
                             </label>
                             <textarea name="rejection_reason" rows="4" required
                                 placeholder="Jelaskan alasan penolakan permintaan ini..."
-                                class="w-full border border-red-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"></textarea>
+                                class="w-full border border-red-300 rounded-lg px-3 py-2 text-sm cc-card focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"></textarea>
                         </div>
                         <div class="flex gap-2">
                             <button type="button" @click="showRejectForm = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors">Batal</button>
@@ -239,7 +239,7 @@
         <div class="space-y-5">
 
             {{-- Chain Visualization --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="cc-card rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
                     <h2 class="font-semibold text-gray-800 text-sm">Rantai Persetujuan</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Jalur approval diperlukan</p>

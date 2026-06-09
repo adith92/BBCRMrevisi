@@ -236,7 +236,7 @@
                 <span class="material-symbols-outlined text-[#00e5ff]">view_kanban</span>
                 Sales Pipeline
             </h1>
-            <p class="text-[13px] text-slate-500 mt-0.5">Drag & drop deal antar tahap — semua tersimpan otomatis</p>
+            <p class="text-[10px] text-slate-400 leading-none mt-0.5 tracking-tight">Drag & drop deal antar tahap — tersimpan otomatis</p>
         </div>
         <div class="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-1">
             <a href="{{ route('opportunities.create') }}" class="btn-primary shrink-0" data-add-activity id="fab-pipeline-add">
@@ -352,7 +352,7 @@
                 {{-- Drop zone: scrolls independently per column --}}
                 <div class="kanban-drop-zone" data-stage="{{ $stage }}" id="zone-{{ $stage }}">
                     @forelse($opps as $opp)
-                    <div class="kanban-card"
+                    <div class="kanban-card cursor-pointer hover:ring-1 hover:ring-blue-500/50 transition-all"
                          data-id="{{ $opp->id }}"
                          data-deal-id="{{ $opp->id }}"
                          data-deal-title="{{ addslashes($opp->title) }}"
@@ -360,6 +360,8 @@
                          data-deal-num="{{ $opp->opp_number }}"
                          data-stage="{{ $opp->stage }}"
                          data-value="{{ $opp->estimated_value ?? 0 }}"
+                         x-data="{ expanded: false }"
+                         @click="expanded = !expanded"
                          x-show="matchesSearch('{{ addslashes($opp->title) }}','{{ addslashes($opp->client->company_name ?? '') }}')"
                     >
                         @php
@@ -372,92 +374,110 @@
                             $hlLabel   = $risk < 7  ? 'Healthy' : ($risk < 14 ? 'Warming' : 'At Risk');
                         @endphp
 
-                        {{-- Card top row --}}
-                        <div class="flex items-start justify-between gap-2 mb-2">
-                            <div class="flex items-center gap-1.5 min-w-0">
-                                <span class="text-[10px] text-slate-600 font-mono truncate">{{ $opp->opp_number }}</span>
-                                <span class="{{ $hlClass }}" title="{{ $hlLabel }} · Last activity: {{ $daysSince }}d ago · Stage: {{ $stageDays }}d">{{ $hlEmoji }}</span>
+                        {{-- Collapsed State --}}
+                        <div x-show="!expanded" class="flex flex-col gap-1.5">
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="text-[12px] font-semibold leading-snug line-clamp-1 flex-1" style="color:var(--cc-text)">
+                                    <span class="material-symbols-outlined text-[12px] align-middle mr-0.5 text-slate-500">corporate_fare</span>
+                                    {{ $opp->client->company_name ?? $opp->title }}
+                                </h3>
+                                @if($opp->estimated_value)
+                                @php
+                                    // Format: if >= 1 Billion show M (Miliar), if >= 1 Million show Jt
+                                    $val = $opp->estimated_value;
+                                    $formatted = $val >= 1000000000 ? number_format($val/1000000000, 1, ',', '.') . 'M' : ($val >= 1000000 ? number_format($val/1000000, 0, ',', '.') . 'Jt' : number_format($val, 0, ',', '.'));
+                                @endphp
+                                <span class="text-[11px] font-bold shrink-0" style="color:var(--cc-text)">Rp{{ $formatted }}</span>
+                                @endif
                             </div>
-                            <div class="flex items-center gap-1 flex-shrink-0">
-                                <button
-                                    @click.stop="openEdit({{ $opp->id }},'{{ addslashes($opp->title) }}',{{ $opp->estimated_value ?? 'null' }},'{{ $opp->expected_close_date?->format('Y-m-d') ?? '' }}','{{ addslashes($opp->notes ?? '') }}',{{ $opp->pax ?? 'null' }})"
-                                    class="p-0.5 rounded text-slate-600 hover:text-slate-300 transition-colors" title="Edit (E)" data-inline-edit>
-                                    <span class="material-symbols-outlined text-[14px]">edit</span>
-                                </button>
-                                <button
-                                    @click.stop="open360({{ $opp->id }})"
-                                    class="p-0.5 rounded text-slate-600 hover:text-[#00e5ff] transition-colors" title="360° View (V)" data-view-360>
-                                    <span class="material-symbols-outlined text-[14px]">360</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Title --}}
-                        <h3 class="text-[13px] font-semibold leading-snug line-clamp-2 mb-2" style="color:var(--cc-text)">{{ $opp->title }}</h3>
-
-                        {{-- Client (click-to-reveal) --}}
-                        <div x-data="{ show: false }" class="mb-2">
-                            <button @click.stop="show = !show"
-                                    class="flex items-center gap-1.5 text-[12px] hover:opacity-80 transition-opacity w-full text-left"
-                                    style="color:var(--cc-text-muted)">
-                                <span class="material-symbols-outlined text-[13px]">corporate_fare</span>
-                                <span x-show="!show" class="truncate italic text-slate-600 text-[11px]">Klik untuk lihat klien</span>
-                                <span x-show="show" x-cloak class="truncate">{{ $opp->client->company_name ?? '-' }}</span>
-                                <span class="material-symbols-outlined text-[12px] ml-auto" x-text="show ? 'visibility_off' : 'visibility'"></span>
-                            </button>
-                            <div x-show="show" x-cloak class="mt-1 pl-5">
-                                <a href="{{ route('clients.show', $opp->client_id) }}"
-                                   class="text-[11px] text-blue-400 hover:underline" @click.stop>
-                                    {{ $opp->client->pic_name ?? '' }}
-                                    @if($opp->client?->phone) · {{ $opp->client->phone }} @endif
-                                </a>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] text-slate-500 font-mono">{{ $opp->opp_number }}</span>
+                                <span class="{{ $hlClass }} text-[10px] px-1 py-0.5 rounded leading-none">{{ $hlEmoji }} {{ $stageDays }}d</span>
                             </div>
                         </div>
 
-                        {{-- Value --}}
-                        @if($opp->estimated_value)
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[13px] font-bold text-slate-100">Rp {{ number_format((float)$opp->estimated_value,0,',','.') }}</span>
-                            @if($opp->pax)
-                            <span class="text-[11px] text-slate-500">{{ $opp->pax }} pax</span>
-                            @endif
-                        </div>
-                        @endif
-
-                        {{-- Close date --}}
-                        @if($opp->expected_close_date)
-                        <div class="flex items-center gap-1.5 text-[11px] mb-2 {{ $opp->expected_close_date->isPast() && !in_array($opp->stage,['won','lost']) ? 'text-red-400' : 'text-slate-500' }}">
-                            <span class="material-symbols-outlined text-[12px]">calendar_month</span>
-                            {{ $opp->expected_close_date->format('d M Y') }}
-                            @if($opp->expected_close_date->isPast() && !in_array($opp->stage,['won','lost']))
-                            <span class="text-[10px] font-bold ml-1">OVERDUE</span>
-                            @endif
-                        </div>
-                        @endif
-
-                        {{-- Discount warning --}}
-                        @if($opp->discount_percent > 0 && !$opp->discount_approved)
-                        <div class="flex items-center gap-1.5 text-[11px] text-amber-400 bg-amber-500/10 rounded-lg px-2 py-1 mb-2">
-                            <span class="material-symbols-outlined text-[12px]">warning</span>
-                            Diskon {{ $opp->discount_percent }}% pending
-                        </div>
-                        @endif
-
-                        {{-- Footer: sales + product --}}
-                        <div class="flex items-center justify-between pt-2 border-t border-white/5">
-                            @if($opp->sales && !auth()->user()->isSales())
-                            <div class="flex items-center gap-1.5">
-                                <div class="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-[10px] font-bold flex-shrink-0">
-                                    {{ strtoupper(substr($opp->sales->name,0,1)) }}
+                        {{-- Expanded State --}}
+                        <div x-show="expanded" x-cloak>
+                            {{-- Card top row --}}
+                            <div class="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-white/5">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="text-[10px] text-slate-600 font-mono truncate">{{ $opp->opp_number }}</span>
+                                    <span class="{{ $hlClass }}" title="{{ $hlLabel }} · Last activity: {{ $daysSince }}d ago · Stage: {{ $stageDays }}d">{{ $hlEmoji }}</span>
                                 </div>
-                                <span class="text-[11px] text-slate-500 truncate max-w-[80px]">{{ $opp->sales->name }}</span>
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    <button
+                                        @click.stop="openEdit({{ $opp->id }},'{{ addslashes($opp->title) }}',{{ $opp->estimated_value ?? 'null' }},'{{ $opp->expected_close_date?->format('Y-m-d') ?? '' }}','{{ addslashes($opp->notes ?? '') }}',{{ $opp->pax ?? 'null' }})"
+                                        class="p-0.5 rounded text-slate-600 hover:text-slate-300 transition-colors" title="Edit (E)" data-inline-edit>
+                                        <span class="material-symbols-outlined text-[14px]">edit</span>
+                                    </button>
+                                    <button
+                                        @click.stop="open360({{ $opp->id }})"
+                                        class="p-0.5 rounded text-slate-600 hover:text-[#00e5ff] transition-colors" title="360° View (V)" data-view-360>
+                                        <span class="material-symbols-outlined text-[14px]">360</span>
+                                    </button>
+                                </div>
                             </div>
-                            @else
-                            <div></div>
+
+                            {{-- Title --}}
+                            <h3 class="text-[13px] font-semibold leading-snug line-clamp-2 mb-2" style="color:var(--cc-text)">{{ $opp->title }}</h3>
+
+                            {{-- Client Details --}}
+                            <div class="mb-2 pl-2 border-l-2 border-blue-500/20">
+                                <a href="{{ route('clients.show', $opp->client_id) }}"
+                                   class="text-[12px] hover:underline" style="color:var(--cc-text)" @click.stop>
+                                    <span class="material-symbols-outlined text-[12px] align-middle">corporate_fare</span>
+                                    {{ $opp->client->company_name ?? '-' }}
+                                </a>
+                                <div class="text-[11px] mt-0.5 text-slate-400">
+                                    {{ $opp->client->pic_name ?? '' }} @if($opp->client?->phone) · {{ $opp->client->phone }} @endif
+                                </div>
+                            </div>
+
+                            {{-- Value --}}
+                            @if($opp->estimated_value)
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[13px] font-bold text-slate-100">Rp {{ number_format((float)$opp->estimated_value,0,',','.') }}</span>
+                                @if($opp->pax)
+                                <span class="text-[11px] text-slate-500">{{ $opp->pax }} pax</span>
+                                @endif
+                            </div>
                             @endif
-                            @if($opp->product)
-                            <span class="text-[10px] text-slate-600 truncate max-w-[90px]">{{ $opp->product->name }}</span>
+
+                            {{-- Close date --}}
+                            @if($opp->expected_close_date)
+                            <div class="flex items-center gap-1.5 text-[11px] mb-2 {{ $opp->expected_close_date->isPast() && !in_array($opp->stage,['won','lost']) ? 'text-red-400' : 'text-slate-500' }}">
+                                <span class="material-symbols-outlined text-[12px]">calendar_month</span>
+                                {{ $opp->expected_close_date->format('d M Y') }}
+                                @if($opp->expected_close_date->isPast() && !in_array($opp->stage,['won','lost']))
+                                <span class="text-[10px] font-bold ml-1">OVERDUE</span>
+                                @endif
+                            </div>
                             @endif
+
+                            {{-- Discount warning --}}
+                            @if($opp->discount_percent > 0 && !$opp->discount_approved)
+                            <div class="flex items-center gap-1.5 text-[11px] text-amber-400 bg-amber-500/10 rounded-lg px-2 py-1 mb-2">
+                                <span class="material-symbols-outlined text-[12px]">warning</span>
+                                Diskon {{ $opp->discount_percent }}% pending
+                            </div>
+                            @endif
+
+                            {{-- Footer: sales + product --}}
+                            <div class="flex items-center justify-between pt-2 border-t border-white/5 mt-2">
+                                @if($opp->sales && !auth()->user()->isSales())
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-[10px] font-bold flex-shrink-0">
+                                        {{ strtoupper(substr($opp->sales->name,0,1)) }}
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 truncate max-w-[80px]">{{ $opp->sales->name }}</span>
+                                </div>
+                                @else
+                                <div></div>
+                                @endif
+                                @if($opp->product)
+                                <span class="text-[10px] text-slate-600 truncate max-w-[90px]">{{ $opp->product->name }}</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     @empty

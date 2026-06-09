@@ -25,7 +25,7 @@
             </a>
         </div>
 
-        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="cc-card rounded-2xl border border-gray-200 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
                 <h2 class="text-xl font-bold text-white">Catat Aktivitas</h2>
                 <p class="text-blue-200 text-sm mt-0.5">Rekam interaksi dengan klien atau prospek</p>
@@ -59,7 +59,7 @@
                                    class="sr-only">
                             <div :class="selectedType === '{{ $opt['value'] }}' ?
                                     'border-{{ $opt['color'] }}-500 bg-{{ $opt['color'] }}-50 ring-2 ring-{{ $opt['color'] }}-500' :
-                                    'border-gray-200 hover:border-gray-300 bg-white'"
+                                    'border-gray-200 hover:border-gray-300 cc-card'"
                                  class="border-2 rounded-xl p-3 text-center transition-all">
                                 <div class="text-2xl mb-1">{{ $opt['icon'] }}</div>
                                 <div class="font-semibold text-sm text-gray-800">{{ $opt['label'] }}</div>
@@ -172,14 +172,14 @@
                             <input type="text" name="next_action" id="next_action"
                                    value="{{ old('next_action') }}"
                                    placeholder="Contoh: Kirim proposal revisi"
-                                   class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                   class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cc-card">
                         </div>
                         <div>
                             <label for="next_action_date" class="block text-xs font-semibold text-blue-700 mb-1">Tanggal Target</label>
                             <input type="date" name="next_action_date" id="next_action_date"
                                    value="{{ old('next_action_date') }}"
                                    min="{{ now()->addDay()->toDateString() }}"
-                                   class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                   class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cc-card">
                         </div>
                     </div>
                 </div>

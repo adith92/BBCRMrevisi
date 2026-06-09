@@ -20,7 +20,7 @@
     </div>
 
     {{-- Filters --}}
-    <form method="GET" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-wrap gap-3 items-end">
+    <form method="GET" class="cc-card rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-wrap gap-3 items-end">
         <div>
             <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Stage</label>
             <select name="stage" class="rounded-xl border-slate-300 text-sm focus:border-[#003887] focus:ring-[#003887]">
@@ -47,7 +47,7 @@
     </form>
 
     {{-- Table --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="cc-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-slate-50 border-b border-slate-200">

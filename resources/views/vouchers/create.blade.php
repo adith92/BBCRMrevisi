@@ -12,7 +12,7 @@
 <div class="max-w-3xl mx-auto space-y-6">
 
     {{-- Single Voucher Form --}}
-    <div class="bg-white rounded-lg shadow p-6" x-data="voucherForm()">
+    <div class="cc-card rounded-lg shadow p-6" x-data="voucherForm()">
         <h2 class="text-xl font-semibold text-gray-900 mb-1">Buat Voucher</h2>
         <p class="text-sm text-gray-500 mb-6">Isi form di bawah untuk membuat satu voucher baru</p>
 
@@ -171,7 +171,7 @@
     </div>
 
     {{-- Bulk Generate Section --}}
-    <div class="bg-white rounded-lg shadow p-6" x-data="{ expanded: false }">
+    <div class="cc-card rounded-lg shadow p-6" x-data="{ expanded: false }">
         <button type="button" @click="expanded = !expanded"
                 class="w-full flex items-center justify-between text-left">
             <div>

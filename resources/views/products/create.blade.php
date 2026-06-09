@@ -50,7 +50,7 @@
             },
             isActive: {{ old('is_active', '1') == '1' ? 'true' : 'false' }},
         }"
-        class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5"
+        class="cc-card rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5"
     >
         @csrf
 
@@ -62,7 +62,7 @@
             <select
                 name="product_category_id"
                 required
-                class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer bg-white"
+                class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer cc-card"
             >
                 <option value="">-- Pilih Kategori --</option>
                 @foreach($categories as $cat)
@@ -146,7 +146,7 @@
                 <select
                     name="unit"
                     required
-                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer bg-white"
+                    class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer cc-card"
                 >
                     <option value="pax" {{ old('unit','pax') === 'pax' ? 'selected' : '' }}>Pax (per orang)</option>
                     <option value="unit" {{ old('unit') === 'unit' ? 'selected' : '' }}>Unit (per kendaraan)</option>
@@ -218,7 +218,7 @@
                     class="sr-only peer"
                     {{ old('is_active', true) ? 'checked' : '' }}
                 >
-                <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-blue-600 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-blue-600 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:cc-card after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
                 <span class="ml-3 text-sm font-medium" :class="isActive ? 'text-emerald-600' : 'text-slate-400'" x-text="isActive ? 'Aktif' : 'Nonaktif'"></span>
             </label>
         </div>

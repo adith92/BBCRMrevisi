@@ -3,7 +3,7 @@
 @section('header_title', 'Create Booking')
 
 @section('content')
-<div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-8">
+<div class="max-w-2xl mx-auto cc-card rounded-lg shadow p-8">
     <h2 class="text-2xl font-bold mb-6">Create New Booking</h2>
 
     <form method="POST" action="{{ route('bookings.store') }}" class="space-y-6">

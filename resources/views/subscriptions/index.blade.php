@@ -35,12 +35,12 @@
 </div>
 @endif
 
-<div class="bg-white rounded-lg shadow p-6">
+<div class="cc-card rounded-lg shadow p-6">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-            <h2 class="text-xl font-semibold text-gray-900">Subscription Billing</h2>
-            <p class="text-sm text-gray-500 mt-0.5">Kelola kontrak berlangganan kendaraan</p>
+            <h2 class="text-xl font-semibold text-[var(--cc-text)]">Subscription Billing</h2>
+            <p class="text-sm text-[var(--cc-text-muted)] mt-0.5">Kelola kontrak berlangganan kendaraan</p>
         </div>
         @can('role:gm,finance,manager')
         <a href="{{ route('subscriptions.create') }}"
@@ -51,7 +51,7 @@
     </div>
 
     {{-- Status Filter Tabs --}}
-    <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
+    <div class="flex flex-wrap gap-2 mb-6 border-b border-[var(--cc-border)] pb-4">
         @php
         $tabs = [
             ''            => 'Semua',
@@ -64,7 +64,7 @@
         @foreach($tabs as $val => $label)
         <a href="{{ route('subscriptions.index', array_merge(request()->query(), ['status' => $val])) }}"
            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-           {{ $status === $val ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+           {{ $status === $val ? 'bg-blue-600 text-white' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] hover:bg-gray-200' }}">
             {{ $label }}
         </a>
         @endforeach
@@ -74,7 +74,7 @@
     <form method="GET" action="{{ route('subscriptions.index') }}" class="mb-4 flex gap-3 items-end">
         <input type="hidden" name="status" value="{{ $status }}">
         <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Filter Client</label>
+            <label class="block text-xs font-medium text-[var(--cc-text-muted)] mb-1">Filter Client</label>
             <select name="client_id" onchange="this.form.submit()"
                     class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]">
                 <option value="">— Semua Client —</option>
@@ -87,15 +87,15 @@
         </div>
         @if($clientId)
         <a href="{{ route('subscriptions.index', ['status' => $status]) }}"
-           class="text-sm text-gray-500 hover:text-gray-700 underline pb-2">Reset</a>
+           class="text-sm text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] underline pb-2">Reset</a>
         @endif
     </form>
 
     {{-- Table --}}
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b">
-                <tr class="text-gray-600 text-left">
+            <thead class="bg-[var(--cc-bg-muted)] border-b">
+                <tr class="text-[var(--cc-text-muted)] text-left">
                     <th class="py-3 px-4">Sub #</th>
                     <th class="py-3 px-4">Client</th>
                     <th class="py-3 px-4">Kendaraan</th>
@@ -112,7 +112,7 @@
                 @php
                 $isOverdue = $sub->status === 'active' && $sub->next_billing_date && $sub->next_billing_date->isPast();
                 @endphp
-                <tr class="border-b hover:bg-gray-50 transition-colors {{ $isOverdue ? 'bg-amber-50' : '' }}">
+                <tr class="border-b hover:bg-[var(--cc-row-hover)] transition-colors {{ $isOverdue ? 'bg-amber-50' : '' }}">
                     <td class="py-3 px-4">
                         <a href="{{ route('subscriptions.show', $sub) }}"
                            class="text-blue-600 hover:underline font-mono font-medium text-xs">
@@ -120,27 +120,27 @@
                         </a>
                     </td>
                     <td class="py-3 px-4">
-                        <div class="font-medium text-gray-900">{{ $sub->client->company_name ?? '—' }}</div>
+                        <div class="font-medium text-[var(--cc-text)]">{{ $sub->client->company_name ?? '—' }}</div>
                     </td>
-                    <td class="py-3 px-4 text-gray-600">
+                    <td class="py-3 px-4 text-[var(--cc-text-muted)]">
                         {{ $sub->vehicle ? $sub->vehicle->plate_number . ' (' . $sub->vehicle->brand . ')' : '—' }}
                     </td>
-                    <td class="py-3 px-4 text-gray-600">
+                    <td class="py-3 px-4 text-[var(--cc-text-muted)]">
                         {{ $sub->product->name ?? '—' }}
                     </td>
-                    <td class="py-3 px-4 text-right font-medium text-gray-900">
+                    <td class="py-3 px-4 text-right font-medium text-[var(--cc-text)]">
                         Rp {{ number_format((float)$sub->monthly_rate, 0, ',', '.') }}
                         <div class="text-xs text-gray-400 font-normal">
                             /{{ $sub->billing_cycle === 'monthly' ? 'bulan' : ($sub->billing_cycle === 'quarterly' ? '3 bulan' : 'tahun') }}
                         </div>
                     </td>
-                    <td class="py-3 px-4 text-xs text-gray-600">
+                    <td class="py-3 px-4 text-xs text-[var(--cc-text-muted)]">
                         <div>{{ $sub->start_date?->format('d M Y') ?? '—' }}</div>
                         <div class="text-gray-400">s/d {{ $sub->end_date?->format('d M Y') ?? '—' }}</div>
                     </td>
                     <td class="py-3 px-4">
                         @if($sub->next_billing_date)
-                        <span class="text-xs {{ $isOverdue ? 'text-red-600 font-semibold' : 'text-gray-600' }}">
+                        <span class="text-xs {{ $isOverdue ? 'text-red-600 font-semibold' : 'text-[var(--cc-text-muted)]' }}">
                             {{ $sub->next_billing_date->format('d M Y') }}
                             @if($isOverdue) <span class="text-red-500">⚠</span> @endif
                         </span>
@@ -154,8 +154,8 @@
                             'active'     => 'bg-green-100 text-green-700',
                             'paused'     => 'bg-yellow-100 text-yellow-700',
                             'terminated' => 'bg-red-100 text-red-700',
-                            'expired'    => 'bg-gray-100 text-gray-500',
-                            default      => 'bg-gray-100 text-gray-500',
+                            'expired'    => 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)]',
+                            default      => 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)]',
                         };
                         $label = match($sub->status) {
                             'active'     => 'Aktif',

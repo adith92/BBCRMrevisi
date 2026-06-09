@@ -120,11 +120,23 @@ class DashboardController extends Controller
             'note'    => 'sticky_note_2',
         ];
 
+        // Chart Data: Revenue Trend (Last 6 Months) for the whole team
+        $salesIds = $teamMembers->pluck('id')->toArray();
+        $revenueTrend = ['labels' => [], 'data' => []];
+        for ($i = 5; $i >= 0; $i--) {
+            $m = Carbon::now()->subMonths($i);
+            $revenueTrend['labels'][] = $m->format('M Y');
+            $revenueTrend['data'][] = Booking::whereIn('sales_id', $salesIds)
+                ->whereMonth('created_at', $m->month)
+                ->whereYear('created_at', $m->year)
+                ->where('status', 'completed')->sum('price');
+        }
+
         return view('dashboard.manager', compact(
             'teamMembers', 'teamPipelineValue', 'teamWon', 'teamLost',
             'stages', 'stageLabels', 'stageColors', 'stageBreakdown',
             'pendingApprovals', 'approvalQueue',
-            'recentActivities', 'activityIcons'
+            'recentActivities', 'activityIcons', 'revenueTrend'
         ));
     }
 
@@ -153,9 +165,28 @@ class DashboardController extends Controller
         $activeBookings = Booking::where('sales_id', $user->id)->where('status', 'active')->count();
         $recentBookings = Booking::where('sales_id', $user->id)->latest()->take(5)->get();
 
+        // Chart Data: Pipeline Funnel
+        $pipelineStages = ['prospecting', 'proposal', 'negotiation', 'won'];
+        $salesFunnel = [];
+        foreach($pipelineStages as $s) {
+            $salesFunnel[] = Opportunity::where('sales_id', $user->id)->where('stage', $s)->count();
+        }
+        
+        // Chart Data: Revenue Trend (Last 6 Months)
+        $revenueTrend = ['labels' => [], 'data' => []];
+        for ($i = 5; $i >= 0; $i--) {
+            $m = Carbon::now()->subMonths($i);
+            $revenueTrend['labels'][] = $m->format('M Y');
+            $revenueTrend['data'][] = Booking::where('sales_id', $user->id)
+                ->whereMonth('created_at', $m->month)
+                ->whereYear('created_at', $m->year)
+                ->where('status', 'completed')->sum('price');
+        }
+
         return view('dashboard.sales', compact(
             'todayRevenue', 'weekRevenue', 'monthRevenue', 'yearRevenue',
-            'myClients', 'activeBookings', 'recentBookings'
+            'myClients', 'activeBookings', 'recentBookings',
+            'salesFunnel', 'revenueTrend'
         ));
     }
 
