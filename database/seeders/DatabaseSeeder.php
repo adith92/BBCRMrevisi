@@ -286,6 +286,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DemoMassiveSeeder::class);
 
         // ==================== MASSIVE VEHICLE + BOOKING + VOUCHER + KPI ====================
-        $this->call(MassiveVehicleBookingSeeder::class);
+        // $this->call(MassiveVehicleBookingSeeder::class);
     }
 }
