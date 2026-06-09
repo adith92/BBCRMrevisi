@@ -174,7 +174,7 @@
     .edit-input { background: var(--cc-input-bg); border: 1px solid var(--cc-input-bd); color: var(--cc-text); border-radius: 8px; padding: 6px 10px; font-size: 13px; width: 100%; outline: none; }
     .edit-input:focus { border-color: var(--cc-accent); box-shadow: 0 0 0 3px var(--cc-accent-dim); }
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .modal-box { background: #0f0f1a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; animation: modal-in 0.25s cubic-bezier(0.16,1,0.3,1); }
+    .modal-box { background: var(--cc-card); border: 1px solid var(--cc-border); border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; animation: modal-in 0.25s cubic-bezier(0.16,1,0.3,1); }
     @keyframes modal-in { from { opacity:0; transform: scale(0.95) translateY(16px); } to { opacity:1; transform: scale(1) translateY(0); } }
     .modal-body { overflow-y: auto; flex: 1; }
     .tab-btn { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
@@ -279,10 +279,6 @@
                 <button class="view-btn active" id="view-board" onclick="setKanbanView('board')" title="Board view">
                     <span class="material-symbols-outlined text-[15px]">view_kanban</span>
                     <span class="hidden sm:inline">Board</span>
-                </button>
-                <button class="view-btn" id="view-list" onclick="setKanbanView('list')" title="List view">
-                    <span class="material-symbols-outlined text-[15px]">view_list</span>
-                    <span class="hidden sm:inline">List</span>
                 </button>
                 <button class="view-btn" id="view-table" onclick="setKanbanView('table')" title="Table view">
                     <span class="material-symbols-outlined text-[15px]">table</span>
@@ -538,8 +534,8 @@
          x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
          class="modal-overlay" style="display:none;" @click.self="editModal.open=false">
         <div class="modal-box max-w-md" @click.stop>
-            <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                <h3 class="text-[15px] font-bold text-slate-100 flex items-center gap-2">
+            <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--cc-border);">
+                <h3 class="text-[15px] font-bold flex items-center gap-2" style="color:var(--cc-text)">
                     <span class="material-symbols-outlined text-[18px] text-[#00e5ff]">edit</span>Edit Deal
                 </h3>
                 <button @click="editModal.open=false" class="text-slate-500 hover:text-slate-300"><span class="material-symbols-outlined">close</span></button>
@@ -586,9 +582,9 @@
          class="modal-overlay" style="display:none;" @click.self="modal360.open=false">
         <div class="modal-box" @click.stop>
             {{-- Header --}}
-            <div class="px-6 py-4 flex items-center justify-between" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div class="px-6 py-4 flex items-center justify-between" style="border-bottom:1px solid var(--cc-border);">
                 <div>
-                    <h3 class="text-[15px] font-bold text-slate-100 flex items-center gap-2">
+                    <h3 class="text-[15px] font-bold flex items-center gap-2" style="color:var(--cc-text)">
                         <span class="material-symbols-outlined text-[18px] text-[#00e5ff]">360</span>
                         <span x-text="modal360.data?.title ?? 'Detail Deal'"></span>
                     </h3>
@@ -602,7 +598,7 @@
                 </div>
             </div>
             {{-- Tabs --}}
-            <div class="px-6 py-3 flex gap-2 flex-wrap" style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <div class="px-6 py-3 flex gap-2 flex-wrap" style="border-bottom:1px solid var(--cc-border);">
                 <button class="tab-btn" :class="{'active':modal360.tab==='info'}"     @click="modal360.tab='info'">Info</button>
                 <button class="tab-btn" :class="{'active':modal360.tab==='activity'}" @click="modal360.tab='activity'">Aktivitas</button>
                 <button class="tab-btn" :class="{'active':modal360.tab==='approval'}" @click="modal360.tab='approval'">Approval</button>
@@ -621,7 +617,7 @@
                         <div class="grid grid-cols-2 gap-4 mb-5">
                             <div class="cc-card p-4">
                                 <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-1">Estimasi Nilai</div>
-                                <div class="text-xl font-extrabold text-slate-100" x-text="'Rp ' + (modal360.data.estimated_value ? Number(modal360.data.estimated_value).toLocaleString('id-ID') : '-')"></div>
+                                <div class="text-xl font-extrabold" style="color:var(--cc-text)" x-text="'Rp ' + (modal360.data.estimated_value ? Number(modal360.data.estimated_value).toLocaleString('id-ID') : '-')"></div>
                             </div>
                             <div class="cc-card p-4">
                                 <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-1">Stage</div>
@@ -659,10 +655,10 @@
                             <p class="text-slate-500 text-[13px] text-center py-8">Belum ada aktivitas</p>
                         </template>
                         <template x-for="log in (modal360.data.activity_logs || [])" :key="log.id">
-                            <div class="flex gap-3 p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
+                            <div class="flex gap-3 p-3 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
                                 <span class="material-symbols-outlined text-[16px] text-slate-500 mt-0.5 flex-shrink-0">radio_button_checked</span>
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-[12px] font-semibold text-slate-200" x-text="log.subject"></div>
+                                    <div class="text-[12px] font-semibold" style="color:var(--cc-text)" x-text="log.subject"></div>
                                     <div x-show="log.notes" class="text-[11px] text-slate-500 mt-0.5" x-text="log.notes"></div>
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="text-[10px] text-slate-600" x-text="log.sales?.name ?? ''"></span>
@@ -683,9 +679,9 @@
                             <p class="text-slate-500 text-[13px] text-center py-8">Tidak ada approval request</p>
                         </template>
                         <template x-for="req in (modal360.data.approval_requests || [])" :key="req.id">
-                            <div class="p-4 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
+                            <div class="p-4 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[12px] font-bold text-slate-200">Level <span x-text="req.level"></span> Approval</span>
+                                    <span class="text-[12px] font-bold" style="color:var(--cc-text)">Level <span x-text="req.level"></span> Approval</span>
                                     <span :class="req.status === 'approved' ? 'status-badge status-confirmed' : req.status === 'rejected' ? 'status-badge status-cancelled' : 'status-badge status-pending'" x-text="req.status"></span>
                                 </div>
                                 <div class="text-[11px] text-slate-500">Diskon: <span class="text-amber-400 font-semibold" x-text="req.discount_percent + '%'"></span></div>
@@ -700,9 +696,9 @@
                 <div x-show="!modal360.loading && modal360.tab==='linked'">
                     <template x-if="modal360.data">
                     <div class="space-y-3">
-                        <div class="p-4 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
+                        <div class="p-4 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
                             <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-2">Client</div>
-                            <div class="text-[13px] font-semibold text-slate-200" x-text="modal360.data.client?.company_name ?? '-'"></div>
+                            <div class="text-[13px] font-semibold" style="color:var(--cc-text)" x-text="modal360.data.client?.company_name ?? '-'"></div>
                             <div class="text-[11px] text-slate-500" x-text="modal360.data.client?.industry ?? ''"></div>
                             <div class="text-[11px] text-slate-500 mt-0.5" x-text="modal360.data.client?.pic_name ?? ''"></div>
                             <a x-show="modal360.data.client_id" :href="'/clients/' + modal360.data.client_id"
@@ -710,7 +706,7 @@
                                 <span class="material-symbols-outlined text-[13px]">open_in_new</span>Lihat Client
                             </a>
                         </div>
-                        <div x-show="modal360.data.booking_id" class="p-4 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
+                        <div x-show="modal360.data.booking_id" class="p-4 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
                             <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-2">Booking Terhubung</div>
                             <a :href="'/bookings/' + modal360.data.booking_id" class="inline-flex items-center gap-1 text-[12px] text-[#00e5ff] hover:underline">
                                 <span class="material-symbols-outlined text-[13px]">route</span>
@@ -739,8 +735,8 @@
          class="modal-overlay" style="display:none;"
          @click.self="transitionDialog.open=false; transitionDialog.revertFn && transitionDialog.revertFn()">
         <div class="modal-box max-w-md" @click.stop>
-            <div class="px-6 py-4" style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                <h3 class="text-[14px] font-bold text-slate-100 flex items-center gap-2">
+            <div class="px-6 py-4" style="border-bottom:1px solid var(--cc-border);">
+                <h3 class="text-[14px] font-bold flex items-center gap-2" style="color:var(--cc-text)">
                     <span class="material-symbols-outlined text-[#00e5ff] text-[18px]">move_up</span>
                     Pindah Stage: <span class="text-[#00e5ff]" x-text="stageLabel(transitionDialog.pendingStage)"></span>
                 </h3>
@@ -748,7 +744,7 @@
             <div class="p-6 space-y-4">
                 <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-2">
                     <div class="text-[11px] text-blue-400 font-bold uppercase mb-1">Deal</div>
-                    <div class="text-sm text-slate-200 font-semibold" x-text="transitionDialog.title"></div>
+                    <div class="text-sm font-semibold" style="color:var(--cc-text)" x-text="transitionDialog.title"></div>
                 </div>
 
                 <div>
@@ -1041,7 +1037,7 @@ function setKanbanView(view) {
     const tableView = document.getElementById('pipeline-table-view');
 
     // Update button states
-    ['board','list','table'].forEach(v => {
+    ['board','table'].forEach(v => {
         const btn = document.getElementById(`view-${v}`);
         if (btn) btn.className = 'view-btn' + (v === view ? ' active' : '');
     });
@@ -1058,16 +1054,6 @@ function setKanbanView(view) {
             c.style.width = '280px';
             c.style.flexDirection = 'column';
         });
-    } else if (view === 'list') {
-        board.style.display = 'flex';
-        board.style.flexDirection = 'column';
-        board.style.overflowX = 'hidden';
-        if (tableView) tableView.classList.remove('active');
-        document.querySelectorAll('.kanban-column').forEach(c => {
-            c.style.width = '100%';
-            c.style.maxWidth = 'none';
-        });
-        CRM_Toast && CRM_Toast.show('📋 List view aktif', 'info');
     } else if (view === 'table') {
         board.style.display = 'none';
         if (tableView) tableView.classList.add('active');
