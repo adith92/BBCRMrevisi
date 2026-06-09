@@ -24,7 +24,6 @@
                     <th class="text-left py-3 px-4">PIC</th>
                     <th class="text-left py-3 px-4">Industry</th>
                     <th class="text-left py-3 px-4">Sales</th>
-                    <th class="text-left py-3 px-4">Bookings</th>
                     <th class="text-left py-3 px-4">Status</th>
                 </tr>
             </thead>
@@ -55,17 +54,11 @@
                         @endif
                     </td>
                     <td class="py-3 px-4">
-                        <a href="{{ route('bookings.index', ['client_id' => $client->id]) }}"
-                           class="text-blue-600 hover:underline font-medium">
-                            {{ $client->bookings_count }}
-                        </a>
-                    </td>
-                    <td class="py-3 px-4">
                         <x-status-badge :status="$client->status" />
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="py-8 text-center text-[var(--cc-text-muted)]">No clients found</td></tr>
+                <tr><td colspan="5" class="py-8 text-center text-[var(--cc-text-muted)]">No clients found</td></tr>
                 @endforelse
             </tbody>
         </table>

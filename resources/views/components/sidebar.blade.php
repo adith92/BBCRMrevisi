@@ -39,22 +39,11 @@
             <span>{{ __('ui.clients') }}</span>
         </a>
 
-        <a href="{{ route('activities.index') }}" class="nav-item {{ Request::routeIs('activities*') ? 'active' : '' }}">
-            <span class="material-symbols-outlined">event_note</span>
-            <span>{{ __('ui.activity_log') }}</span>
-        </a>
-        @endif
-
-        @if(in_array($role, ['gm','manager']))
-        <div class="nav-section-label">{{ __('ui.operations') }}</div>
-
-        <a href="{{ route('approvals.index') }}" class="nav-item {{ Request::routeIs('approvals*') ? 'active' : '' }}">
-            <span class="material-symbols-outlined">fact_check</span>
-            <span>{{ __('ui.approval_queue') }}</span>
-        </a>
         @endif
 
         @if(in_array($role, ['gm','manager','operational']))
+        <div class="nav-section-label">{{ __('ui.operations') }}</div>
+
         <a href="{{ route('fleet.index') }}" class="nav-item {{ Request::routeIs('fleet*','vehicles*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">local_shipping</span>
             <span>{{ __('ui.fleet_armada') }}</span>
@@ -72,11 +61,6 @@
         <a href="{{ route('subscriptions.index') }}" class="nav-item {{ Request::routeIs('subscriptions*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">autorenew</span>
             <span>{{ __('ui.subscriptions') }}</span>
-        </a>
-
-        <a href="{{ route('vouchers.index') }}" class="nav-item {{ Request::routeIs('vouchers*') ? 'active' : '' }}">
-            <span class="material-symbols-outlined">confirmation_number</span>
-            <span>{{ __('ui.e_voucher') }}</span>
         </a>
 
         <a href="{{ route('finance.index') }}" class="nav-item {{ Request::routeIs('finance*','invoices*') ? 'active' : '' }}">
@@ -133,10 +117,6 @@
                 <a href="{{ route('clients.create') }}" class="nav-item text-[12px]">
                     <span class="material-symbols-outlined text-[14px]">corporate_fare</span>
                     <span>Klien Baru</span>
-                </a>
-                <a href="{{ route('activities.create') }}" class="nav-item text-[12px]">
-                    <span class="material-symbols-outlined text-[14px]">event_note</span>
-                    <span>Log Aktivitas</span>
                 </a>
                 @endif
                 @if(in_array($role, ['gm','manager','sales','operational']))

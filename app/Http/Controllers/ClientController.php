@@ -18,9 +18,8 @@ class ClientController extends Controller
     {
         $user = auth()->user();
 
-        $clients = Client::with(['assignedSales', 'bookings', 'invoices'])
+        $clients = Client::with(['assignedSales', 'invoices'])
             ->when($user->isSales(), fn($q) => $q->where('assigned_sales_id', $user->id))
-            ->withCount('bookings')
             ->orderBy('company_name')
             ->paginate(20);
 
@@ -43,8 +42,6 @@ class ClientController extends Controller
 
         $client->load([
             'assignedSales',
-            'bookings.vehicle',
-            'bookings.sales',
             'invoices.payments',
             'meetingLogs',
         ]);
@@ -53,8 +50,6 @@ class ClientController extends Controller
             'total_spend'   => $client->invoices->where('status', 'paid')->sum('amount'),
             'total_pending' => $client->invoices->whereIn('status', ['sent', 'draft'])->sum('amount'),
             'total_overdue' => $client->invoices->where('status', 'overdue')->sum('amount'),
-            'booking_count' => $client->bookings->count(),
-            'last_booking'  => $client->bookings->sortByDesc('pickup_datetime')->first(),
         ];
 
         return view('clients.show', compact('client', 'stats'));

@@ -78,10 +78,6 @@ class User extends Authenticatable
         return $this->hasMany(SalesTarget::class);
     }
 
-    public function approvalRequests()
-    {
-        return $this->hasMany(ApprovalRequest::class, 'requested_by');
-    }
 
     // Role Checks
     /**

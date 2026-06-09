@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\DB;
+use App\Models\Opportunity;
 
 class SalesTarget extends Model
 {
@@ -74,6 +76,53 @@ class SalesTarget extends Model
                 return round(((float) $this->actual_revenue / (float) $this->target_revenue) * 100, 2);
             }
         );
+    }
+
+    protected function actualWon(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => Opportunity::where('sales_id', $this->user_id)
+                ->where('stage', 'won')
+                ->whereYear('actual_close_date', $this->period_year)
+                ->whereMonth('actual_close_date', $this->period_month)
+                ->count()
+        );
+    }
+
+    protected function actualRevenue(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => (float) Opportunity::where('sales_id', $this->user_id)
+                ->where('stage', 'won')
+                ->whereYear('actual_close_date', $this->period_year)
+                ->whereMonth('actual_close_date', $this->period_month)
+                ->sum(DB::raw('COALESCE(final_value, estimated_value, 0)'))
+        );
+    }
+
+    protected function actualOpportunities(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => Opportunity::where('sales_id', $this->user_id)
+                ->whereYear('created_at', $this->period_year)
+                ->whereMonth('created_at', $this->period_month)
+                ->count()
+        );
+    }
+
+    protected function actualMeetings(): Attribute
+    {
+        return Attribute::make(get: fn () => 0);
+    }
+
+    protected function actualCalls(): Attribute
+    {
+        return Attribute::make(get: fn () => 0);
+    }
+
+    protected function actualVisits(): Attribute
+    {
+        return Attribute::make(get: fn () => 0);
     }
 
     // Static helpers

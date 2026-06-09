@@ -8,7 +8,6 @@ use App\Models\PurchaseOrder;
 use App\Models\Vehicle;
 use App\Models\User;
 use App\Models\Opportunity;
-use App\Models\ApprovalRequest;
 use App\Models\ActivityLog;
 use App\Models\Invoice;
 use Carbon\Carbon;
@@ -48,20 +47,23 @@ class DashboardController extends Controller
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd   = Carbon::now()->endOfMonth();
 
-        $pendingPO          = PurchaseOrder::where('status', 'pending')->count();
         $availableVehicles  = Vehicle::where('status', 'available')->count();
         $pendingDispatch    = Booking::where('status', 'pending')->count();
         $upcomingMeetings   = 0;
 
-        $totalMonthlyRevenue = Booking::whereBetween('created_at', [$monthStart, $monthEnd])
-                                  ->where('status', 'completed')->sum('price');
+        // Dynamic target vs realization (Booked vs Paid)
+        $totalMonthlyBooked = Opportunity::where('stage', 'won')
+                                  ->whereBetween('actual_close_date', [$monthStart, $monthEnd])
+                                  ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
+
+        $totalMonthlyPaid   = Invoice::where('status', 'paid')
+                                  ->whereBetween('updated_at', [$monthStart, $monthEnd])
+                                  ->sum('amount');
+
+        $outstandingInvoices = Invoice::whereIn('status', ['sent', 'draft', 'overdue'])->sum('amount');
 
         $completedBookings   = Booking::whereMonth('created_at', Carbon::now()->month)
                                   ->where('status', 'completed')->count();
-
-        $avgRevenuePerBooking = $completedBookings > 0
-                                ? $totalMonthlyRevenue / $completedBookings
-                                : 0;
 
         $activeClients = Client::where('status', 'active')->count();
         $todayRevenue  = Booking::whereDate('created_at', $today)
@@ -109,9 +111,9 @@ class DashboardController extends Controller
         });
 
         return view('dashboard.gm', compact(
-            'pendingPO', 'availableVehicles', 'pendingDispatch', 'upcomingMeetings',
-            'totalMonthlyRevenue', 'completedBookings', 'avgRevenuePerBooking',
-            'activeClients', 'todayRevenue', 'users', 'deals', 'targets'
+            'availableVehicles', 'pendingDispatch', 'upcomingMeetings',
+            'totalMonthlyBooked', 'totalMonthlyPaid', 'outstandingInvoices',
+            'completedBookings', 'activeClients', 'todayRevenue', 'users', 'deals', 'targets'
         ));
     }
 
@@ -156,9 +158,6 @@ class DashboardController extends Controller
             return ['name' => $s->name, 'totals' => $totals];
         })->all();
 
-        $pendingApprovals = ApprovalRequest::where('status', 'pending')->count();
-        $approvalQueue    = ApprovalRequest::where('status', 'pending')->latest()->take(5)->get();
-
         $recentActivities = ActivityLog::latest()->take(10)->get();
         $activityIcons    = [
             'call'    => 'phone',
@@ -182,7 +181,6 @@ class DashboardController extends Controller
         return view('dashboard.manager', compact(
             'teamMembers', 'teamPipelineValue', 'teamWon', 'teamLost',
             'stages', 'stageLabels', 'stageColors', 'stageBreakdown',
-            'pendingApprovals', 'approvalQueue',
             'recentActivities', 'activityIcons', 'revenueTrend'
         ));
     }

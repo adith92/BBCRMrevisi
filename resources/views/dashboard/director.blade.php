@@ -96,10 +96,6 @@
             </div>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-            <a href="{{ route('approvals.index') }}" class="btn-primary text-xs py-2 px-4">
-                <span class="material-symbols-outlined text-[14px]">fact_check</span>
-                Approve Queue
-            </a>
             <a href="{{ route('analytics.index') }}" class="btn-secondary text-xs py-2 px-4">
                 <span class="material-symbols-outlined text-[14px]">query_stats</span>
                 Reports
@@ -209,7 +205,7 @@
                     ['icon'=>'group','color'=>'#1468a8','route'=>'clients.index','text'=>'Prioritaskan 12 client corporate dengan renewal'],
                     ['icon'=>'receipt_long','color'=>'#a17412','route'=>'finance.index','text'=>'Follow-up invoice overdue di atas 14 hari - Rp 420 Jt exposed'],
                     ['icon'=>'local_shipping','color'=>'#21785f','route'=>'fleet.index','text'=>'Tambahkan fleet allocation untuk area Jakarta HQ'],
-                    ['icon'=>'build','color'=>'#72529a','route'=>'approvals.index','text'=>'Percepat approval PO maintenance untuk unit high-demand'],
+                    ['icon'=>'build','color'=>'#72529a','route'=>'maintenance.index','text'=>'Pantau log maintenance untuk unit high-demand'],
                     ['icon'=>'leaderboard','color'=>'#1468a8','route'=>'kpi.index','text'=>'Dorong sales terbaik untuk handle enterprise account'],
                 ];
                 @endphp
@@ -309,7 +305,7 @@
     </div>
 
     {{-- ===== BOTTOM ROW: Recent Bookings + Approval Queue ===== --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4">
 
         {{-- Recent Bookings --}}
         <div class="cc-card p-5">
@@ -336,39 +332,6 @@
                         <div class="text-[10px]" style="color: var(--cc-text-muted);"><a href="{{ route('clients.index') }}" class="dashboard-link">{{ $b['client'] }}</a> - <a href="{{ route('fleet.index') }}" class="dashboard-link">{{ $b['fleet'] }}</a></div>
                     </div>
                     <span class="status-badge {{ $b['statusClass'] }} flex-shrink-0">{{ $b['status'] }}</span>
-                </div>
-                @endforeach
-            </div>
-        </div>
-
-        {{-- Approval Queue --}}
-        <div class="cc-card p-5">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[18px]" style="color:#f87171;">pending_actions</span>
-                    <span class="text-xs font-bold uppercase tracking-widest" style="color:#94a3b8;">Approval Queue</span>
-                </div>
-                <a href="{{ route('approvals.index') }}" class="text-[10px] font-semibold" style="color:#3b82f6;">Approve →</a>
-            </div>
-            @php
-            $approvals = [
-                ['title'=>'Fleet Maintenance PO','dept'=>'Operational','priority'=>'High','icon'=>'build','iconColor'=>'#f87171'],
-                ['title'=>'Corp. Contract Renewal','dept'=>'Sales','priority'=>'High','icon'=>'handshake','iconColor'=>'#f59e0b'],
-                ['title'=>'Invoice Adjustment','dept'=>'Finance','priority'=>'Medium','icon'=>'receipt_long','iconColor'=>'#fbbf24'],
-                ['title'=>'Enterprise Onboarding','dept'=>'Sales','priority'=>'Medium','icon'=>'person_add','iconColor'=>'#60a5fa'],
-            ];
-            @endphp
-            <div class="space-y-1">
-                @foreach($approvals as $a)
-                <div class="approval-item">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(255,255,255,0.04);">
-                        <span class="material-symbols-outlined text-[16px]" style="color:{{ $a['iconColor'] }};">{{ $a['icon'] }}</span>
-                    </div>
-                    <div class="flex-grow min-w-0">
-                        <a href="{{ route('approvals.index') }}" class="text-xs font-semibold dashboard-link truncate" style="color: var(--cc-text);">{{ $a['title'] }}</a>
-                        <div class="text-[10px]" style="color: var(--cc-text-muted);">{{ $a['dept'] }}</div>
-                    </div>
-                    <span class="{{ $a['priority'] === 'High' ? 'priority-high' : 'priority-med' }} flex-shrink-0 uppercase tracking-wide">{{ $a['priority'] }}</span>
                 </div>
                 @endforeach
             </div>

@@ -95,10 +95,6 @@ class Opportunity extends Model
         return $this->hasMany(ActivityLog::class);
     }
 
-    public function approvalRequests()
-    {
-        return $this->hasMany(ApprovalRequest::class);
-    }
 
     public function booking()
     {

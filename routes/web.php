@@ -9,9 +9,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\RevenueController;
-use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\SalesTargetController;
 use App\Http\Controllers\PipelineController;
@@ -65,11 +63,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('products', ProductController::class)->middleware('role:gm,manager,finance');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index')->withoutMiddleware(['role:gm,manager,finance']);
 
-    // Approvals
-    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index')->middleware('role:gm,manager,sales');
-    Route::get('/approvals/{approval}', [ApprovalController::class, 'show'])->name('approvals.show')->middleware('role:gm,manager,sales');
-    Route::post('/approvals/{approval}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve')->middleware('role:gm,manager');
-    Route::post('/approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject')->middleware('role:gm,manager');
 
     // Activity Logs
     Route::resource('activities', ActivityLogController::class)->except(['edit', 'update'])->middleware('role:gm,manager,sales');
@@ -81,19 +74,9 @@ Route::middleware(['auth'])->group(function () {
     // Subscriptions
     Route::resource('subscriptions', SubscriptionController::class)->middleware('role:gm,manager,finance');
     Route::post('/subscriptions/{subscription}/terminate', [SubscriptionController::class, 'terminate'])->name('subscriptions.terminate')->middleware('role:gm,finance');
-    Route::post('/subscriptions/billing/run', [SubscriptionController::class, 'runBilling'])
-        ->middleware('role:gm,finance,manager')
-        ->name('subscriptions.billing.run');
-
-    // Vouchers
-    Route::resource('vouchers', VoucherController::class)->middleware('role:gm,manager,finance');
-    Route::post('/vouchers/{voucher}/redeem', [VoucherController::class, 'redeem'])->name('vouchers.redeem')->middleware('role:gm,finance,operational');
-    Route::post('/vouchers/{voucher}/expire', [VoucherController::class, 'expire'])->name('vouchers.expire')->middleware('role:gm,finance');
-    Route::post('/vouchers/bulk', [VoucherController::class, 'bulkStore'])->name('vouchers.bulk');
 
     // Fleet (Operational)
     Route::resource('fleet', FleetController::class)->middleware('role:gm,manager,operational');
-    Route::resource('vehicle-contracts', App\Http\Controllers\VehicleContractController::class)->middleware('role:gm,operational,manager');
 
     // Finance
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index')->middleware('role:gm,manager,finance');

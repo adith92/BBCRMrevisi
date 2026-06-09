@@ -46,7 +46,7 @@
 </div>
 
 {{-- KPI Cards --}}
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <a href="{{ route('finance.index', ['status' => 'paid']) }}" class="group block bg-green-50 rounded-lg shadow p-5 border-l-4 border-green-500 hover:shadow-md transition-all">
         <p class="text-sm text-gray-600">Total Paid</p>
         <p class="text-xl font-bold text-green-700 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($stats['total_spend']) }}</p>
@@ -61,66 +61,6 @@
     <div class="bg-red-50 rounded-lg shadow p-5 border-l-4 border-red-500">
         <p class="text-sm text-gray-600">Overdue</p>
         <p class="text-xl font-bold text-red-700 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($stats['total_overdue']) }}</p>
-    </div>
-
-    <a href="{{ route('bookings.index', ['client_id' => $client->id]) }}" class="group block bg-blue-50 rounded-lg shadow p-5 border-l-4 border-blue-500 hover:shadow-md transition-all">
-        <p class="text-sm text-gray-600">Total Bookings</p>
-        <p class="text-xl font-bold text-blue-700 mt-1">{{ $stats['booking_count'] }}</p>
-        <p class="text-xs text-blue-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">View bookings →</p>
-    </a>
-</div>
-
-{{-- Booking History --}}
-<div class="cc-card rounded-lg shadow p-6 mb-6">
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Booking History</h3>
-        <a href="{{ route('bookings.index', ['client_id' => $client->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View all →</a>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="border-b">
-                <tr class="text-gray-500">
-                    <th class="text-left py-2">Booking #</th>
-                    <th class="text-left py-2">Vehicle</th>
-                    <th class="text-left py-2">Sales</th>
-                    <th class="text-left py-2">Pickup</th>
-                    <th class="text-left py-2">Destination</th>
-                    <th class="text-left py-2">Status</th>
-                    <th class="text-right py-2">Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($client->bookings->sortByDesc('pickup_datetime')->take(10) as $booking)
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-2">
-                        <a href="{{ route('bookings.show', $booking->id) }}" class="text-blue-600 hover:underline font-mono">
-                            {{ $booking->booking_number }}
-                        </a>
-                    </td>
-                    <td class="py-2">
-                        @if(auth()->user()->isGM() || auth()->user()->isOperational())
-                            <a href="{{ route('fleet.show', $booking->vehicle_id) }}" class="text-blue-600 hover:underline font-mono">
-                                {{ $booking->vehicle->plate_number }}
-                            </a>
-                        @else
-                            <span class="font-mono text-gray-700">{{ $booking->vehicle->plate_number }}</span>
-                        @endif
-                    </td>
-                    <td class="py-2">
-                        <a href="{{ route('sales.performance', $booking->sales_id) }}" class="text-blue-600 hover:underline">
-                            {{ $booking->sales->name }}
-                        </a>
-                    </td>
-                    <td class="py-2 text-gray-600">{{ $booking->pickup_datetime->format('d M Y') }}</td>
-                    <td class="py-2 text-gray-600">{{ $booking->destination }}</td>
-                    <td class="py-2"><x-status-badge :status="$booking->status" /></td>
-                    <td class="py-2 text-right font-semibold">{{ \App\Helpers\FormatHelper::formatIDR($booking->price) }}</td>
-                </tr>
-                @empty
-                <tr><td colspan="7" class="py-4 text-center text-gray-500">No bookings yet</td></tr>
-                @endforelse
-            </tbody>
-        </table>
     </div>
 </div>
 

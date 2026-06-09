@@ -239,7 +239,7 @@ class KanbanTest extends TestCase
                  ->assertJsonPath('opportunity.title', 'Big Deal 360')
                  ->assertJsonStructure(['opportunity' => [
                      'id','title','stage','opp_number',
-                     'client','sales','activity_logs','approval_requests',
+                     'client','sales','activity_logs',
                  ]]);
     }
 

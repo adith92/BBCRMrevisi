@@ -117,10 +117,6 @@
         </div>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
-        <a href="{{ route('approvals.index') }}" class="btn-primary text-xs py-2 px-4">
-            <span class="material-symbols-outlined text-[14px]">fact_check</span>
-            {{ __('ui.approve_queue') }}
-        </a>
         <a href="{{ route('analytics.index') }}" class="btn-secondary text-xs py-2 px-4">
             <span class="material-symbols-outlined text-[14px]">query_stats</span>
             {{ __('ui.reports') }}
@@ -133,19 +129,21 @@
     {{-- ===== KPI CARDS ROW ===== --}}
     <div class="grid-stack-item" gs-id="widget-kpi-row" gs-x="0" gs-y="0" gs-w="12" gs-h="3">
         <div class="grid-stack-item-content">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 h-full">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 h-full">
 
                 {{-- KPI 1: Revenue --}}
                 <a href="{{ route('analytics.index') }}" class="kpi-card kpi-cyan col-span-2 md:col-span-1 lg:col-span-1 block group" style="position:relative;overflow:hidden;transition:transform 0.12s,box-shadow 0.12s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(20,104,168,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-                    <div class="flex items-start justify-between mb-2">
+                    <div class="flex items-start justify-between mb-1.5">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(20,104,168,0.10);">
                             <span class="material-symbols-outlined text-[17px]" style="color:#1468a8;">payments</span>
                         </div>
-                        <span class="signal-up">▲ 18.4%</span>
                     </div>
-                    <div class="text-lg font-black leading-tight text-cc">Rp 2,84 M</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.monthly_revenue') }}</div>
-                    <canvas id="spark-revenue" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
+                    <div class="text-xs text-cc-muted flex flex-col space-y-0.5">
+                        <span>Booked: <strong class="text-cc font-extrabold">{{ \App\Helpers\FormatHelper::formatIDR($totalMonthlyBooked) }}</strong></span>
+                        <span>Paid: <strong class="text-emerald-500 font-extrabold">{{ \App\Helpers\FormatHelper::formatIDR($totalMonthlyPaid) }}</strong></span>
+                    </div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider mt-1 text-cc-muted">Target vs Realisasi</div>
+                    <canvas id="spark-revenue" style="position:absolute;bottom:4px;right:4px;width:54px;height:18px;opacity:0.65;"></canvas>
                 </a>
 
                 {{-- KPI 2: Bookings --}}
@@ -182,7 +180,7 @@
                         </div>
                         <span class="signal-up">▲ 12</span>
                     </div>
-                    <div class="text-lg font-black leading-tight text-cc">128</div>
+                    <div class="text-lg font-black leading-tight text-cc">{{ $activeClients }}</div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.corp_clients') }}</div>
                     <canvas id="spark-clients" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
@@ -195,22 +193,9 @@
                         </div>
                         <span class="signal-warn">{{ __('ui.attention') }}</span>
                     </div>
-                    <div class="text-lg font-black leading-tight text-cc">Rp 420 Jt</div>
+                    <div class="text-lg font-black leading-tight text-cc">{{ \App\Helpers\FormatHelper::formatIDR($outstandingInvoices) }}</div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.outstanding_inv') }}</div>
                     <canvas id="spark-invoice" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
-                </a>
-
-                {{-- KPI 6: Approval --}}
-                <a href="{{ route('approvals.index') }}" class="kpi-card kpi-red block group" style="position:relative;overflow:hidden;transition:transform 0.12s,box-shadow 0.12s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(239,68,68,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-                    <div class="flex items-start justify-between mb-2">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(239,68,68,0.1);">
-                            <span class="material-symbols-outlined text-[17px]" style="color:#f87171;">pending_actions</span>
-                        </div>
-                        <span class="signal-down">{{ __('ui.urgent') }}</span>
-                    </div>
-                    <div class="text-lg font-black leading-tight text-cc">{{ $pendingPO ?? 14 }}</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.pending_approval') }}</div>
-                    <canvas id="spark-approvals" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
 
             </div>
@@ -238,14 +223,11 @@
                         ['icon'=>'build',          'label'=>__('ui.maintenance'),   'route'=>'maintenance.index',   'color'=>'#f97316', 'bg'=>'rgba(249,115,22,0.1)'],
                         ['icon'=>'receipt_long',   'label'=>__('ui.finance'),       'route'=>'finance.index',       'color'=>'#a78bfa', 'bg'=>'rgba(167,139,250,0.1)'],
                         ['icon'=>'subscriptions',  'label'=>__('ui.subscriptions'), 'route'=>'subscriptions.index', 'color'=>'#38bdf8', 'bg'=>'rgba(56,189,248,0.1)'],
-                        ['icon'=>'redeem',         'label'=>__('ui.vouchers'),      'route'=>'vouchers.index',      'color'=>'#fb7185', 'bg'=>'rgba(251,113,133,0.1)'],
                         ['icon'=>'query_stats',    'label'=>__('ui.analytics'),     'route'=>'analytics.index',     'color'=>'#1468a8', 'bg'=>'rgba(20,104,168,0.08)'],
-                        ['icon'=>'fact_check',     'label'=>__('ui.approvals'),     'route'=>'approvals.index',     'color'=>'#4ade80', 'bg'=>'rgba(74,222,128,0.1)'],
                         ['icon'=>'inventory_2',    'label'=>__('ui.products'),      'route'=>'products.index',      'color'=>'#e879f9', 'bg'=>'rgba(232,121,249,0.1)'],
                         ['icon'=>'bar_chart',      'label'=>__('ui.kpi'),           'route'=>'kpi.index',           'color'=>'#fde047', 'bg'=>'rgba(253,224,71,0.1)'],
                         ['icon'=>'event_note',     'label'=>__('ui.activities'),    'route'=>'activities.index',    'color'=>'#94a3b8', 'bg'=>'rgba(148,163,184,0.08)'],
                         ['icon'=>'description',    'label'=>__('ui.opportunities'), 'route'=>'opportunities.index', 'color'=>'#7dd3fc', 'bg'=>'rgba(125,211,252,0.1)'],
-                        ['icon'=>'contract',       'label'=>__('ui.vehicle_contracts'),  'route'=>'vehicle-contracts.index', 'color'=>'#86efac', 'bg'=>'rgba(134,239,172,0.1)'],
                         ['icon'=>'dashboard',      'label'=>__('ui.gm_view'),       'route'=>'dashboard.gm',        'color'=>'#c084fc', 'bg'=>'rgba(192,132,252,0.1)'],
                     ];
                     @endphp
@@ -307,7 +289,6 @@
                         ['icon'=>'group','color'=>'#1468a8','route'=>'clients.index','text'=>__('ui.rec_clients')],
                         ['icon'=>'receipt_long','color'=>'#a17412','route'=>'finance.index','text'=>__('ui.rec_invoice')],
                         ['icon'=>'local_shipping','color'=>'#21785f','route'=>'fleet.index','text'=>__('ui.rec_fleet')],
-                        ['icon'=>'build','color'=>'#72529a','route'=>'approvals.index','text'=>__('ui.rec_approval')],
                         ['icon'=>'leaderboard','color'=>'#1468a8','route'=>'kpi.index','text'=>__('ui.rec_sales')],
                     ];
                     @endphp
@@ -460,8 +441,8 @@
         </div>
     </div>
 
-    {{-- ===== Recent Bookings (1/2 width) ===== --}}
-    <div class="grid-stack-item" gs-id="widget-recent-books" gs-x="0" gs-y="19" gs-w="6" gs-h="5">
+    {{-- ===== Recent Bookings (Full width) ===== --}}
+    <div class="grid-stack-item" gs-id="widget-recent-books" gs-x="0" gs-y="19" gs-w="12" gs-h="5">
         <div class="grid-stack-item-content">
             <div class="cc-card p-5 h-full overflow-auto">
                 <div class="flex items-center justify-between mb-4">
@@ -487,43 +468,6 @@
                             <div class="text-[10px] text-cc-muted"><a href="{{ route('clients.index') }}" class="dashboard-link">{{ $b['client'] }}</a> - <a href="{{ route('fleet.index') }}" class="dashboard-link">{{ $b['fleet'] }}</a></div>
                         </div>
                         <span class="status-badge {{ $b['statusClass'] }} flex-shrink-0">{{ $b['status'] }}</span>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ===== Approval Queue (1/2 width) ===== --}}
-    <div class="grid-stack-item" gs-id="widget-approval-q" gs-x="6" gs-y="19" gs-w="6" gs-h="5">
-        <div class="grid-stack-item-content">
-            <div class="cc-card p-5 h-full overflow-auto">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]" style="color:#f87171;">pending_actions</span>
-                        <span class="text-xs font-bold uppercase tracking-widest" style="color:#94a3b8;">{{ __('ui.approval_queue') }}</span>
-                    </div>
-                    <a href="{{ route('approvals.index') }}" class="text-[10px] font-semibold" style="color:#3b82f6;">Approve →</a>
-                </div>
-                @php
-                $approvals = [
-                    ['title'=>'Fleet Maintenance PO','dept'=>'Operational','priority'=>'High','icon'=>'build','iconColor'=>'#f87171'],
-                    ['title'=>'Corp. Contract Renewal','dept'=>'Sales','priority'=>'High','icon'=>'handshake','iconColor'=>'#f59e0b'],
-                    ['title'=>'Invoice Adjustment','dept'=>'Finance','priority'=>'Medium','icon'=>'receipt_long','iconColor'=>'#fbbf24'],
-                    ['title'=>'Enterprise Onboarding','dept'=>'Sales','priority'=>'Medium','icon'=>'person_add','iconColor'=>'#60a5fa'],
-                ];
-                @endphp
-                <div class="space-y-1">
-                    @foreach($approvals as $a)
-                    <div class="approval-item">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(255,255,255,0.04);">
-                            <span class="material-symbols-outlined text-[16px]" style="color:{{ $a['iconColor'] }};">{{ $a['icon'] }}</span>
-                        </div>
-                        <div class="flex-grow min-w-0">
-                            <a href="{{ route('approvals.index') }}" class="text-xs font-semibold dashboard-link truncate text-cc">{{ $a['title'] }}</a>
-                            <div class="text-[10px] text-cc-muted">{{ $a['dept'] }}</div>
-                        </div>
-                        <span class="{{ $a['priority'] === 'High' ? 'priority-high' : 'priority-med' }} flex-shrink-0 uppercase tracking-wide">{{ $a['priority'] }}</span>
                     </div>
                     @endforeach
                 </div>
@@ -620,7 +564,6 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'spark-fleet',     data: [65,68,70,72,69,71,74,72,75,73,72,74],            color: '#34d399' },
         { id: 'spark-clients',   data: [100,104,108,110,112,115,116,118,120,122,125,128], color: '#a78bfa' },
         { id: 'spark-invoice',   data: [280,310,340,360,395,420,410,430,440,420,415,420], color: '#fbbf24' },
-        { id: 'spark-approvals', data: [8,10,12,9,11,14,12,15,13,14,16,14],              color: '#f87171' },
     ];
     sparks.forEach(s => {
         if (window.CRM_Sparkline) CRM_Sparkline.render(s.id, s.data, s.color);

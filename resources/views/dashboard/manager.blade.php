@@ -5,8 +5,8 @@
 @section('content')
 <x-dashboard-grid :saved-layout="auth()->user()->dashboard_settings">
 
-    {{-- Row 1: Team Overview Cards (4 cards) --}}
-    <div class="grid-stack-item" gs-id="w-pipeline-tim" gs-x="0" gs-y="0" gs-w="3" gs-h="2">
+    {{-- Row 1: Team Overview Cards (3 cards) --}}
+    <div class="grid-stack-item" gs-id="w-pipeline-tim" gs-x="0" gs-y="0" gs-w="4" gs-h="2">
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl border border-[var(--cc-border)] p-5 shadow-sm h-full">
                 <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide font-semibold">Pipeline Tim</p>
@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="w-won-alltime" gs-x="3" gs-y="0" gs-w="3" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-won-alltime" gs-x="4" gs-y="0" gs-w="4" gs-h="2">
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl border border-[var(--cc-border)] p-5 shadow-sm h-full">
                 <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide font-semibold">Won (All Time)</p>
@@ -28,19 +28,7 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="w-approval-l1" gs-x="6" gs-y="0" gs-w="3" gs-h="2">
-        <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl border border-[var(--cc-border)] p-5 shadow-sm h-full">
-                <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide font-semibold">Approval Level-1</p>
-                <p class="text-2xl font-bold {{ $pendingApprovals > 0 ? 'text-red-600 dark:text-red-400' : 'text-[var(--cc-text)]' }} mt-1">
-                    {{ $pendingApprovals }}
-                </p>
-                <p class="text-xs text-[var(--cc-text-muted)] mt-1">Menunggu keputusan Anda</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid-stack-item" gs-id="w-anggota-tim" gs-x="9" gs-y="0" gs-w="3" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-anggota-tim" gs-x="8" gs-y="0" gs-w="4" gs-h="2">
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl border border-[var(--cc-border)] p-5 shadow-sm h-full">
                 <p class="text-xs text-[var(--cc-text-muted)] uppercase tracking-wide font-semibold">Anggota Tim</p>
@@ -121,47 +109,14 @@
         </div>
     </div>
 
-    {{-- Sidebar: Approvals --}}
-    <div class="grid-stack-item" gs-id="w-approval-queue" gs-x="8" gs-y="7" gs-w="4" gs-h="3">
-        <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl border border-[var(--cc-border)] shadow-sm overflow-hidden h-full">
-                <div class="px-5 py-4 border-b border-[var(--cc-border)] flex items-center justify-between">
-                    <h3 class="font-semibold text-[var(--cc-text)]">Approval Level-1</h3>
-                    @if($pendingApprovals > 0)
-                    <span class="bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 text-xs font-semibold px-2 py-0.5 rounded-full">
-                        {{ $pendingApprovals }}
-                    </span>
-                    @endif
-                </div>
-                <div class="divide-y divide-[var(--cc-border)] overflow-y-auto" style="max-height:calc(100% - 100px)">
-                    @forelse($approvalQueue as $approval)
-                    <div class="px-5 py-3 hover:bg-black/5 dark:hover:bg-white/5">
-                        <p class="text-sm font-medium text-[var(--cc-text)]">
-                            {{ optional(optional($approval->opportunity)->client)->company_name ?? 'N/A' }}
-                        </p>
-                        <p class="text-xs text-[var(--cc-text-muted)]">{{ $approval->discount_percent }}% diskon</p>
-                        <a href="{{ route('approvals.show', $approval) }}"
-                           class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Review &rarr;</a>
-                    </div>
-                    @empty
-                    <div class="px-5 py-6 text-center text-[var(--cc-text-muted)] text-sm">Tidak ada pending.</div>
-                    @endforelse
-                </div>
-                <div class="px-5 py-3 border-t border-[var(--cc-border)]">
-                    <a href="{{ route('approvals.index') }}" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Semua approval</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- Sidebar: Recent Activities --}}
-    <div class="grid-stack-item" gs-id="w-recent-activities" gs-x="8" gs-y="10" gs-w="4" gs-h="3">
+    <div class="grid-stack-item" gs-id="w-recent-activities" gs-x="8" gs-y="7" gs-w="4" gs-h="6">
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl border border-[var(--cc-border)] shadow-sm overflow-hidden h-full">
                 <div class="px-5 py-4 border-b border-[var(--cc-border)]">
                     <h3 class="font-semibold text-[var(--cc-text)]">Aktivitas Terbaru Tim</h3>
                 </div>
-                <div class="divide-y divide-[var(--cc-border)] max-h-60 overflow-y-auto">
+                <div class="divide-y divide-[var(--cc-border)] overflow-y-auto" style="max-height:calc(100% - 100px)">
                     @php
                         $activityIcons = [
                             'meeting'    => '🤝',

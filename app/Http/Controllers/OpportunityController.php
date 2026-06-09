@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
-use App\Models\ApprovalRequest;
 use App\Models\Client;
 use App\Models\Opportunity;
 use App\Models\Product;
 use App\Models\User;
-use App\Services\ApprovalService;
 use App\Services\PipelineService;
 use Illuminate\Http\Request;
 
@@ -172,17 +170,11 @@ class OpportunityController extends Controller
             ->take(5)
             ->get();
 
-        $approvalRequests = $opportunity->approvalRequests()
-            ->with(['requester', 'currentApprover'])
-            ->latest()
-            ->get();
-
         $nextStages = $this->pipelineService->getNextStages($opportunity->stage);
 
         return view('pipeline.show', compact(
             'opportunity',
             'activityLogs',
-            'approvalRequests',
             'nextStages'
         ));
     }
@@ -239,26 +231,19 @@ class OpportunityController extends Controller
                 ]);
             }
 
-            // Validasi transisi mundur khusus untuk role 'sales'
-            if (auth()->user()->role === 'sales') {
-                $stageOrder = [
-                    'call_meeting' => 1,
-                    'prospecting' => 2,
-                    'proposal' => 3,
-                    'negotiation' => 4,
-                    'won' => 5,
-                    'lost' => 6
-                ];
-                
-                $oldIdx = $stageOrder[$oldStage] ?? 0;
-                $newIdx = $stageOrder[$validated['stage']] ?? 0;
-                
-                if ($newIdx < $oldIdx && !in_array($validated['stage'], ['won', 'lost'])) {
-                    if ($request->wantsJson()) {
-                        return response()->json(['ok' => false, 'message' => "Gagal: Membutuhkan Persetujuan Sales Manager untuk mundur dari tahapan ini."], 403);
-                    }
-                    return back()->withErrors(['stage' => "Membutuhkan Persetujuan Sales Manager untuk mundur ke tahapan {$validated['stage']}."]);
+            // Validasi hak akses khusus untuk role 'sales' yang merupakan pemilik oportunitas
+            if (auth()->user()->role !== 'sales') {
+                if ($request->wantsJson()) {
+                    return response()->json(['ok' => false, 'message' => 'Akses ditolak: Hanya Sales yang dapat mengubah stage.'], 403);
                 }
+                return back()->withErrors(['stage' => 'Akses ditolak: Hanya Sales yang dapat mengubah stage.']);
+            }
+
+            if ($opportunity->sales_id !== auth()->id()) {
+                if ($request->wantsJson()) {
+                    return response()->json(['ok' => false, 'message' => 'Akses ditolak: Hanya Sales pemilik oportunitas yang dapat mengubah stage.'], 403);
+                }
+                return back()->withErrors(['stage' => 'Akses ditolak: Hanya Sales pemilik oportunitas yang dapat mengubah stage.']);
             }
 
             // Log stage transition as activity
@@ -338,7 +323,10 @@ class OpportunityController extends Controller
 
     public function advanceStage(Request $request, Opportunity $opportunity)
     {
-        $this->authorizeEdit($opportunity);
+        $user = auth()->user();
+        if ($user->role !== 'sales' || $opportunity->sales_id !== $user->id) {
+            abort(403, 'Akses ditolak: Hanya Sales pemilik yang dapat mengubah stage.');
+        }
 
         $validated = $request->validate([
             'stage'       => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
@@ -350,15 +338,6 @@ class OpportunityController extends Controller
             return back()->withErrors([
                 'stage' => "Transisi dari {$opportunity->stage} ke {$validated['stage']} tidak diizinkan.",
             ]);
-        }
-
-        // Proteksi Lost ke Won bagi role sales
-        if ($opportunity->stage === 'lost' && $validated['stage'] === 'won') {
-            if (auth()->user()->role === 'sales') {
-                return back()->withErrors([
-                    'stage' => "Mengubah status dari Lost ke Won membutuhkan persetujuan Sales Manager.",
-                ]);
-            }
         }
 
         // Log the stage advance as an activity
@@ -391,41 +370,6 @@ class OpportunityController extends Controller
         return back()->with('success', "Stage berhasil diubah ke {$validated['stage']}.");
     }
 
-    // ------------------------------------------------------------------
-    // Store Discount / Approval Request (POST)
-    // ------------------------------------------------------------------
-
-    public function storeDiscount(Request $request, Opportunity $opportunity)
-    {
-        $this->authorizeEdit($opportunity);
-
-        $validated = $request->validate([
-            'discount_percent' => 'required|numeric|min:0|max:100',
-            'notes'            => 'nullable|string',
-        ]);
-
-        $discountPercent  = (float) $validated['discount_percent'];
-        $estimatedValue   = (float) ($opportunity->estimated_value ?? 0);
-
-        if (!ApprovalService::needsApproval($discountPercent)) {
-            // Zero discount — just clear any existing discount
-            $opportunity->update([
-                'discount_percent'  => 0,
-                'discount_approved' => true,
-            ]);
-            return back()->with('success', 'Diskon dihapus.');
-        }
-
-        // Update opportunity discount (pending approval)
-        $opportunity->update([
-            'discount_percent'  => $discountPercent,
-            'discount_approved' => false,
-        ]);
-
-        $approvalRequest = ApprovalService::createApprovalChain($opportunity, $discountPercent);
-
-        return back()->with('success', "Permintaan diskon {$discountPercent}% telah dikirim untuk persetujuan level {$approvalRequest->level}.");
-    }
 
     // ------------------------------------------------------------------
     // Kanban drag-drop: move card to new stage (PATCH, JSON)
@@ -433,7 +377,13 @@ class OpportunityController extends Controller
 
     public function moveStage(Request $request, Opportunity $opportunity)
     {
-        $this->authorizeEdit($opportunity);
+        $user = auth()->user();
+        if ($user->role !== 'sales' || $opportunity->sales_id !== $user->id) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Akses ditolak: Hanya Sales pemilik yang dapat mengubah stage.',
+            ], 403);
+        }
 
         $validated = $request->validate([
             'stage'           => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
@@ -454,16 +404,6 @@ class OpportunityController extends Controller
                 'ok'      => false,
                 'message' => "Transisi dari {$fromStage} ke {$toStage} tidak diizinkan.",
             ], 422);
-        }
-
-        // Proteksi Lost ke Won bagi role sales
-        if ($fromStage === 'lost' && $toStage === 'won') {
-            if (auth()->user()->role === 'sales') {
-                return response()->json([
-                    'ok'      => false,
-                    'message' => "Mengubah status dari Lost ke Won membutuhkan persetujuan Sales Manager.",
-                ], 403);
-            }
         }
 
         $updates = ['stage' => $toStage];
@@ -560,7 +500,6 @@ class OpportunityController extends Controller
             'approver',
             'activityLogs' => fn($q) => $q->latest()->limit(20),
             'activityLogs.sales',
-            'approvalRequests' => fn($q) => $q->latest(),
             'booking',
             'subscription',
         ]);

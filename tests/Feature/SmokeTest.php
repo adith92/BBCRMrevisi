@@ -83,12 +83,6 @@ class SmokeTest extends TestCase
     }
 
     /** @test */
-    public function approvals_returns_200(): void
-    {
-        $this->actAs('manager')->get(route('approvals.index'))->assertStatus(200);
-    }
-
-    /** @test */
     public function finance_returns_200_for_finance_role(): void
     {
         $this->actAs('finance')->get(route('finance.index'))->assertStatus(200);
@@ -146,12 +140,6 @@ class SmokeTest extends TestCase
     public function subscriptions_returns_200(): void
     {
         $this->actAs('finance')->get(route('subscriptions.index'))->assertStatus(200);
-    }
-
-    /** @test */
-    public function vouchers_returns_200(): void
-    {
-        $this->actAs('finance')->get(route('vouchers.index'))->assertStatus(200);
     }
 
     /** @test */

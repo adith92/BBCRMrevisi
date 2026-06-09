@@ -90,13 +90,12 @@
     .kanban-card {
         border-radius: 16px;
         padding: 16px;
-        cursor: grab;
+        cursor: default;
         transition: all 0.2s;
     }
     .kanban-card:hover {
         border-color: rgba(99, 102, 241, 0.5); /* indigo-500/50 */
     }
-    .kanban-card:active { cursor: grabbing; }
 
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -232,6 +231,20 @@
                                     <div class="mt-2 text-[10px] text-rose-300 bg-rose-500/20 p-2 rounded-lg flex items-start gap-1 border border-rose-500/20">
                                         <svg class="w-3 h-3 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         <span x-text="deal.lost_reason"></span>
+                                    </div>
+                                </template>
+
+                                 <template x-if="currentUserRole === 'sales' && deal.sales_id === currentUserId">
+                                    <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between" @click.stop>
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Update Stage:</span>
+                                        <select :value="deal.stage" @change="openStageModal(deal, $event.target.value)" class="rounded-lg border border-white/10 bg-[#161d2e] px-2 py-1 text-xs text-white outline-none focus:border-indigo-500">
+                                            <option class="text-slate-900" value="call_meeting">Call/Meeting</option>
+                                            <option class="text-slate-900" value="prospecting">Prospecting</option>
+                                            <option class="text-slate-900" value="proposal">Proposal</option>
+                                            <option class="text-slate-900" value="negotiation">Negotiation</option>
+                                            <option class="text-slate-900" value="won">Won</option>
+                                            <option class="text-slate-900" value="lost">Lost</option>
+                                        </select>
                                     </div>
                                 </template>
                             </div>
@@ -450,6 +463,8 @@ function pipelineManager() {
         note: '',
         expandedHistoryId: null,
         isSaving: false,
+        currentUserId: {{ auth()->id() }},
+        currentUserRole: '{{ auth()->user()->role }}',
         editingDeal: {
             title: '',
             client_id: '',
@@ -469,7 +484,6 @@ function pipelineManager() {
                 }
                 return d;
             });
-            this.initSortable();
         },
 
         filteredDeals(stage) {
@@ -672,44 +686,6 @@ function pipelineManager() {
             }
         },
 
-        initSortable() {
-            const self = this;
-            document.querySelectorAll('.kanban-drop-zone').forEach(el => {
-                new Sortable(el, {
-                    group: 'pipeline',
-                    animation: 150,
-                    ghostClass: 'opacity-50',
-                    onEnd: function (evt) {
-                        if (evt.from === evt.to) return;
-                        
-                        const itemEl = evt.item;
-                        const dealId = itemEl.getAttribute('data-id');
-                        const newStage = evt.to.parentElement.getAttribute('data-stage');
-                        
-                        // Find deal
-                        const deal = self.rawDeals.find(d => d.id == dealId);
-                        
-                        // Check if transition is lost -> won and user is sales
-                        const userRole = '{{ auth()->user()->role }}';
-                        if (deal.stage === 'lost' && newStage === 'won' && userRole === 'sales') {
-                            // Revert DOM instantly
-                            evt.from.insertBefore(itemEl, evt.from.children[evt.oldIndex]);
-                            if (typeof CRM_Toast !== 'undefined') {
-                                CRM_Toast.show('Membutuhkan Persetujuan Sales Manager untuk mengubah Lost menjadi Won.', 'error');
-                            } else {
-                                alert('Membutuhkan Persetujuan Sales Manager untuk mengubah Lost menjadi Won.');
-                            }
-                            return;
-                        }
-                        
-                        // Revert DOM instantly
-                        evt.from.insertBefore(itemEl, evt.from.children[evt.oldIndex]);
-                        
-                        self.openStageModal(deal, newStage);
-                    }
-                });
-            });
-        }
     }
 }
 </script>
