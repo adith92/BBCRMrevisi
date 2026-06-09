@@ -8,9 +8,9 @@
    html.light = near-white glass
    ══════════════════════════════════════════════════════════════ */
 :root {
-    /* accent stays same in both modes */
-    --cc-accent:     #1468a8;
-    --cc-accent-dim: rgba(20,104,168,0.12);
+    /* Bluebird Blue accent stays same in both modes */
+    --cc-accent:     #006aa6;
+    --cc-accent-dim: rgba(0, 106, 166, 0.12);
 
     /* transition speed for theme switch */
     --theme-speed: 200ms;
@@ -18,20 +18,20 @@
 
 /* ── LIGHT (default — set by JS before paint) ── */
 html, html.light {
-    --cc-bg:          #f8fafc;
-    --cc-surface:     #f1f5f9;
+    --cc-bg:          #f8fafc; /* slate-50 */
+    --cc-surface:     #f1f5f9; /* slate-100 */
     --cc-card:        #ffffff;
     --cc-card-hover:  #f8fafc;
-    --cc-sidebar:     rgba(255,255,255,0.7);
-    --cc-topbar:      rgba(255,255,255,0.8);
-    --cc-border:      rgba(0,0,0,0.06);
-    --cc-border-h:    rgba(0,0,0,0.1);
-    --cc-text:        #0f172a;
-    --cc-text-muted:  #475569;
-    --cc-text-faint:  #64748b;
+    --cc-sidebar:     rgba(255,255,255,0.95);
+    --cc-topbar:      rgba(255,255,255,0.95);
+    --cc-border:      rgba(0,0,0,0.08);
+    --cc-border-h:    rgba(0,0,0,0.15);
+    --cc-text:        #0f172a; /* slate-900 */
+    --cc-text-muted:  #475569; /* slate-600 */
+    --cc-text-faint:  #94a3b8; /* slate-400 */
     --cc-input-bg:    #ffffff;
-    --cc-input-bd:    rgba(0,0,0,0.08);
-    --cc-scrollbar:   rgba(0,0,0,0.08);
+    --cc-input-bd:    rgba(0,0,0,0.15);
+    --cc-scrollbar:   rgba(0,0,0,0.1);
     --cc-overlay:     rgba(0,0,0,0.4);
     --cc-modal-bg:    #ffffff;
     --cc-row-hover:   rgba(0,0,0,0.02);
