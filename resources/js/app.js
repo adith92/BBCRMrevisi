@@ -1,10 +1,12 @@
 import Alpine from 'alpinejs';
 import Sortable from 'sortablejs';
 import Chart from 'chart.js/auto';
+import { GridStack } from 'gridstack';
 
 window.Alpine = Alpine;
 window.Sortable = Sortable;
 window.Chart = Chart;
+window.GridStack = GridStack;
 
 /* ════════════════════════════════════════════════════════════
    ALPINE STORES — native reactive state (replaces window.CRM_Theme etc)

@@ -1,7 +1,7 @@
+@import "gridstack/dist/gridstack.min.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 /* ══════════════════════════════════════════════════════════════
    CSS CUSTOM PROPERTIES — DARK / LIGHT MODE
    html.dark  = dark (default)

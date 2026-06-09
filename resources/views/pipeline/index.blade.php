@@ -116,10 +116,27 @@
     {{-- HEADER --}}
     <div class="mb-6 flex items-center justify-between shrink-0">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-1">Active Pipeline Funnel</h1>
-            <p class="text-[var(--cc-text-muted)]">Manage your deals across sales stages.</p>
+            <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-1">Sales Pipeline</h1>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 flex-wrap">
+            {{-- Search --}}
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg class="h-4 w-4 text-[var(--cc-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" x-model="searchQuery" placeholder="Cari deal / klien..."
+                       class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card)] pl-9 pr-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500 w-48 transition-all focus:w-64 placeholder:text-[var(--cc-text-faint)]">
+            </div>
+
+            {{-- Sort By --}}
+            <select x-model="sortBy"
+                    class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card)] px-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500">
+                <option value="updated_desc">Terbaru Diupdate</option>
+                <option value="created_desc">Terbaru Dibuat</option>
+                <option value="value_desc">Nilai Terbesar</option>
+                <option value="value_asc">Nilai Terkecil</option>
+            </select>
+
             @if($isManager)
             <select x-model="selectedSalesFilter"
                     class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card)] px-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500">
@@ -132,7 +149,7 @@
 
             @if(auth()->user()->isSales())
             <button @click="openCreateModal()"
-                    class="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition">
+                    class="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -155,47 +172,56 @@
                 <div class="kanban-drop-zone custom-scrollbar" id="col-{{ $key }}">
                     <template x-for="deal in filteredDeals('{{ $key }}')" :key="deal.id">
                         <div class="kanban-card glass-panel group relative" :data-id="deal.id">
-                            <div class="flex justify-between items-start mb-1">
-                                <h4 class="font-bold text-[var(--cc-text)] text-sm leading-tight" x-text="deal.title"></h4>
+                            {{-- Clickable Header to Expand/Collapse --}}
+                            <div class="flex justify-between items-start mb-1 cursor-pointer" @click="deal.expanded = !deal.expanded">
+                                <h4 class="font-bold text-[var(--cc-text)] text-sm leading-tight pr-4" x-text="deal.client_name"></h4>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-mono font-bold text-emerald-500" x-text="formatIDR(deal.stage === 'won' ? deal.final_value : deal.estimated_value)"></span>
+                                    <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="{'rotate-180': deal.expanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
                             </div>
                             
-                            <div class="mb-2 space-y-1.5">
-                                <div class="flex items-center justify-between">
-                                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest truncate max-w-[65%]" x-text="deal.client_name"></p>
-                                    <div class="flex items-center gap-1 text-[10px] text-slate-500 font-medium whitespace-nowrap">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span x-text="formatDate(deal.created_at)"></span>
+                            {{-- Expanded Details --}}
+                            <div x-show="deal.expanded" x-collapse x-transition>
+                                <div class="mt-2 mb-2 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-[11px] font-bold text-indigo-400 uppercase tracking-widest truncate max-w-[65%]" x-text="deal.title"></p>
+                                        <div class="flex items-center gap-1 text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span x-text="formatDate(deal.created_at)"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="w-4 h-4 rounded border border-white/10 bg-slate-700/50 flex items-center justify-center text-[9px] font-bold text-slate-300" x-text="deal.sales_name.charAt(0)"></div>
+                                        <span class="text-xs text-slate-400 truncate" x-text="deal.sales_name"></span>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <div class="w-4 h-4 rounded border border-white/10 bg-slate-700/50 flex items-center justify-center text-[9px] font-bold text-slate-300" x-text="deal.sales_name.charAt(0)"></div>
-                                    <span class="text-xs text-slate-400 truncate" x-text="deal.sales_name"></span>
+                                
+                                <div class="flex items-center justify-between mt-3 mb-2">
+                                    <div class="flex flex-wrap gap-1">
+                                        <template x-for="p in (deal.products || [])" :key="p.id">
+                                            <span class="inline-flex items-center rounded-lg bg-indigo-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
+                                                <span x-text="(p.quantity > 1 ? p.quantity + 'x ' : '') + p.category"></span>
+                                            </span>
+                                        </template>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between mt-3 mb-2">
-                                <div class="flex flex-wrap gap-1">
-                                    <template x-for="p in (deal.products || [])" :key="p.id">
-                                        <span class="inline-flex items-center rounded-lg bg-indigo-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
-                                            <span x-text="(p.quantity > 1 ? p.quantity + 'x ' : '') + p.category"></span>
-                                        </span>
-                                    </template>
-                                </div>
-                                <span class="text-xs font-mono font-bold text-emerald-400" x-text="formatIDR(deal.stage === 'won' ? deal.final_value : deal.estimated_value)"></span>
-                            </div>
 
-                            <button @click="openHistoryModal(deal)"
-                                    class="text-[10px] font-bold text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors uppercase tracking-widest mt-2">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                View History
-                            </button>
-                            
-                            <template x-if="deal.stage === 'lost' && deal.lost_reason">
-                                <div class="mt-2 text-[10px] text-rose-300 bg-rose-500/20 p-2 rounded-lg flex items-start gap-1 border border-rose-500/20">
-                                    <svg class="w-3 h-3 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <span x-text="deal.lost_reason"></span>
+                                <div class="flex gap-2">
+                                    <button @click.stop="openHistoryModal(deal)"
+                                            class="text-[10px] font-bold text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors uppercase tracking-widest mt-2">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        History
+                                    </button>
                                 </div>
-                            </template>
+                                
+                                <template x-if="deal.stage === 'lost' && deal.lost_reason">
+                                    <div class="mt-2 text-[10px] text-rose-300 bg-rose-500/20 p-2 rounded-lg flex items-start gap-1 border border-rose-500/20">
+                                        <svg class="w-3 h-3 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <span x-text="deal.lost_reason"></span>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -401,6 +427,8 @@ function pipelineManager() {
     return {
         rawDeals: @json($opportunities->items()),
         selectedSalesFilter: 'all',
+        searchQuery: '',
+        sortBy: 'updated_desc',
         isModalOpen: false,
         modalMode: 'create', // create, edit-stage, history
         modalTitle: '',
@@ -422,6 +450,7 @@ function pipelineManager() {
                 if(d.history_timeline && typeof d.history_timeline === 'string') d.history_timeline = JSON.parse(d.history_timeline);
                 d.client_name = d.client?.company_name || '';
                 d.sales_name = d.sales?.name || '';
+                d.expanded = false;
                 if(d.products) {
                     d.products.forEach(p => p.formattedPrice = p.estimatedValue.toLocaleString('id-ID'));
                 }
@@ -431,11 +460,33 @@ function pipelineManager() {
         },
 
         filteredDeals(stage) {
-            return this.rawDeals.filter(d => {
+            let deals = this.rawDeals.filter(d => {
                 if (d.stage !== stage) return false;
                 if (this.selectedSalesFilter !== 'all' && d.sales_id != this.selectedSalesFilter) return false;
+                if (this.searchQuery) {
+                    const q = this.searchQuery.toLowerCase();
+                    const titleMatch = d.title && d.title.toLowerCase().includes(q);
+                    const clientMatch = d.client_name && d.client_name.toLowerCase().includes(q);
+                    if (!titleMatch && !clientMatch) return false;
+                }
                 return true;
             });
+            
+            deals.sort((a, b) => {
+                let valA = parseFloat(a.stage === 'won' ? a.final_value : a.estimated_value) || 0;
+                let valB = parseFloat(b.stage === 'won' ? b.final_value : b.estimated_value) || 0;
+                let dateA = new Date(a.updated_at).getTime() || 0;
+                let dateB = new Date(b.updated_at).getTime() || 0;
+                let createdA = new Date(a.created_at).getTime() || 0;
+                let createdB = new Date(b.created_at).getTime() || 0;
+
+                if (this.sortBy === 'value_desc') return valB - valA;
+                if (this.sortBy === 'value_asc') return valA - valB;
+                if (this.sortBy === 'created_desc') return createdB - createdA;
+                return dateB - dateA;
+            });
+            
+            return deals;
         },
 
         getDealCount(stage) {

@@ -79,10 +79,16 @@ class DashboardController extends Controller
     /* ------------------------------------------------------------------ */
     public function manager()
     {
+        $user       = auth()->user();
         $now        = Carbon::now();
         $monthStart = $now->copy()->startOfMonth();
 
-        $teamMembers = User::where('role', 'sales')->get()->map(function ($s) use ($now) {
+        $teamQuery = User::where('role', 'sales');
+        if ($user->isManager()) {
+            $teamQuery->where('manager_id', $user->id);
+        }
+
+        $teamMembers = $teamQuery->get()->map(function ($s) use ($now) {
             $won   = Opportunity::where('sales_id', $s->id)->whereMonth('updated_at', $now->month)->where('stage', 'won')->count();
             $lost  = Opportunity::where('sales_id', $s->id)->whereMonth('updated_at', $now->month)->where('stage', 'lost')->count();
             $total = $won + $lost;
@@ -228,5 +234,16 @@ class DashboardController extends Controller
             'todayRevenue', 'monthRevenue', 'paidThisMonth',
             'outstanding', 'pendingInvoice', 'overdueCount', 'overdueInvoices'
         ));
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* KUSTOMISASI DASHBOARD                                                */
+    /* ------------------------------------------------------------------ */
+    public function saveLayout(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+        $user->dashboard_settings = $request->input('layout');
+        $user->save();
+        return response()->json(['success' => true]);
     }
 }

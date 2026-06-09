@@ -36,6 +36,7 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/gm', [DashboardController::class, 'gm'])->name('dashboard.gm')->middleware('role:gm');
+    Route::post('/dashboard/save-layout', [DashboardController::class, 'saveLayout'])->name('dashboard.saveLayout');
 
     // Bookings
     Route::resource('bookings', BookingController::class)->middleware('role:gm,manager,sales,operational');
