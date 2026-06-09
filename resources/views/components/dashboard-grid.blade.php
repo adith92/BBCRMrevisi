@@ -113,14 +113,11 @@ function dashboardGrid() {
                     margin: 6,
                     float: false,
                     animate: true,
-                    disableDrag: true,
-                    disableResize: true,
+                    staticGrid: true,
                     removable: false,
                     columnOpts: {
                         breakpoints: [
-                            { w: 768, c: 1 },
-                            { w: 1024, c: 6 },
-                            { w: 1400, c: 12 },
+                            { w: 768, c: 1 }
                         ]
                     }
                 }, '#dashboard-grid');
@@ -137,18 +134,21 @@ function dashboardGrid() {
             const el = document.getElementById('dashboard-grid');
 
             if (this.editing) {
-                this.grid.enableMove(true);
-                this.grid.enableResize(true);
+                this.grid.setStatic(false);
                 el.closest('.relative').classList.add('gs-editing');
             } else {
-                this.grid.enableMove(false);
-                this.grid.enableResize(false);
+                this.grid.setStatic(true);
                 el.closest('.relative').classList.remove('gs-editing');
                 this.saveLayout();
             }
         },
 
         saveLayout() {
+            if (this.grid.getColumn() !== 12) {
+                console.log('Skipping layout save in mobile view');
+                return;
+            }
+
             const items = this.grid.getGridItems().map(el => {
                 const node = el.gridstackNode;
                 return {

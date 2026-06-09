@@ -16,14 +16,24 @@
         flex-direction: column;
     }
 
-    .glass-panel {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
+    .kanban-column-panel {
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--cc-border);
     }
-    .dark .glass-panel {
+    .dark .kanban-column-panel {
         background: rgba(22, 29, 46, 0.6);
         border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .kanban-card-panel {
+        background: var(--cc-card);
+        border: 1px solid var(--cc-border);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .dark .kanban-card-panel {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: none;
     }
 
     .kanban-page-wrapper {
@@ -163,7 +173,7 @@
     <div class="kanban-scroll-x custom-scrollbar">
         <div class="kanban-board">
             @foreach($stages as $key => $label)
-            <div class="kanban-column glass-panel" data-stage="{{ $key }}">
+            <div class="kanban-column kanban-column-panel" data-stage="{{ $key }}">
                 <div class="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
                     <div class="flex flex-col min-w-0 pr-2">
                         <h3 class="font-bold text-[var(--cc-text)] text-sm tracking-wide truncate">{{ $label }}</h3>
@@ -174,7 +184,7 @@
                 
                 <div class="kanban-drop-zone custom-scrollbar" id="col-{{ $key }}">
                     <template x-for="deal in filteredDeals('{{ $key }}')" :key="deal.id">
-                        <div class="kanban-card glass-panel group relative" :data-id="deal.id">
+                        <div class="kanban-card kanban-card-panel group relative" :data-id="deal.id">
                             {{-- Clickable Header to Expand/Collapse --}}
                             <div class="flex justify-between items-start mb-1 cursor-pointer" @click="deal.expanded = !deal.expanded">
                                 <h4 class="font-bold text-[var(--cc-text)] text-sm leading-tight pr-4" x-text="deal.client_name"></h4>

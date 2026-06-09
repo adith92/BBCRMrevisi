@@ -5,12 +5,13 @@
 @push('styles')
 <style>
 .exec-summary-card {
-    background: #ffffff;
-    border: 1px solid rgba(16,40,72,0.10);
+    background: var(--cc-card);
+    border: 1px solid var(--cc-border);
     border-radius: 12px;
     box-shadow: 0 10px 28px rgba(16,40,72,0.08);
     position: relative;
     overflow: hidden;
+    transition: background var(--theme-speed) ease, border-color var(--theme-speed) ease;
 }
 .exec-summary-card::before {
     content: '';
@@ -77,10 +78,11 @@
     margin: 14px 0 16px;
 }
 .ai-metric {
-    border: 1px solid rgba(16,40,72,0.10);
+    border: 1px solid var(--cc-border);
     border-radius: 10px;
     padding: 10px;
-    background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+    background: var(--cc-card);
+    transition: background var(--theme-speed) ease, border-color var(--theme-speed) ease;
 }
 .ai-meter {
     height: 6px;
@@ -275,31 +277,31 @@
                     </div>
                     <a href="{{ route('analytics.index') }}" style="background:rgba(20,104,168,0.08);color:#0f5f9f;border:1px solid rgba(20,104,168,0.18);font-size:9px;font-weight:700;padding:2px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:0.06em;">{{ __('ui.ai_summary') }}</a>
                 </div>
-                <h3 class="text-base font-bold mb-3 leading-snug" style="color:#101828;">
+                <h3 class="text-base font-bold mb-3 leading-snug text-cc">
                     <a href="{{ route('analytics.index') }}" class="dashboard-link">{!! __('ui.performance_headline', ['value' => '<span style="color:#21785f;">18.4%</span>']) !!}</a>
                 </h3>
-                <p class="text-sm leading-relaxed mb-4" style="color:#64748b;">
+                <p class="text-sm leading-relaxed mb-4 text-cc-muted">
                     {{ __('ui.summary_text') }}
                 </p>
                 <div class="ai-metric-grid">
                     <a href="{{ route('analytics.index') }}" class="ai-metric dashboard-link">
-                        <div class="text-[10px] font-bold uppercase tracking-wide" style="color:#667085;">Revenue Lift</div>
-                        <div class="text-xl font-black mt-1" style="color:#101828;">18.4%</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wide text-cc-muted">Revenue Lift</div>
+                        <div class="text-xl font-black mt-1 text-cc">18.4%</div>
                         <div class="ai-meter"><span style="width:82%;background:#2f9d7e;"></span></div>
                     </a>
                     <a href="{{ route('fleet.index') }}" class="ai-metric dashboard-link">
-                        <div class="text-[10px] font-bold uppercase tracking-wide" style="color:#667085;">Fleet Health</div>
-                        <div class="text-xl font-black mt-1" style="color:#101828;">72%</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wide text-cc-muted">Fleet Health</div>
+                        <div class="text-xl font-black mt-1 text-cc">72%</div>
                         <div class="ai-meter"><span style="width:72%;background:#1468a8;"></span></div>
                     </a>
                     <a href="{{ route('finance.index') }}" class="ai-metric dashboard-link">
-                        <div class="text-[10px] font-bold uppercase tracking-wide" style="color:#667085;">Invoice Risk</div>
-                        <div class="text-xl font-black mt-1" style="color:#101828;">14</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wide text-cc-muted">Invoice Risk</div>
+                        <div class="text-xl font-black mt-1 text-cc">14</div>
                         <div class="ai-meter"><span style="width:58%;background:#d7a72f;"></span></div>
                     </a>
                 </div>
                 <div class="space-y-2">
-                    <div class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:#334155;">{{ __('ui.strategic_recommendations') }}</div>
+                    <div class="text-[10px] font-bold uppercase tracking-widest mb-2 text-cc-muted">{{ __('ui.strategic_recommendations') }}</div>
                     @php
                     $recs = [
                         ['icon'=>'group','color'=>'#1468a8','route'=>'clients.index','text'=>__('ui.rec_clients')],
@@ -312,7 +314,7 @@
                     @foreach($recs as $r)
                     <div class="flex items-start gap-2.5">
                         <span class="material-symbols-outlined text-[14px] mt-0.5 flex-shrink-0" style="color:{{ $r['color'] }};">{{ $r['icon'] }}</span>
-                        <a href="{{ route($r['route']) }}" class="text-xs dashboard-link" style="color:#475467;">{{ $r['text'] }}</a>
+                        <a href="{{ route($r['route']) }}" class="text-xs dashboard-link text-cc-muted">{{ $r['text'] }}</a>
                     </div>
                     @endforeach
                 </div>
