@@ -20,6 +20,7 @@
             overflow: hidden;
             background: var(--cc-bg);
             transition: background 200ms ease;
+            position: relative;
         }
 
         #sidebar {
@@ -79,7 +80,14 @@
 </head>
 <body>
 
-<div class="app-shell">
+<div class="app-shell relative">
+
+    {{-- Ambient glowing background --}}
+    <div class="absolute inset-0 z-0 pointer-events-none theme-orbs overflow-hidden">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[0%] right-[0%] w-[50%] h-[50%] bg-blue-900 rounded-full blur-[150px]"></div>
+        <div class="absolute top-[40%] left-[30%] w-[30%] h-[30%] bg-purple-900 rounded-full blur-[100px]"></div>
+    </div>
 
     {{-- ── SIDEBAR ── --}}
     <x-sidebar/>

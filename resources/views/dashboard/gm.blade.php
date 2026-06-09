@@ -102,9 +102,9 @@
 <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
     <div>
         <div class="flex items-center gap-3 mb-1">
-            <h1 class="text-xl font-black tracking-tight" style="color:#101828;">{{ __('ui.bluebird_crm') }} <span style="color:#1468a8;">{{ __('ui.command_center') }}</span></h1>
+            <h1 class="text-xl font-black tracking-tight" style="color: var(--cc-text);">{{ __('ui.bluebird_crm') }} <span style="color:#1468a8;">{{ __('ui.command_center') }}</span></h1>
         </div>
-        <p class="text-xs" style="color:#475569;">{{ __('ui.corporate_intel') }}</p>
+        <p class="text-xs" style="color: var(--cc-text-muted);">{{ __('ui.corporate_intel') }}</p>
         <div class="flex flex-wrap items-center gap-2 mt-3">
             <a href="{{ route('dashboard') }}" class="badge-demo">{{ __('ui.live_demo') }}</a>
             <a href="{{ route('analytics.index') }}" class="badge-demo">{{ __('ui.june_2026') }}</a>
@@ -143,8 +143,8 @@
                         </div>
                         <span class="signal-up">▲ 18.4%</span>
                     </div>
-                    <div class="text-lg font-black leading-tight" style="color:#101828;">Rp 2,84 M</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">{{ __('ui.monthly_revenue') }}</div>
+                    <div class="text-lg font-black leading-tight text-cc">Rp 2,84 M</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.monthly_revenue') }}</div>
                     <canvas id="spark-revenue" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
 
@@ -156,8 +156,8 @@
                         </div>
                         <span class="signal-up">▲ 32</span>
                     </div>
-                    <div class="text-lg font-black leading-tight" style="color:#101828;">{{ $pendingDispatch ?? 248 }}</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">{{ __('ui.active_bookings') }}</div>
+                    <div class="text-lg font-black leading-tight text-cc">{{ $pendingDispatch ?? 248 }}</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.active_bookings') }}</div>
                     <canvas id="spark-bookings" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
 
@@ -169,8 +169,8 @@
                         </div>
                         <span class="signal-up">{{ __('ui.healthy') }}</span>
                     </div>
-                    <div class="text-lg font-black leading-tight" style="color:#101828;">{{ $availableVehicles ?? 72 }}%</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">{{ __('ui.fleet_utilization') }}</div>
+                    <div class="text-lg font-black leading-tight text-cc">{{ $availableVehicles ?? 72 }}%</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.fleet_utilization') }}</div>
                     <canvas id="spark-fleet" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
 
@@ -182,8 +182,8 @@
                         </div>
                         <span class="signal-up">▲ 12</span>
                     </div>
-                    <div class="text-lg font-black leading-tight" style="color:#101828;">128</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">{{ __('ui.corp_clients') }}</div>
+                    <div class="text-lg font-black leading-tight text-cc">128</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.corp_clients') }}</div>
                     <canvas id="spark-clients" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
 
@@ -195,8 +195,8 @@
                         </div>
                         <span class="signal-warn">{{ __('ui.attention') }}</span>
                     </div>
-                    <div class="text-lg font-black leading-tight" style="color:#101828;">Rp 420 Jt</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">{{ __('ui.outstanding_inv') }}</div>
+                    <div class="text-lg font-black leading-tight text-cc">Rp 420 Jt</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.outstanding_inv') }}</div>
                     <canvas id="spark-invoice" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
 
@@ -208,8 +208,8 @@
                         </div>
                         <span class="signal-down">{{ __('ui.urgent') }}</span>
                     </div>
-                    <div class="text-lg font-black leading-tight" style="color:#101828;">{{ $pendingPO ?? 14 }}</div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">{{ __('ui.pending_approval') }}</div>
+                    <div class="text-lg font-black leading-tight text-cc">{{ $pendingPO ?? 14 }}</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide mt-1 text-cc-muted">{{ __('ui.pending_approval') }}</div>
                     <canvas id="spark-approvals" style="position:absolute;bottom:6px;right:6px;width:64px;height:22px;opacity:0.65;"></canvas>
                 </a>
 
@@ -222,11 +222,11 @@
         <div class="grid-stack-item-content">
             <div class="cc-card p-4 h-full overflow-auto">
                 <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-xs font-bold uppercase tracking-widest" style="color:#475569;">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-cc-muted">
                         <span class="material-symbols-outlined text-[13px] align-middle mr-1" style="color:#0066ff;">bolt</span>
                         {{ __('ui.quick_shortcuts') }}
                     </h2>
-                    <span class="text-[10px]" style="color:#334155;">{{ __('ui.quick_shortcuts_desc') }}</span>
+                    <span class="text-[10px] text-cc-muted">{{ __('ui.quick_shortcuts_desc') }}</span>
                 </div>
                 <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                     @php
@@ -346,12 +346,12 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <div class="flex items-center gap-2">
-                                <div class="rank-num" style="background:rgba(16,40,72,0.06);color:#667085;">{{ $i+1 }}</div>
-                                <a href="{{ route('fleet.index') }}" class="text-xs font-semibold dashboard-link" style="color:#101828;">{{ $f['name'] }}</a>
+                                <div class="rank-num" style="background: var(--cc-th-bg); color: var(--cc-text-muted);">{{ $i+1 }}</div>
+                                <a href="{{ route('fleet.index') }}" class="text-xs font-semibold dashboard-link text-cc">{{ $f['name'] }}</a>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span style="background:{{ $f['badgeColor'] }};color:{{ $f['badgeText'] }};font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;">{{ $f['badge'] }}</span>
-                                <span class="text-xs font-bold" style="color:#101828;">{{ $f['pct'] }}%</span>
+                                <span class="text-xs font-bold text-cc">{{ $f['pct'] }}%</span>
                             </div>
                         </div>
                         <div class="fleet-bar">
@@ -374,7 +374,7 @@
                         <span class="text-xs font-bold uppercase tracking-widest" style="color:#94a3b8;">{{ __('ui.weekly_revenue_movement') }}</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="text-[10px] font-semibold" style="color:#475569;">{{ __('ui.peak_note') }}</span>
+                        <span class="text-[10px] font-semibold text-cc-muted">{{ __('ui.peak_note') }}</span>
                         <a href="{{ route('analytics.index') }}" class="text-[10px] font-semibold" style="color:#3b82f6;">Detail →</a>
                     </div>
                 </div>
@@ -484,7 +484,7 @@
                     <div class="booking-row">
                         <div class="flex-grow min-w-0">
                             <a href="{{ route('bookings.index') }}" class="text-xs font-bold font-mono dashboard-link">{{ $b['id'] }}</a>
-                            <div class="text-[10px]" style="color:#475569;"><a href="{{ route('clients.index') }}" class="dashboard-link">{{ $b['client'] }}</a> - <a href="{{ route('fleet.index') }}" class="dashboard-link">{{ $b['fleet'] }}</a></div>
+                            <div class="text-[10px] text-cc-muted"><a href="{{ route('clients.index') }}" class="dashboard-link">{{ $b['client'] }}</a> - <a href="{{ route('fleet.index') }}" class="dashboard-link">{{ $b['fleet'] }}</a></div>
                         </div>
                         <span class="status-badge {{ $b['statusClass'] }} flex-shrink-0">{{ $b['status'] }}</span>
                     </div>
@@ -520,8 +520,8 @@
                             <span class="material-symbols-outlined text-[16px]" style="color:{{ $a['iconColor'] }};">{{ $a['icon'] }}</span>
                         </div>
                         <div class="flex-grow min-w-0">
-                            <a href="{{ route('approvals.index') }}" class="text-xs font-semibold dashboard-link truncate" style="color:#101828;">{{ $a['title'] }}</a>
-                            <div class="text-[10px]" style="color:#475569;">{{ $a['dept'] }}</div>
+                            <a href="{{ route('approvals.index') }}" class="text-xs font-semibold dashboard-link truncate text-cc">{{ $a['title'] }}</a>
+                            <div class="text-[10px] text-cc-muted">{{ $a['dept'] }}</div>
                         </div>
                         <span class="{{ $a['priority'] === 'High' ? 'priority-high' : 'priority-med' }} flex-shrink-0 uppercase tracking-wide">{{ $a['priority'] }}</span>
                     </div>

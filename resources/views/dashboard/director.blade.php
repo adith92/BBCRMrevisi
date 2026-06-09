@@ -5,12 +5,13 @@
 @push('styles')
 <style>
 .exec-summary-card {
-    background: #ffffff;
-    border: 1px solid rgba(16,40,72,0.10);
+    background: var(--cc-card);
+    border: 1px solid var(--cc-border);
     border-radius: 12px;
     box-shadow: 0 10px 28px rgba(16,40,72,0.08);
     position: relative;
     overflow: hidden;
+    transition: background var(--theme-speed) ease, border-color var(--theme-speed) ease;
 }
 .exec-summary-card::before {
     content: '';
@@ -23,7 +24,7 @@
 .fleet-bar {
     height: 6px;
     border-radius: 3px;
-    background: rgba(16,40,72,0.10);
+    background: var(--cc-border);
     overflow: hidden;
 }
 .fleet-bar-fill {
@@ -35,7 +36,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(16,40,72,0.08);
+    border-bottom: 1px solid var(--cc-border);
 }
 .rank-row:last-child { border-bottom: none; }
 .rank-num {
@@ -63,7 +64,7 @@
     align-items: center;
     gap: 10px;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(16,40,72,0.08);
+    border-bottom: 1px solid var(--cc-border);
 }
 .approval-item:last-child { border-bottom: none; }
 .priority-high { color: #b94a48; font-size: 10px; font-weight: 700; }
@@ -80,9 +81,9 @@
     <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
             <div class="flex items-center gap-3 mb-1">
-                <h1 class="text-xl font-black tracking-tight" style="color:#101828;">Bluebird CRM <span style="color:#1468a8;">Command Center</span></h1>
+                <h1 class="text-xl font-black tracking-tight" style="color: var(--cc-text);">Bluebird CRM <span style="color:#1468a8;">Command Center</span></h1>
             </div>
-            <p class="text-xs" style="color:#475569;">Corporate Fleet · Sales Pipeline · Dispatch · Revenue Intelligence</p>
+            <p class="text-xs" style="color: var(--cc-text-muted);">Corporate Fleet · Sales Pipeline · Dispatch · Revenue Intelligence</p>
             <div class="flex flex-wrap items-center gap-2 mt-3">
                 <a href="{{ route('dashboard') }}" class="badge-demo">Live Demo</a>
                 <a href="{{ route('analytics.index') }}" class="badge-demo">June 2026</a>
@@ -117,8 +118,8 @@
                 </div>
                 <span class="signal-up">▲ 18.4%</span>
             </div>
-            <div class="text-lg font-black leading-tight" style="color:#101828;">Rp 2,84 M</div>
-            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Monthly Revenue</div>
+            <div class="text-lg font-black leading-tight" style="color: var(--cc-text);">Rp 2,84 M</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color: var(--cc-text-muted);">Monthly Revenue</div>
         </div>
 
         {{-- KPI 2: Bookings --}}
@@ -129,8 +130,8 @@
                 </div>
                 <span class="signal-up">▲ 32</span>
             </div>
-            <div class="text-lg font-black leading-tight" style="color:#101828;">{{ $pendingDispatch ?? 248 }}</div>
-            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Active Bookings</div>
+            <div class="text-lg font-black leading-tight" style="color: var(--cc-text);">{{ $pendingDispatch ?? 248 }}</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color: var(--cc-text-muted);">Active Bookings</div>
         </div>
 
         {{-- KPI 3: Fleet --}}
@@ -141,8 +142,8 @@
                 </div>
                 <span class="signal-up">Healthy</span>
             </div>
-            <div class="text-lg font-black leading-tight" style="color:#101828;">{{ $availableVehicles ?? 72 }}%</div>
-            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Fleet Utilization</div>
+            <div class="text-lg font-black leading-tight" style="color: var(--cc-text);">{{ $availableVehicles ?? 72 }}%</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color: var(--cc-text-muted);">Fleet Utilization</div>
         </div>
 
         {{-- KPI 4: Clients --}}
@@ -153,8 +154,8 @@
                 </div>
                 <span class="signal-up">▲ 12</span>
             </div>
-            <div class="text-lg font-black leading-tight" style="color:#101828;">128</div>
-            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Corp. Clients</div>
+            <div class="text-lg font-black leading-tight" style="color: var(--cc-text);">128</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color: var(--cc-text-muted);">Corp. Clients</div>
         </div>
 
         {{-- KPI 5: Outstanding --}}
@@ -165,8 +166,8 @@
                 </div>
                 <span class="signal-warn">Attention</span>
             </div>
-            <div class="text-lg font-black leading-tight" style="color:#101828;">Rp 420 Jt</div>
-            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Outstanding Inv.</div>
+            <div class="text-lg font-black leading-tight" style="color: var(--cc-text);">Rp 420 Jt</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color: var(--cc-text-muted);">Outstanding Inv.</div>
         </div>
 
         {{-- KPI 6: Approval --}}
@@ -177,8 +178,8 @@
                 </div>
                 <span class="signal-down">Urgent</span>
             </div>
-            <div class="text-lg font-black leading-tight" style="color:#101828;">{{ $pendingPO ?? 14 }}</div>
-            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color:#475569;">Pending Approval</div>
+            <div class="text-lg font-black leading-tight" style="color: var(--cc-text);">{{ $pendingPO ?? 14 }}</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide mt-1" style="color: var(--cc-text-muted);">Pending Approval</div>
         </div>
 
     </div>
@@ -195,17 +196,17 @@
                 </div>
                 <a href="{{ route('analytics.index') }}" style="background:rgba(20,104,168,0.08);color:#0f5f9f;border:1px solid rgba(20,104,168,0.18);font-size:9px;font-weight:700;padding:2px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:0.06em;">AI Summary</a>
             </div>
-            <h3 class="text-base font-bold mb-3 leading-snug" style="color:#101828;">
+            <h3 class="text-base font-bold mb-3 leading-snug" style="color: var(--cc-text);">
                 <a href="{{ route('analytics.index') }}" class="dashboard-link">Corporate fleet performance naik <span style="color:#21785f;">18.4%</span> bulan ini.</a>
             </h3>
-            <p class="text-sm leading-relaxed mb-4" style="color:#64748b;">
+            <p class="text-sm leading-relaxed mb-4 text-cc-muted">
                 <a href="{{ route('fleet.index') }}" class="dashboard-link">Golden Bird</a> menjadi kontributor revenue terbesar, didorong kontrak corporate dan airport executive transfer. <a href="{{ route('bookings.index') }}" class="dashboard-link">Big Bird</a> stabil dari charter perusahaan, sementara <a href="{{ route('pipeline.index') }}" class="dashboard-link">Cititrans</a> membutuhkan peningkatan pipeline untuk rute bisnis. <a href="{{ route('finance.index') }}" class="dashboard-link">Finance</a> perlu mempercepat follow-up outstanding invoice di atas 14 hari.
             </p>
             <div class="space-y-2">
-                <div class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:#334155;">Strategic Recommendations</div>
+                <div class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color: var(--cc-text-muted);">Strategic Recommendations</div>
                 @php
                 $recs = [
-                    ['icon'=>'group','color'=>'#1468a8','route'=>'clients.index','text'=>'Prioritaskan 12 client corporate dengan potensi renewal'],
+                    ['icon'=>'group','color'=>'#1468a8','route'=>'clients.index','text'=>'Prioritaskan 12 client corporate dengan renewal'],
                     ['icon'=>'receipt_long','color'=>'#a17412','route'=>'finance.index','text'=>'Follow-up invoice overdue di atas 14 hari - Rp 420 Jt exposed'],
                     ['icon'=>'local_shipping','color'=>'#21785f','route'=>'fleet.index','text'=>'Tambahkan fleet allocation untuk area Jakarta HQ'],
                     ['icon'=>'build','color'=>'#72529a','route'=>'approvals.index','text'=>'Percepat approval PO maintenance untuk unit high-demand'],
@@ -215,7 +216,7 @@
                 @foreach($recs as $r)
                 <div class="flex items-start gap-2.5">
                     <span class="material-symbols-outlined text-[14px] mt-0.5 flex-shrink-0" style="color:{{ $r['color'] }};">{{ $r['icon'] }}</span>
-                    <a href="{{ route($r['route']) }}" class="text-xs dashboard-link" style="color:#475467;">{{ $r['text'] }}</a>
+                    <a href="{{ route($r['route']) }}" class="text-xs dashboard-link" style="color: var(--cc-text-muted);">{{ $r['text'] }}</a>
                 </div>
                 @endforeach
             </div>
@@ -243,12 +244,12 @@
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <div class="flex items-center gap-2">
-                            <div class="rank-num" style="background:rgba(16,40,72,0.06);color:#667085;">{{ $i+1 }}</div>
-                            <a href="{{ route('fleet.index') }}" class="text-xs font-semibold dashboard-link" style="color:#101828;">{{ $f['name'] }}</a>
+                            <div class="rank-num" style="background: var(--cc-th-bg); color: var(--cc-text-muted);">{{ $i+1 }}</div>
+                            <a href="{{ route('fleet.index') }}" class="text-xs font-semibold dashboard-link truncate" style="color: var(--cc-text);">{{ $f['name'] }}</a>
                         </div>
                         <div class="flex items-center gap-2">
                             <span style="background:{{ $f['badgeColor'] }};color:{{ $f['badgeText'] }};font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;">{{ $f['badge'] }}</span>
-                            <span class="text-xs font-bold" style="color:#101828;">{{ $f['pct'] }}%</span>
+                            <span class="text-xs font-bold" style="color: var(--cc-text);">{{ $f['pct'] }}%</span>
                         </div>
                     </div>
                     <div class="fleet-bar">
@@ -297,8 +298,8 @@
                 <div class="rank-row">
                     <span class="text-base flex-shrink-0">{{ $s['medal'] }}</span>
                     <div class="flex-grow min-w-0">
-                        <a href="{{ route('kpi.index') }}" class="text-xs font-semibold dashboard-link truncate" style="color:#101828;">{{ $s['name'] }}</a>
-                        <div class="text-[10px]" style="color:#475569;">Closing {{ $s['closing'] }}</div>
+                        <a href="{{ route('kpi.index') }}" class="text-xs font-semibold dashboard-link truncate" style="color: var(--cc-text);">{{ $s['name'] }}</a>
+                        <div class="text-[10px]" style="color: var(--cc-text-muted);">Closing {{ $s['closing'] }}</div>
                     </div>
                     <div class="text-xs font-bold flex-shrink-0" style="color:{{ $s['color'] }};">{{ $s['rev'] }}</div>
                 </div>
@@ -332,7 +333,7 @@
                 <div class="booking-row">
                     <div class="flex-grow min-w-0">
                         <a href="{{ route('bookings.index') }}" class="text-xs font-bold font-mono dashboard-link">{{ $b['id'] }}</a>
-                        <div class="text-[10px]" style="color:#475569;"><a href="{{ route('clients.index') }}" class="dashboard-link">{{ $b['client'] }}</a> - <a href="{{ route('fleet.index') }}" class="dashboard-link">{{ $b['fleet'] }}</a></div>
+                        <div class="text-[10px]" style="color: var(--cc-text-muted);"><a href="{{ route('clients.index') }}" class="dashboard-link">{{ $b['client'] }}</a> - <a href="{{ route('fleet.index') }}" class="dashboard-link">{{ $b['fleet'] }}</a></div>
                     </div>
                     <span class="status-badge {{ $b['statusClass'] }} flex-shrink-0">{{ $b['status'] }}</span>
                 </div>
@@ -364,8 +365,8 @@
                         <span class="material-symbols-outlined text-[16px]" style="color:{{ $a['iconColor'] }};">{{ $a['icon'] }}</span>
                     </div>
                     <div class="flex-grow min-w-0">
-                        <a href="{{ route('approvals.index') }}" class="text-xs font-semibold dashboard-link truncate" style="color:#101828;">{{ $a['title'] }}</a>
-                        <div class="text-[10px]" style="color:#475569;">{{ $a['dept'] }}</div>
+                        <a href="{{ route('approvals.index') }}" class="text-xs font-semibold dashboard-link truncate" style="color: var(--cc-text);">{{ $a['title'] }}</a>
+                        <div class="text-[10px]" style="color: var(--cc-text-muted);">{{ $a['dept'] }}</div>
                     </div>
                     <span class="{{ $a['priority'] === 'High' ? 'priority-high' : 'priority-med' }} flex-shrink-0 uppercase tracking-wide">{{ $a['priority'] }}</span>
                 </div>
