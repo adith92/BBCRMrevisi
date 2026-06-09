@@ -238,8 +238,13 @@
             </h1>
             <p class="text-[13px] text-slate-500 mt-0.5">Drag & drop deal antar tahap — semua tersimpan otomatis</p>
         </div>
-        <div class="flex flex-wrap items-center gap-2.5">
-            <div class="relative">
+        <div class="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-1">
+            <a href="{{ route('opportunities.create') }}" class="btn-primary shrink-0" data-add-activity id="fab-pipeline-add">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                <span class="hidden sm:inline">Tambah Deal</span>
+            </a>
+
+            <div class="relative shrink-0">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[16px]">search</span>
                 <input x-model="search" type="text" placeholder="Cari deal, client..." class="pl-9 pr-4 py-2 text-[13px] dark-input rounded-xl w-48"/>
             </div>
@@ -285,11 +290,6 @@
                     <span class="hidden sm:inline">Table</span>
                 </button>
             </div>
-
-            <a href="{{ route('opportunities.create') }}" class="btn-primary" data-add-activity id="fab-pipeline-add">
-                <span class="material-symbols-outlined text-[16px]">add</span>
-                <span class="hidden sm:inline">Tambah Deal</span>
-            </a>
         </div>
     </div>
 
