@@ -50,9 +50,9 @@ class KanbanTest extends TestCase
         $response = $this->actingAs($sales)->get('/pipeline');
 
         $response->assertOk();
-        $response->assertSee('Sales Pipeline');
+        $response->assertSee('Active Pipeline Funnel');
         $response->assertSee('Demo Fleet Deal');
-        $response->assertSee('kanbanBoard()'); // Alpine component present
+        $response->assertSee('pipelineManager()'); // Alpine component present
     }
 
     public function test_unauthenticated_cannot_access_pipeline(): void

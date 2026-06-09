@@ -367,7 +367,7 @@ class SmokeTest extends TestCase
     public function widget_preference_default_widgets_returns_9_items(): void
     {
         $defaults = WidgetPreference::defaultWidgets();
-        $this->assertCount(9, $defaults);
+        $this->assertCount(15, $defaults);
         foreach ($defaults as $w) {
             $this->assertArrayHasKey('id', $w);
             $this->assertArrayHasKey('visible', $w);
@@ -380,7 +380,7 @@ class SmokeTest extends TestCase
     {
         $user = $this->user('sales');
         $result = WidgetPreference::forUser($user->id);
-        $this->assertCount(9, $result);
+        $this->assertCount(15, $result);
     }
 
     /** @test */
