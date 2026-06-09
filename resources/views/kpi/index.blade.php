@@ -1,510 +1,413 @@
 @extends('layouts.app')
 
-@section('header_title', 'Performa & Target')
+@section('header_title', 'Performance Dashboard')
+
+@push('styles')
+<style>
+    #content-area {
+        overflow-x: hidden !important;
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+    }
+    .dark .glass-card {
+        background: rgba(22, 29, 46, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    [x-cloak] { display: none !important; }
+</style>
+@endpush
 
 @section('content')
-@php
-    use Carbon\Carbon;
-    $monthNames = [
-        1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
-        7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
-    ];
-    $isManager = auth()->user()->isManager() || auth()->user()->isGM() || auth()->user()->isDirector();
-    function kpiBar(int|float $actual, int|float $target, string $color = 'blue'): array {
-        $pct = $target > 0 ? min(100, round(($actual / $target) * 100, 1)) : ($actual > 0 ? 100 : 0);
-        return ['pct' => $pct, 'color' => $color];
-    }
-    function rupiah(float|string $val): string {
-        return 'Rp ' . number_format((float)$val, 0, ',', '.');
-    }
-@endphp
-
-<div x-data="{
-    showSetTargetModal: false,
-    targetUserId: '',
-    targetYear: {{ $year }},
-    targetMonth: {{ $month }},
-}">
-
-    {{-- Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-[var(--cc-text)]">Performa & Target KPI</h1>
-            <p class="text-sm text-[var(--cc-text-muted)] mt-0.5">{{ $monthNames[$month] }} {{ $year }}</p>
-        </div>
-        <div class="flex items-center gap-3">
-            {{-- Month/Year selector --}}
-            <form method="GET" class="flex items-center gap-2">
-                <select name="month" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
-                    @foreach($monthNames as $m => $mn)
-                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ $mn }}</option>
-                    @endforeach
-                </select>
-                <select name="year" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
-                    @for($y = now()->year; $y >= now()->year - 3; $y--)
-                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                    @endfor
-                </select>
-                <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Tampilkan</button>
-            </form>
-
-            @if($isManager)
-            <button @click="showSetTargetModal = true"
-                    class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-                Set Target
-            </button>
-            @endif
-        </div>
+<div x-data="dashboardManager()" x-init="initData()" class="space-y-8 flex flex-col h-full pb-8">
+    
+    <div class="shrink-0 mb-2">
+        <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-1">Performance Overview</h1>
+        <p class="text-[var(--cc-text-muted)]">
+            Sales Performance Monitoring • 
+            <span class="text-indigo-400 font-medium" x-text="currentUser.role === 'Sales' ? 'Team View' : 'Company Overview'"></span>
+        </p>
     </div>
 
-    {{-- Overall Score Card --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-5 col-span-1">
-            <div class="text-blue-200 text-sm font-medium mb-1">Skor Keseluruhan</div>
-            <div class="text-4xl font-bold">{{ $overallScore }}%</div>
-            <div class="mt-3 bg-blue-500/50 rounded-full h-2">
-                <div class="cc-card rounded-full h-2 transition-all" style="width: {{ min(100, $overallScore) }}%"></div>
-            </div>
-            <div class="text-blue-200 text-xs mt-2">Rata-rata pencapaian semua KPI</div>
-        </div>
-
-        <div class="cc-card rounded-2xl border border-gray-200 p-5">
-            <div class="text-[var(--cc-text-muted)] text-sm mb-1">Total Aktivitas</div>
-            <div class="text-3xl font-bold text-[var(--cc-text)]">
-                {{ $ownTarget->actual_meetings + $ownTarget->actual_calls + $ownTarget->actual_visits }}
-            </div>
-            <div class="text-xs text-gray-400 mt-1">Meeting + Panggilan + Kunjungan</div>
-        </div>
-
-        <div class="cc-card rounded-2xl border border-gray-200 p-5">
-            <div class="text-[var(--cc-text-muted)] text-sm mb-1">Deals Won</div>
-            <div class="text-3xl font-bold text-green-600">{{ $ownTarget->actual_won }}</div>
-            <div class="text-xs text-gray-400 mt-1">dari target {{ $ownTarget->target_won }}</div>
-        </div>
-    </div>
-
-    {{-- KPI Progress Bars --}}
-    <div class="cc-card rounded-2xl border border-gray-200 p-6 mb-6">
-        <h3 class="text-lg font-bold text-[var(--cc-text)] mb-5">Pencapaian KPI Bulan Ini</h3>
-
-        <div class="space-y-5">
-            @php
-                $kpis = [
-                    ['icon' => '🤝', 'label' => 'Meeting', 'actual' => $ownTarget->actual_meetings, 'target' => $ownTarget->target_meetings, 'color' => 'blue', 'unit' => 'meeting'],
-                    ['icon' => '📞', 'label' => 'Panggilan / Follow-up', 'actual' => $ownTarget->actual_calls, 'target' => $ownTarget->target_calls, 'color' => 'green', 'unit' => 'panggilan'],
-                    ['icon' => '🚗', 'label' => 'Kunjungan', 'actual' => $ownTarget->actual_visits, 'target' => $ownTarget->target_visits, 'color' => 'purple', 'unit' => 'kunjungan'],
-                    ['icon' => '🎯', 'label' => 'Opportunity Dibuat', 'actual' => $ownTarget->actual_opportunities, 'target' => $ownTarget->target_opportunities, 'color' => 'orange', 'unit' => 'opportunity'],
-                    ['icon' => '🏆', 'label' => 'Deals Won', 'actual' => $ownTarget->actual_won, 'target' => $ownTarget->target_won, 'color' => 'yellow', 'unit' => 'deal'],
-                ];
-                $colorMap = [
-                    'blue' => ['bar' => 'bg-blue-500', 'text' => 'text-blue-700', 'bg' => 'bg-blue-50'],
-                    'green' => ['bar' => 'bg-green-500', 'text' => 'text-green-700', 'bg' => 'bg-green-50'],
-                    'purple' => ['bar' => 'bg-purple-500', 'text' => 'text-purple-700', 'bg' => 'bg-purple-50'],
-                    'orange' => ['bar' => 'bg-orange-500', 'text' => 'text-orange-700', 'bg' => 'bg-orange-50'],
-                    'yellow' => ['bar' => 'bg-yellow-500', 'text' => 'text-yellow-700', 'bg' => 'bg-yellow-50'],
-                    'red' => ['bar' => 'bg-red-500', 'text' => 'text-red-700', 'bg' => 'bg-red-50'],
-                ];
-            @endphp
-
-            @foreach($kpis as $kpi)
-            @php
-                $bar = kpiBar($kpi['actual'], $kpi['target']);
-                $c = $colorMap[$kpi['color']];
-                $pct = $bar['pct'];
-                $barColor = $pct >= 100 ? 'bg-green-500' : ($pct >= 70 ? $c['bar'] : ($pct >= 40 ? 'bg-orange-400' : 'bg-red-400'));
-            @endphp
+    {{-- KPI Highlight Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 rounded-2xl border border-indigo-500/20 p-5 flex items-center justify-between">
             <div>
-                <div class="flex items-center justify-between mb-1.5">
-                    <div class="flex items-center gap-2">
-                        <span class="text-lg">{{ $kpi['icon'] }}</span>
-                        <span class="font-medium text-[var(--cc-text)] text-sm">{{ $kpi['label'] }}</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm text-[var(--cc-text-muted)]">
-                            <span class="font-bold text-[var(--cc-text)]">{{ $kpi['actual'] }}</span>
-                            / {{ $kpi['target'] }} {{ $kpi['unit'] }}
-                        </span>
-                        <span class="text-sm font-bold {{ $pct >= 100 ? 'text-green-600' : ($pct >= 70 ? $c['text'] : 'text-orange-600') }}">
-                            {{ $pct }}%
-                        </span>
-                    </div>
-                </div>
-                <div class="bg-gray-100 rounded-full h-2.5">
-                    <div class="{{ $barColor }} rounded-full h-2.5 transition-all duration-500" style="width: {{ $pct }}%"></div>
-                </div>
+                <p class="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-1">Active Pipeline</p>
+                <p class="text-2xl font-mono font-bold text-[var(--cc-text)]" x-text="formatIDR(metrics.activePipelineValue)"></p>
+                <p class="text-xs text-indigo-200 mt-1"><span x-text="metrics.activeDealsCount"></span> deals currently active</p>
             </div>
-            @endforeach
+            <div class="h-12 w-12 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-400">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            </div>
+        </div>
 
-            {{-- Revenue --}}
-            @php
-                $revActual = (float) $ownTarget->actual_revenue;
-                $revTarget = (float) $ownTarget->target_revenue;
-                $revPct = $revTarget > 0 ? min(100, round(($revActual / $revTarget) * 100, 1)) : ($revActual > 0 ? 100 : 0);
-                $revBarColor = $revPct >= 100 ? 'bg-green-500' : ($revPct >= 70 ? 'bg-blue-500' : ($revPct >= 40 ? 'bg-orange-400' : 'bg-red-400'));
-            @endphp
+        <div class="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 rounded-2xl border border-emerald-500/20 p-5 flex items-center justify-between">
             <div>
-                <div class="flex items-center justify-between mb-1.5">
-                    <div class="flex items-center gap-2">
-                        <span class="text-lg">💰</span>
-                        <span class="font-medium text-[var(--cc-text)] text-sm">Revenue</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm text-[var(--cc-text-muted)]">
-                            <span class="font-bold text-[var(--cc-text)]">{{ rupiah($revActual) }}</span>
-                            / {{ rupiah($revTarget) }}
-                        </span>
-                        <span class="text-sm font-bold {{ $revPct >= 100 ? 'text-green-600' : ($revPct >= 70 ? 'text-blue-700' : 'text-orange-600') }}">
-                            {{ $revPct }}%
-                        </span>
-                    </div>
-                </div>
-                <div class="bg-gray-100 rounded-full h-2.5">
-                    <div class="{{ $revBarColor }} rounded-full h-2.5 transition-all duration-500" style="width: {{ $revPct }}%"></div>
-                </div>
+                <p class="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-1">Total Revenue Won</p>
+                <p class="text-2xl font-mono font-bold text-[var(--cc-text)]" x-text="formatIDR(metrics.totalActual)"></p>
+                <p class="text-xs text-emerald-200 mt-1">Acquired from closed won deals</p>
+            </div>
+            <div class="h-12 w-12 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-500/10 to-amber-600/5 rounded-2xl border border-amber-500/20 p-5 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-amber-300 uppercase tracking-widest mb-1">Win Rate</p>
+                <p class="text-2xl font-mono font-bold text-[var(--cc-text)]" x-text="metrics.winRate.toFixed(1) + '%'"></p>
+                <p class="text-xs text-amber-200 mt-1">Closing efficiency</p>
+            </div>
+            <div class="h-12 w-12 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 text-amber-400">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
             </div>
         </div>
     </div>
 
-    {{-- Radar & Gauge Charts --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-6">
-            <h3 class="text-lg font-bold text-[var(--cc-text)] mb-4">Analisis Kompetensi</h3>
-            <div id="radarChart" class="min-h-[320px] flex justify-center"></div>
-        </div>
-        <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-6">
-            <h3 class="text-lg font-bold text-[var(--cc-text)] mb-4">Skor Pencapaian KPI</h3>
-            <div id="gaugeChart" class="min-h-[320px] flex justify-center items-center"></div>
-        </div>
-    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {{-- Left Column: Progress & Target --}}
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div class="grid grid-cols-1 gap-6" :class="personalMetrics ? 'xl:grid-cols-2' : ''">
+                {{-- Personal/Team Target Progress --}}
+                <template x-if="personalMetrics">
+                    <div class="rounded-3xl border border-emerald-500/10 bg-emerald-900/10 backdrop-blur-md p-6 relative overflow-hidden flex flex-col justify-between">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="h-10 w-10 bg-emerald-500/20 rounded-xl flex items-center justify-center shrink-0">
+                                    <svg class="h-5 w-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-[var(--cc-text)] text-lg" x-text="currentUser.role === 'Sales' ? 'My Individual Trajectory' : 'My Team Trajectory'"></h3>
+                                    <p class="text-xs text-emerald-400/70 font-medium" x-text="'Tracking towards ' + formatIDR(personalMetrics.totalTarget)"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-wrap items-end justify-between mb-3 gap-2">
+                                <div class="text-3xl 2xl:text-4xl font-mono font-bold tracking-tight text-[var(--cc-text)] flex flex-wrap items-baseline gap-2">
+                                    <span x-text="formatIDR(personalMetrics.totalActual)"></span>
+                                    <span class="text-sm 2xl:text-lg text-emerald-500/70 font-medium" x-text="'/ ' + formatIDR(personalMetrics.totalTarget)"></span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400" x-text="(personalMetrics.totalTarget > 0 ? ((personalMetrics.totalActual / personalMetrics.totalTarget) * 100).toFixed(1) : '0.0') + '%'"></div>
+                                </div>
+                            </div>
+                            <div class="h-3 w-full overflow-hidden rounded-full bg-slate-800 shadow-inner mt-4">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 ease-out relative"
+                                     :style="`width: ${Math.min(personalMetrics.totalTarget > 0 ? (personalMetrics.totalActual / personalMetrics.totalTarget) * 100 : 0, 100)}%`">
+                                    <div class="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
 
-    {{-- Last 6 Months Chart --}}
-    <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-6 mb-6">
-        <h3 class="text-lg font-bold text-[var(--cc-text)] mb-4">Tren 6 Bulan Terakhir</h3>
-        <div class="h-64">
-            <canvas id="kpiTrendChart"></canvas>
-        </div>
-    </div>
-
-    {{-- Team KPI Table (Manager/GM/Director) --}}
-    @if($isManager && $teamUsers->isNotEmpty())
-    <div class="cc-card rounded-2xl overflow-hidden mb-6">
-        <div class="px-6 py-4 border-b border-[var(--cc-border)] flex items-center justify-between flex-wrap gap-3">
-            <h3 class="text-[15px] font-bold text-[var(--cc-text)]">KPI Tim Sales — {{ $monthNames[$month] }} {{ $year }}</h3>
-            <div class="flex items-center gap-3">
-                <span class="text-sm text-[var(--cc-text-muted)]">{{ $teamUsers->count() }} anggota</span>
-                <form method="GET" action="{{ route('kpi.index') }}" class="flex items-center gap-1">
-                    <input type="hidden" name="year" value="{{ $year }}">
-                    <input type="hidden" name="month" value="{{ $month }}">
-                    <label class="text-xs text-[var(--cc-text-muted)]">Urutkan:</label>
-                    <select name="sort_team" onchange="this.form.submit()"
-                            class="dark-input text-[12px] py-1 px-2 rounded-lg ml-1">
-                        <option value="revenue" {{ ($sortTeam ?? 'revenue') === 'revenue' ? 'selected' : '' }}>Revenue ↓</option>
-                        <option value="kpi_pct" {{ ($sortTeam ?? '') === 'kpi_pct'  ? 'selected' : '' }}>Skor KPI ↓</option>
-                        <option value="name"    {{ ($sortTeam ?? '') === 'name'     ? 'selected' : '' }}>Nama A-Z</option>
-                    </select>
-                </form>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-[var(--cc-border)] text-[11px] uppercase text-[var(--cc-text-muted)] font-semibold">
-                        <th class="text-left px-4 py-3">Sales</th>
-                        <th class="text-center px-3 py-3">Meeting</th>
-                        <th class="text-center px-3 py-3">Panggilan</th>
-                        <th class="text-center px-3 py-3">Kunjungan</th>
-                        <th class="text-center px-3 py-3">Oppty</th>
-                        <th class="text-center px-3 py-3">Won</th>
-                        <th class="text-right px-4 py-3">Revenue</th>
-                        <th class="text-center px-4 py-3">Skor</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[var(--cc-border)]">
-                    @foreach($teamTargets as $tt)
-                    @php
-                        if (!$tt->user) continue;
-                        $tu = $tt->user;
-                        $scores = [];
-                        if ($tt->target_meetings > 0) $scores[] = min(100, ($tt->actual_meetings / $tt->target_meetings) * 100);
-                        if ($tt->target_calls > 0) $scores[] = min(100, ($tt->actual_calls / $tt->target_calls) * 100);
-                        if ($tt->target_visits > 0) $scores[] = min(100, ($tt->actual_visits / $tt->target_visits) * 100);
-                        if ($tt->target_opportunities > 0) $scores[] = min(100, ($tt->actual_opportunities / $tt->target_opportunities) * 100);
-                        if ($tt->target_won > 0) $scores[] = min(100, ($tt->actual_won / $tt->target_won) * 100);
-                        if ((float)$tt->target_revenue > 0) $scores[] = min(100, ((float)$tt->actual_revenue / (float)$tt->target_revenue) * 100);
-                        $teamScore = count($scores) > 0 ? round(array_sum($scores) / count($scores), 1) : 0;
-                        $scoreColor = $teamScore >= 80 ? 'text-green-400 bg-green-900/40' : ($teamScore >= 50 ? 'text-yellow-400 bg-yellow-900/40' : 'text-red-400 bg-red-900/40');
-                    @endphp
-                    <tr class="hover:bg-[var(--cc-row-hover)] transition-colors">
-                        <td class="px-4 py-3">
-                            <div class="font-semibold text-[var(--cc-text)]">{{ $tu->name }}</div>
-                            <div class="text-xs text-[var(--cc-text-muted)] uppercase">{{ $tu->role }}</div>
-                        </td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_meetings }}</span>
-                            <span class="text-slate-600">/{{ $tt->target_meetings }}</span>
-                        </td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_calls }}</span>
-                            <span class="text-slate-600">/{{ $tt->target_calls }}</span>
-                        </td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_visits }}</span>
-                            <span class="text-slate-600">/{{ $tt->target_visits }}</span>
-                        </td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-[var(--cc-text)]">{{ $tt->actual_opportunities }}</span>
-                            <span class="text-slate-600">/{{ $tt->target_opportunities }}</span>
-                        </td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="font-semibold text-green-400">{{ $tt->actual_won }}</span>
-                            <span class="text-slate-600">/{{ $tt->target_won }}</span>
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <div class="text-xs font-semibold text-[var(--cc-text)]">{{ rupiah((float)$tt->actual_revenue) }}</div>
-                            <div class="text-xs text-slate-600">/ {{ rupiah((float)$tt->target_revenue) }}</div>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-block px-2 py-1 rounded-full text-xs font-bold {{ $scoreColor }}">
-                                {{ $teamScore }}%
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @endif
-
-    {{-- Set Target Modal --}}
-    @if($isManager)
-    <div x-show="showSetTargetModal"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-         @click.self="showSetTargetModal = false">
-
-        <div class="cc-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
-             @click.stop>
-            <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-5 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-white">Set Target KPI</h3>
-                <button @click="showSetTargetModal = false" class="text-green-200 hover:text-white transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                {{-- Global Target Progress --}}
+                <div class="rounded-3xl border border-white/10 glass-card p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="h-10 w-10 bg-indigo-500/20 rounded-xl flex items-center justify-center shrink-0">
+                                <svg class="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-[var(--cc-text)] text-lg" x-text="currentUser.role === 'Sales' ? 'Team Trajectory' : 'Company Trajectory'"></h3>
+                                <p class="text-xs text-slate-400 font-medium" x-text="'Tracking towards ' + formatIDR(metrics.totalTarget)"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-end justify-between mb-3 gap-2">
+                            <div class="text-3xl 2xl:text-4xl font-mono font-bold tracking-tight text-[var(--cc-text)] flex flex-wrap items-baseline gap-2">
+                                <span x-text="formatIDR(metrics.totalActual)"></span>
+                                <span class="text-sm 2xl:text-lg text-slate-500 font-medium" x-text="'/ ' + formatIDR(metrics.totalTarget)"></span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-emerald-400" x-text="globalProgress.toFixed(1) + '%'"></div>
+                            </div>
+                        </div>
+                        <div class="h-3 w-full overflow-hidden rounded-full bg-slate-800 shadow-inner">
+                            <div class="h-full bg-gradient-to-r from-indigo-500 via-blue-500 to-emerald-400 transition-all duration-1000 ease-out relative"
+                                 :style="`width: ${Math.min(globalProgress, 100)}%`">
+                                <div class="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <form method="POST" action="{{ route('kpi.store') }}" class="p-6">
-                @csrf
+            {{-- Core Products Grid --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                <template x-for="cat in productCategories" :key="cat">
+                    <div class="p-5 glass-card hover:border-white/20 transition-colors rounded-2xl group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="text-sm font-bold text-slate-300" x-text="cat"></div>
+                            <div class="text-xs font-black bg-white/5 px-2 py-0.5 rounded-full" 
+                                 :class="getProductBarColorClass(cat, true)" 
+                                 x-text="getProductProgress(cat).toFixed(0) + '%'"></div>
+                        </div>
+                        <div class="text-xl font-mono font-bold text-[var(--cc-text)] mb-1 group-hover:text-indigo-300 transition-colors" x-text="formatIDR(metrics.productMetrics[cat]?.actual || 0)"></div>
+                        <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-4" x-text="'Target: ' + formatIDR(metrics.productMetrics[cat]?.target || 0)"></div>
+                        
+                        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full transition-all duration-700 delay-100" 
+                                 :class="getProductBarColorClass(cat, false)"
+                                 :style="`width: ${Math.min(getProductProgress(cat), 100)}%`"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-                    <div class="sm:col-span-1">
-                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">Sales / Manager</label>
-                        <select name="user_id" x-model="targetUserId" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-                            <option value="">-- Pilih --</option>
-                            @foreach($salesUsers as $su)
-                            <option value="{{ $su->id }}">{{ $su->name }}</option>
-                            @endforeach
-                        </select>
+        {{-- Right Column: Leaderboard --}}
+        <div class="rounded-3xl border border-white/10 glass-card p-6 flex flex-col relative overflow-hidden h-[600px] lg:h-auto">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+            <div class="relative z-10 flex flex-col h-full">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-2 text-amber-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <h3 class="font-bold text-[var(--cc-text)] text-lg">Top Performers</h3>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">Tahun</label>
-                        <select name="period_year" x-model="targetYear" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-                            @for($y = now()->year; $y >= now()->year - 2; $y--)
-                            <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">Bulan</label>
-                        <select name="period_month" x-model="targetMonth" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-                            @foreach($monthNames as $m => $mn)
-                            <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ $mn }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <template x-if="(currentUser.role === 'GM' || currentUser.role === 'Manager') && selectedManagerId">
+                        <button @click="selectedManagerId = null" 
+                                class="text-[10px] uppercase font-bold tracking-widest text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors bg-indigo-500/10 px-2 py-1 rounded-md">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            Back
+                        </button>
+                    </template>
                 </div>
+                
+                <div class="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <template x-if="currentUser.role === 'Sales'">
+                        <template x-for="(item, idx) in leaderboard" :key="item.user.id">
+                            <div class="flex items-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs border" :class="getRankStyle(idx)" x-text="idx + 1"></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="truncate text-sm font-bold text-[var(--cc-text)]" x-text="item.user.name"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-mono font-bold text-emerald-400" x-text="formatIDR(item.revenue)"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    @php
-                        $targetFields = [
-                            ['name' => 'target_meetings', 'label' => 'Target Meeting', 'icon' => '🤝', 'type' => 'number'],
-                            ['name' => 'target_calls', 'label' => 'Target Panggilan', 'icon' => '📞', 'type' => 'number'],
-                            ['name' => 'target_visits', 'label' => 'Target Kunjungan', 'icon' => '🚗', 'type' => 'number'],
-                            ['name' => 'target_opportunities', 'label' => 'Target Opportunity', 'icon' => '🎯', 'type' => 'number'],
-                            ['name' => 'target_won', 'label' => 'Target Deals Won', 'icon' => '🏆', 'type' => 'number'],
-                            ['name' => 'target_revenue', 'label' => 'Target Revenue (IDR)', 'icon' => '💰', 'type' => 'number'],
-                        ];
-                    @endphp
-                    @foreach($targetFields as $tf)
-                    <div>
-                        <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">{{ $tf['icon'] }} {{ $tf['label'] }}</label>
-                        <input type="{{ $tf['type'] }}" name="{{ $tf['name'] }}" min="0"
-                               placeholder="0"
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-                    </div>
-                    @endforeach
-                </div>
+                    <template x-if="currentUser.role !== 'Sales' && selectedManagerId">
+                        <template x-for="(item, idx) in managerLeaderboard.find(m => m.user.id === selectedManagerId)?.reps || []" :key="item.user.id">
+                            <div class="flex items-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs border" :class="getRankStyle(idx)" x-text="idx + 1"></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="truncate text-sm font-bold text-[var(--cc-text)]" x-text="item.user.name"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-mono font-bold text-emerald-400" x-text="formatIDR(item.revenue)"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
 
-                <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
-                    <button type="button" @click="showSetTargetModal = false"
-                            class="px-5 py-2 text-sm font-medium text-[var(--cc-text-muted)] border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
-                        Batal
-                    </button>
-                    <button type="submit"
-                            class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-xl transition-colors text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Simpan Target
-                    </button>
+                    <template x-if="currentUser.role !== 'Sales' && !selectedManagerId">
+                        <template x-for="(item, idx) in managerLeaderboard" :key="item.user.id">
+                            <div @click="selectedManagerId = item.user.id"
+                                 class="flex items-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/5 cursor-pointer hover:border-indigo-500/50 hover:bg-white/10 transition group">
+                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs border" :class="getRankStyle(idx)" x-text="idx + 1"></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="truncate text-sm font-bold text-[var(--cc-text)] group-hover:text-indigo-300 transition-colors" x-text="item.user.name"></p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5" x-text="item.reps.length + ' Reps'"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-mono font-bold text-emerald-400" x-text="formatIDR(item.revenue)"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    
+                    <template x-if="(currentUser.role === 'Sales' && leaderboard.length === 0) || (currentUser.role !== 'Sales' && managerLeaderboard.length === 0)">
+                        <div class="text-center text-sm text-slate-500 py-8 border border-dashed border-white/10 rounded-2xl">No data available</div>
+                    </template>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-    @endif
-
 </div>
+@endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    var isDark = document.documentElement.classList.contains('dark');
-    var textColor = isDark ? '#94a3b8' : '#64748b';
-    var gridColor = isDark ? '#334155' : '#e2e8f0';
+function dashboardManager() {
+    return {
+        currentUser: @json($currentUser),
+        users: @json($users),
+        deals: @json($deals),
+        targets: @json($targets),
+        
+        productCategories: ['Mobil Short Term', 'Mobil Long Term', 'Bus Pariwisata', 'Shuttle Bus', 'E-Voucher', 'Mobil Box/Blind Van'],
+        
+        metrics: { totalTarget: 0, totalActual: 0, productMetrics: {}, activeDealsCount: 0, activePipelineValue: 0, winRate: 0 },
+        personalMetrics: null,
+        globalProgress: 0,
+        
+        leaderboard: [],
+        managerLeaderboard: [],
+        selectedManagerId: null,
 
-    // Radar Chart
-    var radarOptions = {
-        series: [{
-            name: 'Pencapaian Target (%)',
-            data: {!! json_encode($radarData ?? [0,0,0,0,0]) !!},
-        }],
-        chart: { height: 320, type: 'radar', background: 'transparent', toolbar: { show: false } },
-        labels: ['Meeting', 'Panggilan', 'Kunjungan', 'Opportunity', 'Deals Won'],
-        stroke: { width: 2, colors: ['#3b82f6'] },
-        fill: { opacity: 0.2, colors: ['#3b82f6'] },
-        markers: { size: 4, colors: ['#fff'], strokeColors: '#3b82f6', strokeWidth: 2 },
-        yaxis: { show: false, min: 0, max: 100 },
-        xaxis: {
-            labels: {
-                style: { colors: [textColor, textColor, textColor, textColor, textColor], fontSize: '11px', fontFamily: 'inherit' }
+        initData() {
+            const allSalesIds = this.users.filter(u => u.role === 'Sales').map(u => u.id);
+            const myTeamIds = this.users.filter(u => u.managerId === (this.currentUser.role === 'Manager' ? this.currentUser.id : this.currentUser.managerId) && u.role === 'Sales').map(u => u.id);
+            const myIndividualIds = [this.currentUser.id];
+            
+            const visibleSalesIds = this.currentUser.role === 'GM' ? allSalesIds : (this.currentUser.role === 'Manager' ? allSalesIds : myTeamIds);
+            
+            this.metrics = this.calculateMetrics(visibleSalesIds);
+            
+            if (this.currentUser.role === 'Sales') {
+                this.personalMetrics = this.calculateMetrics(myIndividualIds);
+            } else if (this.currentUser.role === 'Manager') {
+                this.personalMetrics = this.calculateMetrics(myTeamIds);
             }
+            
+            this.globalProgress = this.metrics.totalTarget > 0 ? (this.metrics.totalActual / this.metrics.totalTarget) * 100 : 0;
+            
+            this.calculateLeaderboards(visibleSalesIds);
         },
-        plotOptions: { radar: { polygons: { strokeColors: gridColor, connectorColors: gridColor } } }
-    };
-    new ApexCharts(document.querySelector("#radarChart"), radarOptions).render();
-
-    // Gauge Chart
-    var gaugeOptions = {
-        series: [{{ $overallScore }}],
-        chart: { type: 'radialBar', height: 350, background: 'transparent' },
-        plotOptions: {
-            radialBar: {
-                startAngle: -135,
-                endAngle: 135,
-                hollow: { margin: 15, size: '65%', background: 'transparent', image: undefined },
-                track: { background: gridColor, strokeWidth: '100%', margin: 0, dropShadow: { enabled: false } },
-                dataLabels: {
-                    show: true,
-                    name: { offsetY: 20, show: true, color: textColor, fontSize: '14px' },
-                    value: { offsetY: -10, color: isDark ? '#fff' : '#1e293b', fontSize: '36px', show: true, formatter: function(val) { return val + "%"; } }
+        
+        calculateMetrics(salesIds) {
+            let totalTarget = 0;
+            let totalActual = 0;
+            let productMetrics = {};
+            this.productCategories.forEach(cat => {
+                productMetrics[cat] = { target: 0, actual: 0 };
+            });
+            
+            this.targets.forEach(t => {
+                if (salesIds.includes(t.userId)) {
+                    this.productCategories.forEach(cat => {
+                        productMetrics[cat].target += t.productTargets[cat] || 0;
+                        totalTarget += t.productTargets[cat] || 0;
+                    });
                 }
-            }
-        },
-        fill: {
-            type: 'gradient',
-            gradient: { shade: 'dark', type: 'horizontal', shadeIntensity: 0.5, gradientToColors: ['#10b981'], inverseColors: true, opacityFrom: 1, opacityTo: 1, stops: [0, 100] }
-        },
-        stroke: { lineCap: 'round' },
-        colors: ['#3b82f6'],
-        labels: ['Skor Keseluruhan']
-    };
-    new ApexCharts(document.querySelector("#gaugeChart"), gaugeOptions).render();
-});
-</script>
-
-{{-- Chart.js --}}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('kpiTrendChart');
-    if (!ctx) return;
-
-    const chartData = @json($chartData);
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: chartData.labels,
-            datasets: [
-                {
-                    label: 'Meeting',
-                    data: chartData.meetings,
-                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                    borderRadius: 4,
-                },
-                {
-                    label: 'Panggilan',
-                    data: chartData.calls,
-                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                    borderRadius: 4,
-                },
-                {
-                    label: 'Revenue (juta)',
-                    data: chartData.revenue.map(r => +(r / 1000000).toFixed(1)),
-                    type: 'line',
-                    borderColor: 'rgba(234, 179, 8, 1)',
-                    backgroundColor: 'rgba(234, 179, 8, 0.1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(234, 179, 8, 1)',
-                    tension: 0.4,
-                    yAxisID: 'y2',
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            if (ctx.dataset.label === 'Revenue (juta)') {
-                                return 'Revenue: Rp ' + ctx.parsed.y.toFixed(1) + 'jt';
+            });
+            
+            let activeDealsCount = 0;
+            let activePipelineValue = 0;
+            let wonDealsCount = 0;
+            let lostDealsCount = 0;
+            
+            this.deals.forEach(d => {
+                if (salesIds.includes(d.salesId)) {
+                    if (d.stage === 'Won') {
+                        const val = d.actualValue || 0;
+                        let prods = d.products || [];
+                        if(typeof prods === 'string') prods = JSON.parse(prods);
+                        let totalEst = prods.reduce((acc, p) => acc + (p.estimatedValue * (p.quantity || 1)), 0);
+                        if (totalEst === 0) totalEst = 1;
+                        prods.forEach(p => {
+                            if (productMetrics[p.category]) {
+                                const prop = (p.estimatedValue * (p.quantity || 1)) / totalEst;
+                                productMetrics[p.category].actual += Math.round(val * prop);
                             }
-                            return ctx.dataset.label + ': ' + ctx.parsed.y;
-                        }
+                        });
+                        totalActual += val;
+                        wonDealsCount++;
+                    } else if (d.stage === 'Lost') {
+                        lostDealsCount++;
+                    } else {
+                        activeDealsCount++;
+                        activePipelineValue += (d.estimatedValue || 0);
                     }
                 }
-            },
-            scales: {
-                x: { grid: { display: false } },
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 },
-                    title: { display: true, text: 'Jumlah' }
-                },
-                y2: {
-                    position: 'right',
-                    beginAtZero: true,
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'Revenue (juta IDR)' }
+            });
+            
+            const totalClosed = wonDealsCount + lostDealsCount;
+            const winRate = totalClosed > 0 ? (wonDealsCount / totalClosed) * 100 : 0;
+            
+            return { totalTarget, totalActual, productMetrics, activeDealsCount, activePipelineValue, winRate };
+        },
+
+        calculateLeaderboards(visibleSalesIds) {
+            // Reps leaderboard
+            let scores = {};
+            this.users.filter(u => u.role === 'Sales').forEach(u => {
+                if (visibleSalesIds.includes(u.id)) {
+                    scores[u.id] = { user: u, revenue: 0 };
                 }
-            }
+            });
+            this.deals.forEach(d => {
+                if (d.stage === 'Won' && scores[d.salesId]) {
+                    scores[d.salesId].revenue += (d.actualValue || 0);
+                }
+            });
+            this.leaderboard = Object.values(scores).sort((a, b) => b.revenue - a.revenue);
+            
+            // Managers leaderboard
+            let managers = {};
+            this.users.filter(u => u.role === 'Manager').forEach(u => {
+                managers[u.id] = { user: u, revenue: 0, reps: [] };
+            });
+            
+            let reps = {};
+            this.users.filter(u => u.role === 'Sales').forEach(u => {
+                if (visibleSalesIds.includes(u.id)) {
+                    reps[u.id] = { user: u, revenue: 0, managerId: u.managerId };
+                }
+            });
+            
+            this.deals.forEach(d => {
+                if (d.stage === 'Won' && reps[d.salesId]) {
+                    reps[d.salesId].revenue += (d.actualValue || 0);
+                }
+            });
+            
+            Object.values(reps).forEach(rep => {
+                if (rep.managerId && managers[rep.managerId]) {
+                    managers[rep.managerId].reps.push(rep);
+                    managers[rep.managerId].revenue += rep.revenue;
+                }
+            });
+            
+            Object.values(managers).forEach(m => {
+                m.reps.sort((a, b) => b.revenue - a.revenue);
+            });
+            
+            this.managerLeaderboard = Object.values(managers)
+                .filter(m => m.reps.length > 0)
+                .sort((a, b) => b.revenue - a.revenue);
+        },
+
+        formatIDR(val) {
+            if (!val) val = 0;
+            return 'Rp ' + parseInt(val).toLocaleString('id-ID');
+        },
+        
+        getProductProgress(cat) {
+            const m = this.metrics.productMetrics[cat];
+            if(!m || m.target === 0) return 0;
+            return (m.actual / m.target) * 100;
+        },
+        
+        getProductBarColorClass(cat, isText) {
+            const p = this.getProductProgress(cat);
+            if (p >= 100) return isText ? 'text-emerald-400' : 'bg-emerald-500';
+            if (p >= 75) return isText ? 'text-indigo-400' : 'bg-indigo-500';
+            if (p >= 50) return isText ? 'text-amber-400' : 'bg-amber-500';
+            return isText ? 'text-rose-400' : 'bg-rose-500';
+        },
+        
+        getRankStyle(idx) {
+            if (idx === 0) return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+            if (idx === 1) return 'bg-slate-300/20 text-slate-300 border-slate-300/30';
+            if (idx === 2) return 'bg-amber-700/20 text-amber-600 border-amber-700/30';
+            return 'bg-slate-800 text-slate-400 border-white/5';
         }
-    });
-});
+    }
+}
 </script>
-@endsection
+@endpush

@@ -1,24 +1,13 @@
 @extends('layouts.app')
 
-@section('header_title', 'Sales Pipeline')
+@section('header_title', 'Active Pipeline Funnel')
 
 @push('styles')
 <style>
-    /* ── KANBAN SPA LAYOUT ──
-       The content-area (#content-area) handles vertical scroll.
-       The kanban board itself scrolls HORIZONTALLY inside a fixed-height wrapper.
-       Each column: header is sticky, cards scroll vertically inside the column.
-    ── */
-
-    /* ── PIPELINE: Override layout defaults ──────────────────────────────────
-       The SPA layout has:
-         #content-area { overflow-x: hidden }   ← blocks kanban horiz scroll
-         #content-area > .p-6 { padding: 24px } ← shrinks height
-       We override both here so kanban gets full freedom.
-    ──────────────────────────────────────────────────────────────────────── */
+    /* ── KANBAN SPA LAYOUT & GLASSMORPHISM ── */
     #content-area {
         overflow-x: visible !important;
-        overflow: hidden !important;  /* kanban manages its own scroll */
+        overflow: hidden !important;
     }
     #content-area > div.p-6 {
         padding: 0 !important;
@@ -27,25 +16,25 @@
         flex-direction: column;
     }
 
-    /* kanban-page-wrapper: fill the now-padding-free content-area */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+    }
+    .dark .glass-panel {
+        background: rgba(22, 29, 46, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
     .kanban-page-wrapper {
         display: flex;
         flex-direction: column;
-        height: 100%;          /* fill parent — no magic number needed */
+        height: 100%;
         min-height: 0;
+        background: var(--cc-bg);
+        padding: 24px;
     }
 
-    .kanban-page-header {
-        flex-shrink: 0;
-        padding-bottom: 12px;
-    }
-
-    .kanban-summary-bar {
-        flex-shrink: 0;
-        padding-bottom: 12px;
-    }
-
-    /* Horizontal scroll container for the board */
     .kanban-scroll-x {
         flex: 1;
         min-height: 0;
@@ -54,40 +43,29 @@
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
         padding-bottom: 12px;
-        cursor: grab;
     }
-    .kanban-scroll-x:active { cursor: grabbing; }
     .kanban-scroll-x::-webkit-scrollbar { height: 6px; }
     .kanban-scroll-x::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
     .kanban-scroll-x::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-    .kanban-scroll-x::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-    /* Board: full height of scroll container */
     .kanban-board {
         display: flex;
-        gap: 14px;
+        gap: 16px;
         height: 100%;
         min-width: max-content;
         align-items: flex-start;
     }
 
-    /* Each column: fixed width, full height, flex column */
     .kanban-column {
-        width: 280px;
+        width: 320px;
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
         height: 100%;
         max-height: 100%;
+        border-radius: 24px;
     }
 
-    /* Column header: sticky at top of column, never scrolls */
-    .kanban-col-header {
-        flex-shrink: 0;
-        margin-bottom: 8px;
-    }
-
-    /* Drop zone: fills remaining column height, cards scroll here */
     .kanban-drop-zone {
         flex: 1;
         min-height: 0;
@@ -95,998 +73,560 @@
         overflow-x: hidden;
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        border-radius: 12px;
-        padding: 6px 4px 6px 4px;
-        transition: background 0.15s, outline 0.15s;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
+        gap: 12px;
+        padding: 12px;
     }
-    .kanban-drop-zone::-webkit-scrollbar { width: 3px; }
-    .kanban-drop-zone::-webkit-scrollbar-track { background: transparent; }
-    .kanban-drop-zone::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
-    .kanban-drop-zone.sortable-over { background: rgba(0,229,255,0.04); outline: 2px dashed rgba(0,229,255,0.25); outline-offset: -2px; }
-    /* Kanban card — adapts to dark/light via CSS vars */
+
     .kanban-card {
-        background: var(--cc-card);
-        border: 1px solid var(--cc-border);
-        border-radius: 12px;
-        padding: 14px;
+        border-radius: 16px;
+        padding: 16px;
         cursor: grab;
-        user-select: none;
-        transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        transition: all 0.2s;
     }
     .kanban-card:hover {
-        border-color: var(--cc-border-h);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-        background: var(--cc-card-hover);
+        border-color: rgba(99, 102, 241, 0.5); /* indigo-500/50 */
     }
-    html.dark .kanban-card { box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
-    html.dark .kanban-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
-    .kanban-card.sortable-ghost { opacity: 0.25; }
-    .kanban-card.sortable-drag  { opacity: 1; transform: rotate(1.5deg) scale(1.02); box-shadow: 0 12px 32px rgba(0,0,0,0.25); border-color: var(--cc-accent); cursor: grabbing; }
+    .kanban-card:active { cursor: grabbing; }
 
-    /* Stage column headers — lighter background, darker text for readability */
-    .stage-header { border-radius: 12px; padding: 14px 16px; }
-    /* Dark mode: subtle tint */
-    html.dark .stage-call { background: rgba(20,104,168,0.05);  border: 1px solid rgba(20,104,168,0.15); }
-    html.dark .stage-pro  { background: rgba(20,104,168,0.10);  border: 1px solid rgba(20,104,168,0.20); }
-    html.dark .stage-prop { background: rgba(20,104,168,0.15);  border: 1px solid rgba(20,104,168,0.25); }
-    html.dark .stage-neg  { background: rgba(20,104,168,0.20);  border: 1px solid rgba(20,104,168,0.30); }
-    html.dark .stage-won  { background: rgba(16,185,129,0.08);  border: 1px solid rgba(16,185,129,0.18); }
-    html.dark .stage-lost { background: rgba(239,68,68,0.06);   border: 1px solid rgba(239,68,68,0.14); }
-    /* Light mode: very light pastel — high contrast text */
-    html.light .stage-call { background: rgba(20,104,168,0.04);  border: 1px solid rgba(20,104,168,0.12); }
-    html.light .stage-pro  { background: rgba(20,104,168,0.07);  border: 1px solid rgba(20,104,168,0.18); }
-    html.light .stage-prop { background: rgba(20,104,168,0.10);  border: 1px solid rgba(20,104,168,0.24); }
-    html.light .stage-neg  { background: rgba(20,104,168,0.13);  border: 1px solid rgba(20,104,168,0.30); }
-    html.light .stage-won  { background: rgba(16,185,129,0.07);  border: 1px solid rgba(16,185,129,0.20); }
-    html.light .stage-lost { background: rgba(239,68,68,0.05);   border: 1px solid rgba(239,68,68,0.16); }
-    /* Fallback for when no class set */
-    .stage-call { background: rgba(20,104,168,0.05);  border: 1px solid rgba(20,104,168,0.15); }
-    .stage-pro  { background: rgba(20,104,168,0.10);  border: 1px solid rgba(20,104,168,0.20); }
-    .stage-prop { background: rgba(20,104,168,0.15);  border: 1px solid rgba(20,104,168,0.25); }
-    .stage-neg  { background: rgba(20,104,168,0.20);  border: 1px solid rgba(20,104,168,0.30); }
-    .stage-won  { background: rgba(16,185,129,0.08);  border: 1px solid rgba(16,185,129,0.18); }
-    .stage-lost { background: rgba(239,68,68,0.06);   border: 1px solid rgba(239,68,68,0.14); }
-    /* Stage header text — force readable contrast */
-    .stage-header .text-slate-100 { color: var(--cc-text) !important; }
-    html.light .stage-header span[style*="color"] { filter: saturate(1.3) brightness(0.7); }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-    /* Drop zone background — subtle */
-    .kanban-drop-zone { background: rgba(0,0,0,0.02); }
-    html.dark .kanban-drop-zone { background: rgba(255,255,255,0.01); }
-    /* Card text overrides for light mode */
-    html.light .kanban-card h3 { color: var(--cc-text) !important; }
-    html.light .kanban-card .text-slate-100 { color: var(--cc-text) !important; }
-    html.light .kanban-card .text-slate-200 { color: var(--cc-text) !important; }
-    html.light .kanban-card .text-slate-500,
-    html.light .kanban-card .text-slate-600 { color: var(--cc-text-muted) !important; }
-    html.light .kanban-card .border-white\/5 { border-color: rgba(0,0,0,0.08) !important; }
-    html.light .kanban-card .bg-blue-500\/20 { background: rgba(59,130,246,0.15) !important; }
-    html.light .kanban-card .text-blue-400 { color: #1d4ed8 !important; }
-
-    /* Summary bar cards in light mode */
-    html.light .kanban-summary-bar .cc-card { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-
-    .edit-input { background: var(--cc-input-bg); border: 1px solid var(--cc-input-bd); color: var(--cc-text); border-radius: 8px; padding: 6px 10px; font-size: 13px; width: 100%; outline: none; }
-    .edit-input:focus { border-color: var(--cc-accent); box-shadow: 0 0 0 3px var(--cc-accent-dim); }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .modal-box { background: var(--cc-card); border: 1px solid var(--cc-border); border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; animation: modal-in 0.25s cubic-bezier(0.16,1,0.3,1); }
-    @keyframes modal-in { from { opacity:0; transform: scale(0.95) translateY(16px); } to { opacity:1; transform: scale(1) translateY(0); } }
-    .modal-body { overflow-y: auto; flex: 1; }
-    .tab-btn { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
-    .tab-btn.active { background: rgba(0,229,255,0.1); color: #00e5ff; border-color: rgba(0,229,255,0.2); }
-    .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.04); color: #94a3b8; }
-    .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 12px; }
-    .info-row:last-child { border-bottom: none; }
-    .info-label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; min-width: 140px; padding-top: 1px; }
-    .info-val { font-size: 13px; color: #cbd5e1; flex: 1; }
-    #toast { position: fixed; bottom: 24px; right: 24px; z-index: 200; min-width: 240px; padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; display: none; }
-    #toast.success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; }
-    #toast.error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.3);  color: #f87171; }
-    @media (max-width: 768px) {
-        .kanban-column { width: 256px; }
-        .kanban-page-wrapper { height: 100%; } /* inherit from content-area */
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .animate-spin { animation: spin 1s linear infinite; }
-
-    /* ── TABLE VIEW ── */
-    #pipeline-table-view { display: none; flex: 1; overflow: auto; }
-    #pipeline-table-view.active { display: block; }
-    .pipeline-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .pipeline-table thead th {
-        position: sticky; top: 0; z-index: 2;
-        background: var(--cc-card); color: var(--cc-text-muted);
-        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-        padding: 10px 14px; border-bottom: 1px solid var(--cc-border); text-align: left;
-        white-space: nowrap;
-    }
-    .pipeline-table tbody tr { border-bottom: 1px solid var(--cc-border); transition: background 0.1s; cursor: pointer; }
-    .pipeline-table tbody tr:hover { background: var(--cc-row-hover); }
-    .pipeline-table tbody td { padding: 10px 14px; color: var(--cc-text); vertical-align: middle; }
-    .pipeline-table tbody td.muted { color: var(--cc-text-muted); }
-    .stage-pill {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700;
-    }
-
-    /* Momentum scroll for board on touch */
-    @media (hover: none) {
-        .kanban-scroll-x { cursor: default; }
-    }
+    /* For smooth animations in alpine */
+    [x-cloak] { display: none !important; }
 </style>
 @endpush
 
 @section('content')
-<div
-    x-data="kanbanBoard()"
-    x-init="init()"
-    @keydown.escape.window="closeModal()"
-    class="kanban-page-wrapper"
->
+@php
+    $stages = [
+        'call_meeting' => 'Call/Meeting',
+        'prospecting'  => 'Prospecting',
+        'proposal'     => 'Proposal',
+        'negotiation'  => 'Negotiation',
+        'won'          => 'Won',
+        'lost'         => 'Lost'
+    ];
+    $isManager = auth()->user()->isManager() || auth()->user()->isDirector() || auth()->user()->isGM();
+    $userId = auth()->id();
+@endphp
 
-    {{-- PAGE HEADER --}}
-    <div class="kanban-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+<div x-data="pipelineManager()" x-init="initData()" class="kanban-page-wrapper">
+    
+    {{-- HEADER --}}
+    <div class="mb-6 flex items-center justify-between shrink-0">
         <div>
-            <h1 class="text-[22px] font-extrabold text-slate-100 tracking-tight flex items-center gap-2">
-                <span class="material-symbols-outlined text-[#00e5ff]">view_kanban</span>
-                Sales Pipeline
-            </h1>
-            <p class="text-[10px] text-slate-400 leading-none mt-0.5 tracking-tight">Drag & drop deal antar tahap — tersimpan otomatis</p>
+            <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-1">Active Pipeline Funnel</h1>
+            <p class="text-[var(--cc-text-muted)]">Manage your deals across sales stages.</p>
         </div>
-        <div class="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-1">
-            <a href="{{ route('opportunities.create') }}" class="btn-primary shrink-0" data-add-activity id="fab-pipeline-add">
-                <span class="material-symbols-outlined text-[16px]">add</span>
-                <span class="hidden sm:inline">Tambah Deal</span>
-            </a>
-
-            <div class="relative shrink-0">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[16px]">search</span>
-                <input x-model="search" type="text" placeholder="Cari deal, client..." class="pl-9 pr-4 py-2 text-[13px] dark-input rounded-xl w-48"/>
-            </div>
-            <select x-model="filterStage" class="dark-input text-[13px] py-2 px-3 rounded-xl">
-                <option value="">Semua Stage</option>
-                @foreach($stages as $s)
-                <option value="{{ $s }}">{{ ucfirst($s) }}</option>
+        <div class="flex items-center gap-4">
+            @if($isManager)
+            <select x-model="selectedSalesFilter"
+                    class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card)] px-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500">
+                <option value="all">All Sales</option>
+                @foreach($salesUsers as $su)
+                    <option value="{{ $su->id }}">{{ $su->name }}</option>
                 @endforeach
             </select>
-            {{-- Sales filter (manager/gm/director) --}}
-            @if($salesUsers->isNotEmpty())
-            <form method="GET" id="pipeline-filter-form">
-                <input type="hidden" name="sort_by" value="{{ $sortBy }}">
-                <select name="filter_sales" onchange="document.getElementById('pipeline-filter-form').submit()"
-                        class="dark-input text-[13px] py-2 px-3 rounded-xl">
-                    <option value="">Semua Sales</option>
-                    @foreach($salesUsers as $su)
-                    <option value="{{ $su->id }}" {{ request('filter_sales') == $su->id ? 'selected' : '' }}>{{ $su->name }}</option>
-                    @endforeach
-                </select>
-            </form>
             @endif
-            {{-- Sort --}}
-            <form method="GET" id="pipeline-sort-form">
-                @if(request('filter_sales'))<input type="hidden" name="filter_sales" value="{{ request('filter_sales') }}">@endif
-                <select name="sort_by" onchange="document.getElementById('pipeline-sort-form').submit()"
-                        class="dark-input text-[13px] py-2 px-3 rounded-xl">
-                    <option value="updated"    {{ $sortBy === 'updated'    ? 'selected' : '' }}>Terbaru diupdate</option>
-                    <option value="newest"     {{ $sortBy === 'newest'     ? 'selected' : '' }}>Terbaru dibuat</option>
-                    <option value="value_desc" {{ $sortBy === 'value_desc' ? 'selected' : '' }}>Nilai ↓</option>
-                    <option value="value_asc"  {{ $sortBy === 'value_asc'  ? 'selected' : '' }}>Nilai ↑</option>
-                    <option value="close_date" {{ $sortBy === 'close_date' ? 'selected' : '' }}>Close date</option>
-                </select>
-            </form>
-            {{-- View Toggle: Board / List / Table --}}
-            <div class="view-toggle">
-                <button class="view-btn active" id="view-board" onclick="setKanbanView('board')" title="Board view">
-                    <span class="material-symbols-outlined text-[15px]">view_kanban</span>
-                    <span class="hidden sm:inline">Board</span>
-                </button>
-                <button class="view-btn" id="view-table" onclick="setKanbanView('table')" title="Table view">
-                    <span class="material-symbols-outlined text-[15px]">table</span>
-                    <span class="hidden sm:inline">Table</span>
-                </button>
-            </div>
+
+            @if(auth()->user()->isSales())
+            <button @click="openCreateModal()"
+                    class="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Deal
+            </button>
+            @endif
         </div>
     </div>
 
-    {{-- SUMMARY BAR --}}
-    @php
-    $stageConf = [
-        'call_meeting'=> ['label'=>'Call/Meeting','color'=>'#38bdf8','icon'=>'phone_in_talk'],
-        'prospecting' => ['label'=>'Prospekting','color'=>'#0ea5e9','icon'=>'radar'],
-        'proposal'    => ['label'=>'Proposal',   'color'=>'#0284c7','icon'=>'description'],
-        'negotiation' => ['label'=>'Negosiasi',  'color'=>'#0369a1','icon'=>'handshake'],
-        'won'         => ['label'=>'Menang',     'color'=>'#10b981','icon'=>'emoji_events'],
-        'lost'        => ['label'=>'Kalah',      'color'=>'#ef4444','icon'=>'cancel'],
-    ];
-    @endphp
-    <div class="kanban-summary-bar grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        @foreach($stages as $s)
-        @php $c = $stageConf[$s]; $col = $kanban[$s]; @endphp
-        <div class="cc-card px-4 py-3 flex items-center gap-3">
-            <span class="material-symbols-outlined text-[20px]" style="color:{{ $c['color'] }}">{{ $c['icon'] }}</span>
-            <div>
-                <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ $c['label'] }}</div>
-                <div class="text-[15px] font-bold text-slate-100"
-                     id="count-{{ $s }}" data-count-badge="{{ $s }}">{{ $col['count'] }}</div>
-                <div class="text-[10px] text-slate-500"
-                     data-value-badge="{{ $s }}">Rp {{ number_format($col['total_value'],0,',','.') }}</div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-
-    {{-- KANBAN BOARD: horizontal scroll wrapper --}}
-    <div class="kanban-scroll-x" id="kanban-scroll-x">
+    {{-- KANBAN BOARD --}}
+    <div class="kanban-scroll-x custom-scrollbar">
         <div class="kanban-board">
-
-            @foreach($stages as $stage)
-            @php
-            $c = $stageConf[$stage];
-            $col = $kanban[$stage];
-            $opps = $col['opportunities'];
-            $stageClass = ['call_meeting'=>'stage-call','prospecting'=>'stage-pro','proposal'=>'stage-prop','negotiation'=>'stage-neg','won'=>'stage-won','lost'=>'stage-lost'][$stage];
-            @endphp
-
-            <div class="kanban-column" x-show="filterStage === '' || filterStage === '{{ $stage }}'">
-
-                {{-- Column header: fixed, does NOT scroll with cards --}}
-                <div class="kanban-col-header">
-                    <div class="{{ $stageClass }} stage-header flex items-center justify-between mb-1">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[18px]" style="color:{{ $c['color'] }}">{{ $c['icon'] }}</span>
-                            <span class="text-sm font-bold text-slate-100 uppercase tracking-wide">{{ $c['label'] }}</span>
-                        </div>
-                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                              style="background:rgba(255,255,255,0.1); color:{{ $c['color'] }}"
-                              id="badge-{{ $stage }}" data-count-badge="{{ $stage }}">{{ $col['count'] }}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-500 font-semibold px-1 pb-1"
-                         data-col-value="{{ $stage }}">Rp {{ number_format($col['total_value'],0,',','.') }}</div>
+            @foreach($stages as $key => $label)
+            <div class="kanban-column glass-panel" data-stage="{{ $key }}">
+                <div class="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
+                    <h3 class="font-bold text-[var(--cc-text)] text-sm tracking-wide">{{ $label }}</h3>
+                    <span class="text-xs font-bold text-slate-400 bg-black/20 px-2.5 py-0.5 rounded-full border border-white/5" x-text="getDealCount('{{ $key }}')">0</span>
                 </div>
-
-                {{-- Drop zone: scrolls independently per column --}}
-                <div class="kanban-drop-zone" data-stage="{{ $stage }}" id="zone-{{ $stage }}">
-                    @forelse($opps as $opp)
-                    <div class="kanban-card cursor-pointer hover:ring-1 hover:ring-blue-500/50 transition-all"
-                         data-id="{{ $opp->id }}"
-                         data-deal-id="{{ $opp->id }}"
-                         data-deal-title="{{ addslashes($opp->title) }}"
-                         data-deal-stage="{{ $opp->stage }}"
-                         data-deal-num="{{ $opp->opp_number }}"
-                         data-stage="{{ $opp->stage }}"
-                         data-value="{{ $opp->estimated_value ?? 0 }}"
-                         x-data="{ expanded: false }"
-                         @click="expanded = !expanded"
-                         x-show="matchesSearch('{{ addslashes($opp->title) }}','{{ addslashes($opp->client->company_name ?? '') }}')"
-                    >
-                        @php
-                            $lastAct   = $opp->activityLogs->max('created_at');
-                            $daysSince = $lastAct ? now()->diffInDays($lastAct) : 99;
-                            $stageDays = $opp->updated_at->diffInDays(now());
-                            $risk      = $daysSince + ($stageDays * 0.5);
-                            $hlEmoji   = $risk < 7  ? '💚' : ($risk < 14 ? '💛' : '❤️');
-                            $hlClass   = $risk < 7  ? 'health-green' : ($risk < 14 ? 'health-yellow' : 'health-red');
-                            $hlLabel   = $risk < 7  ? 'Healthy' : ($risk < 14 ? 'Warming' : 'At Risk');
-                        @endphp
-
-                        {{-- Collapsed State --}}
-                        <div x-show="!expanded" class="flex flex-col gap-1.5">
-                            <div class="flex items-start justify-between gap-2">
-                                <h3 class="text-[12px] font-semibold leading-snug line-clamp-1 flex-1" style="color:var(--cc-text)">
-                                    <span class="material-symbols-outlined text-[12px] align-middle mr-0.5 text-slate-500">corporate_fare</span>
-                                    {{ $opp->client->company_name ?? $opp->title }}
-                                </h3>
-                                @if($opp->estimated_value)
-                                @php
-                                    // Format: if >= 1 Billion show M (Miliar), if >= 1 Million show Jt
-                                    $val = $opp->estimated_value;
-                                    $formatted = $val >= 1000000000 ? number_format($val/1000000000, 1, ',', '.') . 'M' : ($val >= 1000000 ? number_format($val/1000000, 0, ',', '.') . 'Jt' : number_format($val, 0, ',', '.'));
-                                @endphp
-                                <span class="text-[11px] font-bold shrink-0" style="color:var(--cc-text)">Rp{{ $formatted }}</span>
-                                @endif
+                
+                <div class="kanban-drop-zone custom-scrollbar" id="col-{{ $key }}">
+                    <template x-for="deal in filteredDeals('{{ $key }}')" :key="deal.id">
+                        <div class="kanban-card glass-panel group relative" :data-id="deal.id">
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="font-bold text-[var(--cc-text)] text-sm leading-tight" x-text="deal.title"></h4>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-slate-500 font-mono">{{ $opp->opp_number }}</span>
-                                <span class="{{ $hlClass }} text-[10px] px-1 py-0.5 rounded leading-none">{{ $hlEmoji }} {{ $stageDays }}d</span>
-                            </div>
-                        </div>
-
-                        {{-- Expanded State --}}
-                        <div x-show="expanded" x-cloak>
-                            {{-- Card top row --}}
-                            <div class="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-white/5">
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                    <span class="text-[10px] text-slate-600 font-mono truncate">{{ $opp->opp_number }}</span>
-                                    <span class="{{ $hlClass }}" title="{{ $hlLabel }} · Last activity: {{ $daysSince }}d ago · Stage: {{ $stageDays }}d">{{ $hlEmoji }}</span>
-                                </div>
-                                <div class="flex items-center gap-1 flex-shrink-0">
-                                    <button
-                                        @click.stop="openEdit({{ $opp->id }},'{{ addslashes($opp->title) }}',{{ $opp->estimated_value ?? 'null' }},'{{ $opp->expected_close_date?->format('Y-m-d') ?? '' }}','{{ addslashes($opp->notes ?? '') }}',{{ $opp->pax ?? 'null' }})"
-                                        class="p-0.5 rounded text-slate-600 hover:text-slate-300 transition-colors" title="Edit (E)" data-inline-edit>
-                                        <span class="material-symbols-outlined text-[14px]">edit</span>
-                                    </button>
-                                    <button
-                                        @click.stop="open360({{ $opp->id }})"
-                                        class="p-0.5 rounded text-slate-600 hover:text-[#00e5ff] transition-colors" title="360° View (V)" data-view-360>
-                                        <span class="material-symbols-outlined text-[14px]">360</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {{-- Title --}}
-                            <h3 class="text-[13px] font-semibold leading-snug line-clamp-2 mb-2" style="color:var(--cc-text)">{{ $opp->title }}</h3>
-
-                            {{-- Client Details --}}
-                            <div class="mb-2 pl-2 border-l-2 border-blue-500/20">
-                                <a href="{{ route('clients.show', $opp->client_id) }}"
-                                   class="text-[12px] hover:underline" style="color:var(--cc-text)" @click.stop>
-                                    <span class="material-symbols-outlined text-[12px] align-middle">corporate_fare</span>
-                                    {{ $opp->client->company_name ?? '-' }}
-                                </a>
-                                <div class="text-[11px] mt-0.5 text-slate-400">
-                                    {{ $opp->client->pic_name ?? '' }} @if($opp->client?->phone) · {{ $opp->client->phone }} @endif
-                                </div>
-                            </div>
-
-                            {{-- Value --}}
-                            @if($opp->estimated_value)
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-[13px] font-bold text-slate-100">Rp {{ number_format((float)$opp->estimated_value,0,',','.') }}</span>
-                                @if($opp->pax)
-                                <span class="text-[11px] text-slate-500">{{ $opp->pax }} pax</span>
-                                @endif
-                            </div>
-                            @endif
-
-                            {{-- Close date --}}
-                            @if($opp->expected_close_date)
-                            <div class="flex items-center gap-1.5 text-[11px] mb-2 {{ $opp->expected_close_date->isPast() && !in_array($opp->stage,['won','lost']) ? 'text-red-400' : 'text-slate-500' }}">
-                                <span class="material-symbols-outlined text-[12px]">calendar_month</span>
-                                {{ $opp->expected_close_date->format('d M Y') }}
-                                @if($opp->expected_close_date->isPast() && !in_array($opp->stage,['won','lost']))
-                                <span class="text-[10px] font-bold ml-1">OVERDUE</span>
-                                @endif
-                            </div>
-                            @endif
-
-                            {{-- Discount warning --}}
-                            @if($opp->discount_percent > 0 && !$opp->discount_approved)
-                            <div class="flex items-center gap-1.5 text-[11px] text-amber-400 bg-amber-500/10 rounded-lg px-2 py-1 mb-2">
-                                <span class="material-symbols-outlined text-[12px]">warning</span>
-                                Diskon {{ $opp->discount_percent }}% pending
-                            </div>
-                            @endif
-
-                            {{-- Footer: sales + product --}}
-                            <div class="flex items-center justify-between pt-2 border-t border-white/5 mt-2">
-                                @if($opp->sales && !auth()->user()->isSales())
-                                <div class="flex items-center gap-1.5">
-                                    <div class="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-[10px] font-bold flex-shrink-0">
-                                        {{ strtoupper(substr($opp->sales->name,0,1)) }}
+                            
+                            <div class="mb-2 space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest truncate max-w-[65%]" x-text="deal.client_name"></p>
+                                    <div class="flex items-center gap-1 text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span x-text="formatDate(deal.created_at)"></span>
                                     </div>
-                                    <span class="text-[11px] text-slate-500 truncate max-w-[80px]">{{ $opp->sales->name }}</span>
                                 </div>
-                                @else
-                                <div></div>
-                                @endif
-                                @if($opp->product)
-                                <span class="text-[10px] text-slate-600 truncate max-w-[90px]">{{ $opp->product->name }}</span>
-                                @endif
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-4 h-4 rounded border border-white/10 bg-slate-700/50 flex items-center justify-center text-[9px] font-bold text-slate-300" x-text="deal.sales_name.charAt(0)"></div>
+                                    <span class="text-xs text-slate-400 truncate" x-text="deal.sales_name"></span>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center py-10 text-[13px] text-slate-600" id="empty-{{ $stage }}">
-                        <span class="material-symbols-outlined text-[32px] block mb-2 opacity-30">inbox</span>
-                        Belum ada deal
-                    </div>
-                    @endforelse
-                </div>
+                            
+                            <div class="flex items-center justify-between mt-3 mb-2">
+                                <div class="flex flex-wrap gap-1">
+                                    <template x-for="p in (deal.products || [])" :key="p.id">
+                                        <span class="inline-flex items-center rounded-lg bg-indigo-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
+                                            <span x-text="(p.quantity > 1 ? p.quantity + 'x ' : '') + p.category"></span>
+                                        </span>
+                                    </template>
+                                </div>
+                                <span class="text-xs font-mono font-bold text-emerald-400" x-text="formatIDR(deal.stage === 'won' ? deal.final_value : deal.estimated_value)"></span>
+                            </div>
 
+                            <button @click="openHistoryModal(deal)"
+                                    class="text-[10px] font-bold text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors uppercase tracking-widest mt-2">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                View History
+                            </button>
+                            
+                            <template x-if="deal.stage === 'lost' && deal.lost_reason">
+                                <div class="mt-2 text-[10px] text-rose-300 bg-rose-500/20 p-2 rounded-lg flex items-start gap-1 border border-rose-500/20">
+                                    <svg class="w-3 h-3 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span x-text="deal.lost_reason"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
             </div>
             @endforeach
         </div>
     </div>
 
-    {{-- ── TABLE VIEW (inline toggle, no redirect) ── --}}
-    <div id="pipeline-table-view">
-        <table class="pipeline-table">
-            <thead>
-                <tr>
-                    <th>Deal</th>
-                    <th>Client</th>
-                    <th>Stage</th>
-                    <th>Nilai</th>
-                    <th>Close Date</th>
-                    <th>Sales</th>
-                    <th>Hari</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                $allOpps = collect($kanban)->flatMap(fn($col) => $col['opportunities'])->sortByDesc('estimated_value');
-                $stageColors = ['call_meeting'=>['bg'=>'rgba(20,104,168,0.05)','color'=>'#38bdf8'],'prospecting'=>['bg'=>'rgba(20,104,168,0.10)','color'=>'#0ea5e9'],'proposal'=>['bg'=>'rgba(20,104,168,0.15)','color'=>'#0284c7'],'negotiation'=>['bg'=>'rgba(20,104,168,0.20)','color'=>'#0369a1'],'won'=>['bg'=>'rgba(16,185,129,0.15)','color'=>'#10b981'],'lost'=>['bg'=>'rgba(239,68,68,0.12)','color'=>'#ef4444']];
-                $stageLabels = ['call_meeting'=>'Call/Meeting','prospecting'=>'Prospekting','proposal'=>'Proposal','negotiation'=>'Negosiasi','won'=>'Menang','lost'=>'Kalah'];
-                @endphp
-                @forelse($allOpps as $opp)
-                @php
-                $sc = $stageColors[$opp->stage] ?? ['bg'=>'rgba(148,163,184,0.1)','color'=>'#94a3b8'];
-                $days = $opp->created_at->diffInDays(now());
-                @endphp
-                <tr onclick="Alpine.store ? null : null" data-id="{{ $opp->id }}">
-                    <td class="font-semibold max-w-[220px]">
-                        <div class="truncate">{{ $opp->title }}</div>
-                    </td>
-                    <td class="muted">{{ $opp->client->company_name ?? '-' }}</td>
-                    <td>
-                        <span class="stage-pill" style="background:{{ $sc['bg'] }};color:{{ $sc['color'] }}">
-                            {{ $stageLabels[$opp->stage] ?? $opp->stage }}
-                        </span>
-                    </td>
-                    <td class="font-semibold">
-                        @if($opp->estimated_value)
-                            <span style="color:var(--cc-text)">Rp {{ number_format($opp->estimated_value,0,',','.') }}</span>
-                        @else
-                            <span class="muted">—</span>
-                        @endif
-                    </td>
-                    <td class="muted {{ $opp->expected_close_date && $opp->expected_close_date->isPast() && !in_array($opp->stage,['won','lost']) ? 'text-red-400' : '' }}">
-                        {{ $opp->expected_close_date ? $opp->expected_close_date->format('d M Y') : '—' }}
-                    </td>
-                    <td class="muted">{{ $opp->sales->name ?? '—' }}</td>
-                    <td class="muted text-right">{{ $days }}d</td>
-                </tr>
-                @empty
-                <tr><td colspan="7" class="text-center py-10 muted">Tidak ada data</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- ── INLINE EDIT MODAL ── --}}
-    <div x-show="editModal.open"
-         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-         class="modal-overlay" style="display:none;" @click.self="editModal.open=false">
-        <div class="modal-box max-w-md" @click.stop>
-            <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--cc-border);">
-                <h3 class="text-[15px] font-bold flex items-center gap-2" style="color:var(--cc-text)">
-                    <span class="material-symbols-outlined text-[18px] text-[#00e5ff]">edit</span>Edit Deal
-                </h3>
-                <button @click="editModal.open=false" class="text-slate-500 hover:text-slate-300"><span class="material-symbols-outlined">close</span></button>
+    {{-- MODALS --}}
+    <div x-show="isModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/80 backdrop-blur-sm p-4">
+        <div class="w-full max-w-md rounded-3xl bg-[#161d2e] shadow-2xl border border-white/10 flex flex-col" @click.away="closeModal()">
+            
+            <div class="p-6 border-b border-white/5">
+                <h2 class="text-lg font-bold text-white" x-text="modalTitle"></h2>
             </div>
-            <form class="p-6 space-y-4" @submit.prevent="saveEdit()">
-                <div>
-                    <label class="dark-label block mb-1.5">Judul Deal *</label>
-                    <input x-model="editModal.title" type="text" class="edit-input" required/>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="dark-label block mb-1.5">Nilai (Rp)</label>
-                        <input x-model="editModal.estimated_value" type="number" min="0" class="edit-input" placeholder="0"/>
-                    </div>
-                    <div>
-                        <label class="dark-label block mb-1.5">PAX</label>
-                        <input x-model="editModal.pax" type="number" min="1" class="edit-input" placeholder="0"/>
-                    </div>
-                </div>
-                <div>
-                    <label class="dark-label block mb-1.5">Target Close</label>
-                    <input x-model="editModal.expected_close_date" type="date" class="edit-input"/>
-                </div>
-                <div>
-                    <label class="dark-label block mb-1.5">Notes</label>
-                    <textarea x-model="editModal.notes" rows="3" class="edit-input resize-none"></textarea>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="submit" class="btn-primary flex-1" :disabled="editModal.saving">
-                        <span x-show="!editModal.saving" class="material-symbols-outlined text-[16px]">save</span>
-                        <span x-show="editModal.saving" class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
-                        <span x-text="editModal.saving ? 'Menyimpan...' : 'Simpan'"></span>
-                    </button>
-                    <button type="button" @click="editModal.open=false" class="btn-secondary">Batal</button>
-                </div>
-            </form>
-        </div>
-    </div>
+            
+            <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                
+                {{-- HISTORY VIEW --}}
+                <template x-if="modalMode === 'history'">
+                    <div class="space-y-4">
+                        <template x-if="!editingDeal.history_timeline || editingDeal.history_timeline.length === 0">
+                            <div class="text-sm text-slate-400 text-center py-4">No history available for this deal.</div>
+                        </template>
+                        <template x-for="entry in (editingDeal.history_timeline || [])" :key="entry.id">
+                            <div class="relative pl-6 pb-4 border-l border-white/10 last:border-0 last:pb-0">
+                                <div class="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-indigo-500 ring-4 ring-[#161d2e]"></div>
+                                
+                                <div class="cursor-pointer group flex justify-between items-start rounded-xl -ml-2 p-2 transition hover:bg-white/5"
+                                     @click="expandedHistoryId = (expandedHistoryId === entry.id ? null : entry.id)">
+                                    <div>
+                                        <div class="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors"
+                                             x-text="stageLabel(entry.stage) + (entry.subType ? ' (' + entry.subType + ')' : '')"></div>
+                                        <div class="text-xs text-slate-400" x-text="formatDate(entry.timestamp, true)"></div>
+                                    </div>
+                                    <template x-if="entry.note || entry.products?.length || entry.estimatedValue">
+                                        <svg class="w-4 h-4 text-slate-400" :class="{'rotate-180': expandedHistoryId === entry.id}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </template>
+                                </div>
 
-    {{-- ── 360° MODAL ── --}}
-    <div x-show="modal360.open"
-         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-         class="modal-overlay" style="display:none;" @click.self="modal360.open=false">
-        <div class="modal-box" @click.stop>
-            {{-- Header --}}
-            <div class="px-6 py-4 flex items-center justify-between" style="border-bottom:1px solid var(--cc-border);">
-                <div>
-                    <h3 class="text-[15px] font-bold flex items-center gap-2" style="color:var(--cc-text)">
-                        <span class="material-symbols-outlined text-[18px] text-[#00e5ff]">360</span>
-                        <span x-text="modal360.data?.title ?? 'Detail Deal'"></span>
-                    </h3>
-                    <div class="text-[11px] text-slate-500 font-mono mt-0.5" x-text="modal360.data?.opp_number ?? ''"></div>
-                </div>
-                <div class="flex items-center gap-2.5">
-                    <a :href="'/opportunities/' + modal360.id" class="btn-secondary text-[12px] py-1.5 px-3">
-                        <span class="material-symbols-outlined text-[14px]">open_in_new</span>Full View
-                    </a>
-                    <button @click="modal360.open=false" class="text-slate-500 hover:text-slate-300"><span class="material-symbols-outlined">close</span></button>
-                </div>
-            </div>
-            {{-- Tabs --}}
-            <div class="px-6 py-3 flex gap-2 flex-wrap" style="border-bottom:1px solid var(--cc-border);">
-                <button class="tab-btn" :class="{'active':modal360.tab==='info'}"     @click="modal360.tab='info'">Info</button>
-                <button class="tab-btn" :class="{'active':modal360.tab==='activity'}" @click="modal360.tab='activity'">Aktivitas</button>
-                <button class="tab-btn" :class="{'active':modal360.tab==='approval'}" @click="modal360.tab='approval'">Approval</button>
-                <button class="tab-btn" :class="{'active':modal360.tab==='linked'}"   @click="modal360.tab='linked'">Data Terhubung</button>
-            </div>
-            {{-- Body --}}
-            <div class="modal-body p-6">
-                <div x-show="modal360.loading" class="flex items-center justify-center py-16">
-                    <span class="material-symbols-outlined text-[32px] text-slate-600 animate-spin">progress_activity</span>
-                </div>
-
-                {{-- INFO --}}
-                <div x-show="!modal360.loading && modal360.tab==='info'">
-                    <template x-if="modal360.data">
-                    <div>
-                        <div class="grid grid-cols-2 gap-4 mb-5">
-                            <div class="cc-card p-4">
-                                <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-1">Estimasi Nilai</div>
-                                <div class="text-xl font-extrabold" style="color:var(--cc-text)" x-text="'Rp ' + (modal360.data.estimated_value ? Number(modal360.data.estimated_value).toLocaleString('id-ID') : '-')"></div>
+                                <div x-show="expandedHistoryId === entry.id" class="mt-2 text-sm bg-black/20 rounded-xl p-3 border border-white/5 space-y-3" x-transition>
+                                    <template x-if="entry.note">
+                                        <div>
+                                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Note</h4>
+                                            <p class="text-white/80 whitespace-pre-wrap leading-relaxed" x-text="entry.note"></p>
+                                        </div>
+                                    </template>
+                                    <template x-if="entry.products && entry.products.length > 0">
+                                        <div>
+                                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Products</h4>
+                                            <div class="space-y-1.5">
+                                                <template x-for="p in entry.products" :key="p.id">
+                                                    <div class="flex flex-col text-xs bg-white/5 px-2 py-1.5 rounded-lg border border-white/5">
+                                                        <div class="flex justify-between">
+                                                            <div>
+                                                                <span class="text-white" x-text="p.category"></span>
+                                                                <span class="text-slate-400 ml-1" x-text="'x' + (p.quantity || 1)"></span>
+                                                            </div>
+                                                            <span class="text-emerald-400 font-mono" x-text="formatIDR(p.estimatedValue * (p.quantity || 1))"></span>
+                                                        </div>
+                                                        <template x-if="p.details">
+                                                            <div class="text-white/60 mt-1.5 text-[10px] bg-black/20 p-1.5 rounded-md border border-white/5 leading-relaxed">
+                                                                <span class="font-semibold text-slate-500 mr-1">Note:</span>
+                                                                <span x-text="p.details"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="entry.estimatedValue !== undefined">
+                                        <div class="pt-2 border-t border-white/10 flex justify-between items-center">
+                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Est. Value</span>
+                                            <span class="text-sm text-emerald-400 font-mono font-bold" x-text="formatIDR(entry.estimatedValue)"></span>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
-                            <div class="cc-card p-4">
-                                <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-1">Stage</div>
-                                <div class="text-xl font-extrabold" :style="'color:' + stageColor(modal360.data.stage)" x-text="stageLabel(modal360.data.stage)"></div>
-                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                {{-- CREATE / EDIT STAGE --}}
+                <template x-if="modalMode === 'create'">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Deal Title <span class="text-rose-500">*</span></label>
+                            <input type="text" x-model="editingDeal.title" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500" />
                         </div>
                         <div>
-                            <div class="info-row"><span class="info-label">Client</span><span class="info-val" x-text="modal360.data.client?.company_name ?? '-'"></span></div>
-                            <div class="info-row"><span class="info-label">Sales</span><span class="info-val" x-text="modal360.data.sales?.name ?? '-'"></span></div>
-                            <div class="info-row"><span class="info-label">Produk</span><span class="info-val" x-text="modal360.data.product?.name ?? '-'"></span></div>
-                            <div class="info-row"><span class="info-label">PAX</span><span class="info-val" x-text="modal360.data.pax ?? '-'"></span></div>
-                            <div class="info-row">
-                                <span class="info-label">Diskon</span>
-                                <span class="info-val flex items-center gap-2">
-                                    <span x-text="modal360.data.discount_percent > 0 ? modal360.data.discount_percent + '%' : '-'"></span>
-                                    <span x-show="modal360.data.discount_percent > 0"
-                                          :class="modal360.data.discount_approved ? 'status-badge status-confirmed' : 'status-badge status-pending'"
-                                          x-text="modal360.data.discount_approved ? 'Approved' : 'Pending'"></span>
-                                </span>
-                            </div>
-                            <div class="info-row"><span class="info-label">Target Close</span><span class="info-val" x-text="modal360.data.expected_close_date ? new Date(modal360.data.expected_close_date).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '-'"></span></div>
-                            <div class="info-row"><span class="info-label">Actual Close</span><span class="info-val" x-text="modal360.data.actual_close_date ? new Date(modal360.data.actual_close_date).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '-'"></span></div>
-                            <div x-show="modal360.data.lost_reason" class="info-row"><span class="info-label">Alasan Kalah</span><span class="info-val text-red-400" x-text="modal360.data.lost_reason"></span></div>
-                            <div x-show="modal360.data.notes" class="info-row"><span class="info-label">Notes</span><span class="info-val text-slate-400" x-text="modal360.data.notes"></span></div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Company <span class="text-rose-500">*</span></label>
+                            <select x-model="editingDeal.client_id" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500">
+                                <option value="" disabled>Select a company</option>
+                                @foreach($clients as $c)
+                                    <option value="{{ $c->id }}">{{ $c->company_name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
-                    </template>
-                </div>
+                </template>
 
-                {{-- ACTIVITY --}}
-                <div x-show="!modal360.loading && modal360.tab==='activity'">
-                    <template x-if="modal360.data">
-                    <div class="space-y-3">
-                        <template x-if="!modal360.data.activity_logs || modal360.data.activity_logs.length === 0">
-                            <p class="text-slate-500 text-[13px] text-center py-8">Belum ada aktivitas</p>
-                        </template>
-                        <template x-for="log in (modal360.data.activity_logs || [])" :key="log.id">
-                            <div class="flex gap-3 p-3 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
-                                <span class="material-symbols-outlined text-[16px] text-slate-500 mt-0.5 flex-shrink-0">radio_button_checked</span>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-[12px] font-semibold" style="color:var(--cc-text)" x-text="log.subject"></div>
-                                    <div x-show="log.notes" class="text-[11px] text-slate-500 mt-0.5" x-text="log.notes"></div>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span class="text-[10px] text-slate-600" x-text="log.sales?.name ?? ''"></span>
-                                        <span class="text-[10px] text-slate-700" x-text="log.activity_date ? new Date(log.activity_date).toLocaleDateString('id-ID') : ''"></span>
+                <template x-if="modalMode === 'create' || modalMode === 'edit-stage'">
+                    <div class="space-y-4 mt-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">Products</label>
+                                <span class="text-xs font-bold text-emerald-400" x-text="'Total Est: ' + formatIDR(calculateTotalEst())"></span>
+                            </div>
+                            <div class="space-y-2">
+                                <template x-for="(p, idx) in editingDeal.products" :key="p.id">
+                                    <div class="p-3 rounded-xl border border-white/10 bg-white/5 space-y-2 relative group">
+                                        <button type="button" @click="editingDeal.products.splice(idx, 1)" class="absolute top-2 right-2 text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                        <select x-model="p.category" class="w-[90%] bg-transparent text-sm text-white font-bold outline-none">
+                                            <option class="text-slate-900" value="Mobil Short Term">Mobil Short Term</option>
+                                            <option class="text-slate-900" value="Mobil Long Term">Mobil Long Term</option>
+                                            <option class="text-slate-900" value="Bus Pariwisata">Bus Pariwisata</option>
+                                            <option class="text-slate-900" value="Shuttle Bus">Shuttle Bus</option>
+                                            <option class="text-slate-900" value="E-Voucher">E-Voucher</option>
+                                            <option class="text-slate-900" value="Mobil Box/Blind Van">Mobil Box/Blind Van</option>
+                                        </select>
+                                        <div class="flex gap-2">
+                                            <div class="w-20">
+                                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest pl-1">Qty</label>
+                                                <input type="number" min="1" x-model.number="p.quantity" class="w-full rounded-lg border border-white/10 bg-[#161d2e] px-3 py-1.5 text-sm text-white outline-none focus:border-indigo-500" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest pl-1">Unit Price</label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1.5 text-sm text-slate-400">Rp</span>
+                                                    <input type="text" x-model="p.formattedPrice" @input="handlePriceInput(p, $event)" class="w-full rounded-lg border border-white/10 bg-[#161d2e] pl-8 pr-3 py-1.5 text-sm text-white outline-none focus:border-indigo-500" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <input type="text" placeholder="Details / Note (Optional)" x-model="p.details" class="w-full rounded-lg border border-transparent bg-[#161d2e]/50 px-3 py-1.5 text-xs text-white outline-none focus:border-white/10 placeholder:text-slate-600" />
+                                        </div>
                                     </div>
-                                </div>
+                                </template>
+                                <button @click="addProduct()" type="button" class="w-full rounded-xl border border-dashed border-white/20 py-3 text-sm font-bold text-slate-400 hover:text-indigo-300 hover:border-indigo-400/50 hover:bg-indigo-500/10 transition-colors flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    Add Product Item
+                                </button>
+                            </div>
+                        </div>
+
+                        <template x-if="targetStage === 'call_meeting'">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Activity Type</label>
+                                <select x-model="subType" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500">
+                                    <option value="Call">Call</option>
+                                    <option value="Offline Meeting">Offline Meeting</option>
+                                </select>
+                            </div>
+                        </template>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Note / Highlights</label>
+                            <textarea x-model="note" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500 min-h-[80px]" placeholder="Add details..."></textarea>
+                        </div>
+
+                        <template x-if="targetStage === 'won' && modalMode !== 'history'">
+                            <div class="bg-emerald-500/10 text-emerald-300 p-4 rounded-2xl text-sm border border-emerald-500/20">
+                                <p class="font-bold">Deal Won!</p>
+                                <p class="mt-1">100% of the Estimated Value (<span x-text="formatIDR(calculateTotalEst())"></span>) will be recognized as Actual Revenue.</p>
+                            </div>
+                        </template>
+
+                        <template x-if="targetStage === 'lost' && modalMode !== 'history'">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Lost Reason <span class="text-rose-500">*</span></label>
+                                <textarea x-model="editingDeal.lost_reason" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500" rows="3" placeholder="Why was this deal lost?"></textarea>
                             </div>
                         </template>
                     </div>
-                    </template>
-                </div>
-
-                {{-- APPROVAL --}}
-                <div x-show="!modal360.loading && modal360.tab==='approval'">
-                    <template x-if="modal360.data">
-                    <div class="space-y-3">
-                        <template x-if="!modal360.data.approval_requests || modal360.data.approval_requests.length === 0">
-                            <p class="text-slate-500 text-[13px] text-center py-8">Tidak ada approval request</p>
-                        </template>
-                        <template x-for="req in (modal360.data.approval_requests || [])" :key="req.id">
-                            <div class="p-4 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[12px] font-bold" style="color:var(--cc-text)">Level <span x-text="req.level"></span> Approval</span>
-                                    <span :class="req.status === 'approved' ? 'status-badge status-confirmed' : req.status === 'rejected' ? 'status-badge status-cancelled' : 'status-badge status-pending'" x-text="req.status"></span>
-                                </div>
-                                <div class="text-[11px] text-slate-500">Diskon: <span class="text-amber-400 font-semibold" x-text="req.discount_percent + '%'"></span></div>
-                                <div x-show="req.notes" class="text-[11px] text-slate-500 mt-1" x-text="req.notes"></div>
-                            </div>
-                        </template>
-                    </div>
-                    </template>
-                </div>
-
-                {{-- LINKED --}}
-                <div x-show="!modal360.loading && modal360.tab==='linked'">
-                    <template x-if="modal360.data">
-                    <div class="space-y-3">
-                        <div class="p-4 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
-                            <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-2">Client</div>
-                            <div class="text-[13px] font-semibold" style="color:var(--cc-text)" x-text="modal360.data.client?.company_name ?? '-'"></div>
-                            <div class="text-[11px] text-slate-500" x-text="modal360.data.client?.industry ?? ''"></div>
-                            <div class="text-[11px] text-slate-500 mt-0.5" x-text="modal360.data.client?.pic_name ?? ''"></div>
-                            <a x-show="modal360.data.client_id" :href="'/clients/' + modal360.data.client_id"
-                               class="inline-flex items-center gap-1 mt-2 text-[11px] text-[#00e5ff] hover:underline">
-                                <span class="material-symbols-outlined text-[13px]">open_in_new</span>Lihat Client
-                            </a>
-                        </div>
-                        <div x-show="modal360.data.booking_id" class="p-4 rounded-xl" style="background:var(--cc-input-bg);border:1px solid var(--cc-border);">
-                            <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-2">Booking Terhubung</div>
-                            <a :href="'/bookings/' + modal360.data.booking_id" class="inline-flex items-center gap-1 text-[12px] text-[#00e5ff] hover:underline">
-                                <span class="material-symbols-outlined text-[13px]">route</span>
-                                Booking #<span x-text="modal360.data.booking_id"></span>
-                            </a>
-                        </div>
-                        <div x-show="modal360.data.subscription_id" class="p-4 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
-                            <div class="text-[11px] text-slate-500 font-bold uppercase tracking-wide mb-2">Subscription Terhubung</div>
-                            <a :href="'/subscriptions/' + modal360.data.subscription_id" class="inline-flex items-center gap-1 text-[12px] text-[#00e5ff] hover:underline">
-                                <span class="material-symbols-outlined text-[13px]">autorenew</span>
-                                Subscription #<span x-text="modal360.data.subscription_id"></span>
-                            </a>
-                        </div>
-                        <div x-show="!modal360.data.booking_id && !modal360.data.subscription_id" class="text-[13px] text-slate-500 text-center py-4">
-                            Belum ada data terhubung
-                        </div>
-                    </div>
-                    </template>
-                </div>
+                </template>
             </div>
-        </div>
-    </div>
-
-    {{-- ── STAGE TRANSITION DIALOG ── --}}
-    <div x-show="transitionDialog.open"
-         class="modal-overlay" style="display:none;"
-         @click.self="transitionDialog.open=false; transitionDialog.revertFn && transitionDialog.revertFn()">
-        <div class="modal-box max-w-md" @click.stop>
-            <div class="px-6 py-4" style="border-bottom:1px solid var(--cc-border);">
-                <h3 class="text-[14px] font-bold flex items-center gap-2" style="color:var(--cc-text)">
-                    <span class="material-symbols-outlined text-[#00e5ff] text-[18px]">move_up</span>
-                    Pindah Stage: <span class="text-[#00e5ff]" x-text="stageLabel(transitionDialog.pendingStage)"></span>
-                </h3>
-            </div>
-            <div class="p-6 space-y-4">
-                <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-2">
-                    <div class="text-[11px] text-blue-400 font-bold uppercase mb-1">Deal</div>
-                    <div class="text-sm font-semibold" style="color:var(--cc-text)" x-text="transitionDialog.title"></div>
-                </div>
-
-                <div>
-                    <label class="dark-label block mb-1.5">Estimasi Nilai Terbaru (Rp)</label>
-                    <input x-model="transitionDialog.estimated_value" type="number" min="0" class="edit-input" placeholder="0"/>
-                </div>
-
-                <div>
-                    <label class="dark-label block mb-1.5">Catatan Progres</label>
-                    <textarea x-model="transitionDialog.notes" rows="2" class="edit-input resize-none" placeholder="Catatan aktivitas ini..."></textarea>
-                </div>
-
-                <div x-show="transitionDialog.pendingStage === 'lost'">
-                    <label class="dark-label block mb-1.5 text-red-400">Alasan Kalah *</label>
-                    <textarea x-model="transitionDialog.lost_reason" rows="2" class="edit-input resize-none border-red-500/30 focus:border-red-500" placeholder="Harga terlalu tinggi, dll..."></textarea>
-                </div>
-
-                <div class="flex gap-3 pt-2">
-                    <button @click="confirmTransition()" class="btn-primary flex-1">
-                        <span class="material-symbols-outlined text-[16px]">save</span>Simpan & Pindah
+            
+            <div class="p-5 bg-black/20 rounded-b-3xl flex justify-end gap-3 border-t border-white/5 mt-auto">
+                <button @click="closeModal()" class="px-4 py-2 text-sm font-bold text-slate-400 hover:text-white transition">
+                    <span x-text="modalMode === 'history' ? 'Close' : 'Cancel'"></span>
+                </button>
+                <template x-if="modalMode !== 'history'">
+                    <button @click="saveDeal()" 
+                            :disabled="isSaving || (targetStage === 'lost' && !editingDeal.lost_reason) || (modalMode === 'create' && (!editingDeal.title || !editingDeal.client_id))"
+                            class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-xl justify-center items-center text-sm font-bold transition shadow-lg shadow-indigo-500/20">
+                        <span x-text="isSaving ? 'Saving...' : 'Save'"></span>
                     </button>
-                    <button @click="transitionDialog.open=false; transitionDialog.revertFn && transitionDialog.revertFn()" class="btn-secondary">Batal</button>
-                </div>
+                </template>
             </div>
         </div>
     </div>
-
 </div>
 
-{{-- Toast notification --}}
-<div id="toast"></div>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
 <script>
-function kanbanBoard() {
+function pipelineManager() {
     return {
-        search: '',
-        filterStage: '',
-        editModal: { open:false, saving:false, id:null, title:'', estimated_value:'', expected_close_date:'', notes:'', pax:'' },
-        modal360:  { open:false, loading:false, id:null, data:null, tab:'info' },
-        transitionDialog:{ open:false, pendingId:null, pendingStage:null, title:'', estimated_value:'', notes:'', lost_reason:'', revertFn:null },
-        _toastTimer: null,
-
-        init() {
-            this.$nextTick(() => {
-                this.initSortable();
-                this.initBoardDragScroll();
-            });
+        rawDeals: @json($opportunities->items()),
+        selectedSalesFilter: 'all',
+        isModalOpen: false,
+        modalMode: 'create', // create, edit-stage, history
+        modalTitle: '',
+        targetStage: 'call_meeting',
+        subType: 'Call',
+        note: '',
+        expandedHistoryId: null,
+        isSaving: false,
+        editingDeal: {
+            title: '',
+            client_id: '',
+            products: [],
+            lost_reason: ''
         },
 
-        // Mouse drag-to-scroll on board (desktop)
-        initBoardDragScroll() {
-            const board = document.getElementById('kanban-scroll-x');
-            if (!board) return;
-            let isDragging = false, startX = 0, scrollLeft = 0;
-
-            board.addEventListener('mousedown', (e) => {
-                // Don't hijack if clicking a card or button
-                if (e.target.closest('.kanban-card') || e.target.closest('button') || e.target.closest('a')) return;
-                isDragging = true;
-                startX = e.pageX - board.offsetLeft;
-                scrollLeft = board.scrollLeft;
-                board.style.cursor = 'grabbing';
-            });
-            document.addEventListener('mouseup',   () => { isDragging = false; board.style.cursor = ''; });
-            document.addEventListener('mouseleave', () => { isDragging = false; board.style.cursor = ''; });
-            board.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-                const x = e.pageX - board.offsetLeft;
-                board.scrollLeft = scrollLeft - (x - startX) * 1.2;
-            });
-        },
-
-        initSortable() {
-            document.querySelectorAll('.kanban-drop-zone').forEach(zone => {
-                Sortable.create(zone, {
-                    group: 'kanban',
-                    animation: 180,
-                    ghostClass: 'sortable-ghost',
-                    dragClass: 'sortable-drag',
-                    draggable: '.kanban-card',
-                    onOver: (evt) => { evt.to.classList.add('sortable-over'); },
-                    onMove: (evt) => { evt.related.classList && evt.to.classList.add('sortable-over'); },
-                    onEnd: (evt) => {
-                        document.querySelectorAll('.kanban-drop-zone').forEach(z => z.classList.remove('sortable-over'));
-                        const card     = evt.item;
-                        const newZone  = evt.to;
-                        const oldZone  = evt.from;
-                        const oppId    = card.dataset.id;
-                        const newStage = newZone.dataset.stage;
-                        const oldStage = card.dataset.stage;
-                        const oppTitle = card.dataset.dealTitle;
-                        const oppValue = card.dataset.value;
-
-                        if (newStage === oldStage) return;
-
-                        const revertFn = () => {
-                            const ref = oldZone.children[evt.oldIndex] || null;
-                            oldZone.insertBefore(card, ref);
-                            card.dataset.stage = oldStage;
-                        };
-
-                        this.transitionDialog = { 
-                            open:true, 
-                            pendingId:oppId, 
-                            pendingStage:newStage, 
-                            title:oppTitle,
-                            estimated_value:oppValue || '',
-                            notes:'',
-                            lost_reason:'',
-                            revertFn 
-                        };
-                    },
-                });
-            });
-        },
-
-        async doMoveStage(oppId, newStage, payload, revertFn) {
-            const token = document.querySelector('meta[name="csrf-token"]').content;
-            
-            try {
-                const res  = await fetch(`/opportunities/${oppId}/move-stage`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':token, 'Accept':'application/json' },
-                    body: JSON.stringify(payload),
-                });
-                const data = await res.json();
-                if (!res.ok || !data.ok) { revertFn && revertFn(); this.toast(data.message ?? 'Gagal.', 'error'); return; }
-                
-                // Update DOM value data attribute
-                const card = document.querySelector(`.kanban-card[data-id="${oppId}"]`);
-                if (card && payload.estimated_value) {
-                    card.dataset.value = payload.estimated_value;
-                    
-                    // Note: This only updates the data attribute, not the rendered HTML of the value.
-                    // The easiest fix is to let the user see the updated value in 360 view or board refresh,
-                    // but we can also manually update the rendered text if needed.
-                    const valEl = card.querySelector('.text-[13px].font-bold.text-slate-100');
-                    if (valEl) valEl.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(payload.estimated_value);
+        initData() {
+            this.rawDeals = this.rawDeals.map(d => {
+                if(d.products && typeof d.products === 'string') d.products = JSON.parse(d.products);
+                if(d.history_timeline && typeof d.history_timeline === 'string') d.history_timeline = JSON.parse(d.history_timeline);
+                d.client_name = d.client?.company_name || '';
+                d.sales_name = d.sales?.name || '';
+                if(d.products) {
+                    d.products.forEach(p => p.formattedPrice = p.estimatedValue.toLocaleString('id-ID'));
                 }
+                return d;
+            });
+            this.initSortable();
+        },
 
-                this.updateColumnCounts(data.summary);
-                this.toast(data.message, 'success');
-                // 🎊 Konfetti celebration when deal moves to Won!
-                if (payload.stage === 'won') {
-                    if (window.CRM_Confetti) CRM_Confetti.fire();
-                }
-            } catch(e) {
-                revertFn && revertFn();
-                this.toast('Koneksi error. Coba lagi.', 'error');
+        filteredDeals(stage) {
+            return this.rawDeals.filter(d => {
+                if (d.stage !== stage) return false;
+                if (this.selectedSalesFilter !== 'all' && d.sales_id != this.selectedSalesFilter) return false;
+                return true;
+            });
+        },
+
+        getDealCount(stage) {
+            return this.filteredDeals(stage).length;
+        },
+
+        formatIDR(val) {
+            if(!val) val = 0;
+            return 'Rp ' + parseInt(val).toLocaleString('id-ID');
+        },
+
+        formatDate(iso, time = false) {
+            if(!iso) return '';
+            const d = new Date(iso);
+            if(time) {
+                return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             }
+            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
         },
 
-        confirmTransition() {
-            const { pendingId, pendingStage, estimated_value, notes, lost_reason, revertFn } = this.transitionDialog;
-            
-            if (pendingStage === 'lost' && !lost_reason.trim()) { 
-                this.toast('Alasan kalah wajib diisi.','error'); 
-                return; 
+        stageLabel(st) {
+            const map = {
+                'call_meeting': 'Call/Meeting',
+                'prospecting': 'Prospecting',
+                'proposal': 'Proposal',
+                'negotiation': 'Negotiation',
+                'won': 'Won',
+                'lost': 'Lost'
+            };
+            return map[st] || st;
+        },
+
+        calculateTotalEst() {
+            if(!this.editingDeal.products) return 0;
+            return this.editingDeal.products.reduce((acc, p) => acc + (p.estimatedValue * (p.quantity || 1)), 0);
+        },
+
+        addProduct() {
+            if(!this.editingDeal.products) this.editingDeal.products = [];
+            this.editingDeal.products.push({
+                id: 'p' + Date.now(),
+                category: 'Mobil Short Term',
+                quantity: 1,
+                estimatedValue: 0,
+                formattedPrice: '',
+                details: ''
+            });
+        },
+
+        handlePriceInput(p, event) {
+            let val = parseInt(event.target.value.replace(/[^0-9]/g, '')) || 0;
+            p.estimatedValue = val;
+            p.formattedPrice = val > 0 ? val.toLocaleString('id-ID') : '';
+        },
+
+        openHistoryModal(deal) {
+            this.editingDeal = JSON.parse(JSON.stringify(deal));
+            this.modalMode = 'history';
+            this.modalTitle = 'Deal History';
+            this.expandedHistoryId = null;
+            this.isModalOpen = true;
+        },
+
+        openCreateModal() {
+            this.editingDeal = {
+                title: '',
+                client_id: '',
+                products: [],
+                lost_reason: ''
+            };
+            this.addProduct();
+            this.targetStage = 'call_meeting';
+            this.subType = 'Call';
+            this.note = '';
+            this.modalMode = 'create';
+            this.modalTitle = 'Create New Deal';
+            this.isModalOpen = true;
+        },
+
+        openStageModal(deal, newStage) {
+            this.editingDeal = JSON.parse(JSON.stringify(deal));
+            // Initialize formattedPrice for editing
+            if(this.editingDeal.products) {
+                this.editingDeal.products.forEach(p => p.formattedPrice = (p.estimatedValue || 0).toLocaleString('id-ID'));
             }
-
-            const card = document.querySelector(`.kanban-card[data-id="${pendingId}"]`);
-            if (card) card.dataset.stage = pendingStage;
-            
-            this.transitionDialog.open = false;
-            
-            this.doMoveStage(pendingId, pendingStage, {
-                stage: pendingStage,
-                estimated_value: estimated_value || null,
-                notes: notes || null,
-                lost_reason: lost_reason || null
-            }, revertFn);
-        },
-
-        openEdit(id, title, value, closeDate, notes, pax) {
-            this.editModal = { open:true, saving:false, id, title, estimated_value:value??'', expected_close_date:closeDate??'', notes:notes??'', pax:pax??'' };
-        },
-
-        async saveEdit() {
-            this.editModal.saving = true;
-            const token = document.querySelector('meta[name="csrf-token"]').content;
-            try {
-                const res = await fetch(`/opportunities/${this.editModal.id}/quick-update`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':token, 'Accept':'application/json' },
-                    body: JSON.stringify({
-                        title: this.editModal.title,
-                        estimated_value: this.editModal.estimated_value || null,
-                        expected_close_date: this.editModal.expected_close_date || null,
-                        notes: this.editModal.notes || null,
-                        pax: this.editModal.pax || null,
-                    }),
-                });
-                const data = await res.json();
-                if (!res.ok || !data.ok) { this.toast('Gagal menyimpan.','error'); return; }
-
-                // Update DOM title
-                const card = document.querySelector(`.kanban-card[data-id="${this.editModal.id}"]`);
-                if (card) { const h = card.querySelector('h3'); if (h) h.textContent = data.opportunity.title; }
-
-                this.editModal.open = false;
-                this.toast('Deal berhasil diperbarui.','success');
-
-                if (this.modal360.open && this.modal360.id == this.editModal.id) this.fetchModal360(this.editModal.id);
-            } catch(e) { this.toast('Koneksi error.','error'); }
-            finally    { this.editModal.saving = false; }
-        },
-
-        async open360(id) {
-            this.modal360 = { open:true, loading:true, id, data:null, tab:'info' };
-            await this.fetchModal360(id);
-        },
-
-        async fetchModal360(id) {
-            this.modal360.loading = true;
-            try {
-                const res  = await fetch(`/opportunities/${id}/360`, { headers:{'Accept':'application/json'} });
-                const data = await res.json();
-                if (data.ok) { this.modal360.data = data.opportunity; }
-                else { this.toast('Gagal memuat data.','error'); this.modal360.open = false; }
-            } catch(e) { this.toast('Koneksi error.','error'); this.modal360.open = false; }
-            finally    { this.modal360.loading = false; }
+            this.targetStage = newStage;
+            this.subType = 'Call';
+            this.note = '';
+            this.modalMode = 'edit-stage';
+            this.modalTitle = 'Move to ' + this.stageLabel(newStage);
+            this.isModalOpen = true;
         },
 
         closeModal() {
-            this.modal360.open = false;
-            this.editModal.open = false;
-            if (this.transitionDialog.open) { this.transitionDialog.revertFn && this.transitionDialog.revertFn(); this.transitionDialog.open = false; }
+            this.isModalOpen = false;
         },
 
-        matchesSearch(title, client) {
-            if (!this.search) return true;
-            const q = this.search.toLowerCase();
-            return title.toLowerCase().includes(q) || client.toLowerCase().includes(q);
-        },
+        async saveDeal() {
+            this.isSaving = true;
+            try {
+                const payload = {
+                    title: this.editingDeal.title,
+                    client_id: this.editingDeal.client_id,
+                    stage: this.targetStage,
+                    products: this.editingDeal.products,
+                    subType: this.subType,
+                    notes: this.note,
+                    lost_reason: this.editingDeal.lost_reason
+                };
 
-        stageColor(s) { return {prospecting:'#3b82f6',proposal:'#f59e0b',negotiation:'#f97316',won:'#10b981',lost:'#ef4444'}[s]??'#94a3b8'; },
-        stageLabel(s) { return {prospecting:'Prospekting',proposal:'Proposal',negotiation:'Negosiasi',won:'Menang',lost:'Kalah'}[s]??s; },
+                let url = '{{ route("pipeline.store") }}';
+                let method = 'POST';
+                if(this.modalMode === 'edit-stage') {
+                    url = '/pipeline/' + this.editingDeal.id;
+                    payload._method = 'PUT';
+                }
 
-        updateColumnCounts(summary) {
-            const fmt = (n) => new Intl.NumberFormat('id-ID').format(Math.round(n));
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(payload)
+                });
 
-            if (summary) {
-                // Update counts from server-authoritative summary
-                document.querySelectorAll('[data-count-badge]').forEach(el => {
-                    const stage = el.dataset.countBadge;
-                    if (summary[stage] !== undefined) el.textContent = summary[stage].count;
-                });
-                // Update Rupiah values in summary bar
-                document.querySelectorAll('[data-value-badge]').forEach(el => {
-                    const stage = el.dataset.valueBadge;
-                    if (summary[stage] !== undefined) el.textContent = 'Rp ' + fmt(summary[stage].total);
-                });
-                // Update Rupiah in column headers
-                document.querySelectorAll('[data-col-value]').forEach(el => {
-                    const stage = el.dataset.colValue;
-                    if (summary[stage] !== undefined) el.textContent = 'Rp ' + fmt(summary[stage].total);
-                });
-            } else {
-                // Fallback: count DOM cards (no rupiah update possible)
-                setTimeout(() => {
-                    document.querySelectorAll('[data-count-badge]').forEach(el => {
-                        const stage = el.dataset.countBadge;
-                        const zone  = document.getElementById(`zone-${stage}`);
-                        if (zone) el.textContent = zone.querySelectorAll('.kanban-card').length;
-                    });
-                }, 80);
+                const data = await res.json();
+                if(!res.ok) {
+                    throw new Error(data.message || 'Error saving deal');
+                }
+
+                // Update UI
+                if(this.modalMode === 'create') {
+                    let newDeal = data.opportunity;
+                    newDeal.client_name = {{ \Illuminate\Support\Js::from($clients->pluck('company_name', 'id')) }}[newDeal.client_id] || '';
+                    newDeal.sales_name = '{{ auth()->user()->name }}'; // since sales created it
+                    this.rawDeals.unshift(newDeal);
+                } else {
+                    let idx = this.rawDeals.findIndex(d => d.id === this.editingDeal.id);
+                    if(idx !== -1) {
+                        data.opportunity.client_name = this.rawDeals[idx].client_name;
+                        data.opportunity.sales_name = this.rawDeals[idx].sales_name;
+                        this.rawDeals[idx] = data.opportunity;
+                    }
+                }
+                
+                if(typeof CRM_Toast !== 'undefined') {
+                    CRM_Toast.show('Deal saved successfully', 'success');
+                } else {
+                    alert('Deal saved successfully');
+                }
+                
+                this.closeModal();
+            } catch (e) {
+                if(typeof CRM_Toast !== 'undefined') {
+                    CRM_Toast.show(e.message, 'error');
+                } else {
+                    alert(e.message);
+                }
+            } finally {
+                this.isSaving = false;
             }
         },
 
-        toast(msg, type='success') {
-            // Use global CRM_Toast if available, fallback to local
-            if (window.CRM_Toast) { CRM_Toast.show(msg, type); return; }
-            const el = document.getElementById('toast');
-            if (!el) return;
-            el.textContent = msg;
-            el.className = type;
-            el.style.display = 'block';
-            clearTimeout(this._toastTimer);
-            this._toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3200);
-        },
-    };
-}
-
-/* ── Kanban Multi-View Toggle ── */
-function setKanbanView(view) {
-    const board     = document.getElementById('kanban-scroll-x');
-    const tableView = document.getElementById('pipeline-table-view');
-
-    // Update button states
-    ['board','table'].forEach(v => {
-        const btn = document.getElementById(`view-${v}`);
-        if (btn) btn.className = 'view-btn' + (v === view ? ' active' : '');
-    });
-    localStorage.setItem('kanban-view', view);
-
-    if (!board) return;
-
-    if (view === 'board') {
-        board.style.display = '';
-        board.style.flexDirection = '';
-        board.style.overflowX = 'auto';
-        if (tableView) tableView.classList.remove('active');
-        document.querySelectorAll('.kanban-column').forEach(c => {
-            c.style.width = '280px';
-            c.style.flexDirection = 'column';
-        });
-    } else if (view === 'table') {
-        board.style.display = 'none';
-        if (tableView) tableView.classList.add('active');
-        CRM_Toast && CRM_Toast.show('📊 Table view aktif', 'info');
+        initSortable() {
+            const self = this;
+            document.querySelectorAll('.kanban-drop-zone').forEach(el => {
+                new Sortable(el, {
+                    group: 'pipeline',
+                    animation: 150,
+                    ghostClass: 'opacity-50',
+                    onEnd: function (evt) {
+                        if (evt.from === evt.to) return;
+                        
+                        const itemEl = evt.item;
+                        const dealId = itemEl.getAttribute('data-id');
+                        const newStage = evt.to.parentElement.getAttribute('data-stage');
+                        
+                        // Find deal
+                        const deal = self.rawDeals.find(d => d.id == dealId);
+                        
+                        // Revert DOM instantly
+                        evt.from.insertBefore(itemEl, evt.from.children[evt.oldIndex]);
+                        
+                        self.openStageModal(deal, newStage);
+                    }
+                });
+            });
+        }
     }
 }
-
-// Restore saved view on load
-document.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('kanban-view') || 'board';
-    if (saved !== 'board') setKanbanView(saved);
-    initBoardDragScroll && initBoardDragScroll();
-    CRM_CtxMenu && CRM_CtxMenu.init();
-});
 </script>
 @endpush

@@ -95,12 +95,17 @@ class OpportunityController extends Controller
         $validated = $request->validate([
             'title'               => 'required|string|max:255',
             'client_id'           => 'required|exists:clients,id',
-            'product_id'          => 'nullable|exists:products,id',
             'stage'               => 'in:call_meeting,prospecting,proposal,negotiation,won,lost',
-            'estimated_value'     => 'nullable|numeric|min:0',
-            'pax'                 => 'nullable|integer|min:1',
+            'products'            => 'nullable|array',
+            'products.*.id'       => 'nullable|string',
+            'products.*.category' => 'required|string',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.estimatedValue' => 'required|numeric|min:0',
+            'products.*.details'  => 'nullable|string',
             'expected_close_date' => 'nullable|date',
             'notes'               => 'nullable|string',
+            'subType'             => 'nullable|string',
+            'estimated_value'     => 'nullable|numeric|min:0',
         ]);
 
         // Force sales role to own record; managers/GMs shouldn't be creating them based on spec
@@ -109,7 +114,36 @@ class OpportunityController extends Controller
 
         $validated['stage'] = 'call_meeting';
 
+        $estimatedValue = 0;
+        $products = [];
+        if (!empty($validated['products'])) {
+            $products = $validated['products'];
+            foreach ($products as $p) {
+                $estimatedValue += (float)$p['estimatedValue'] * (int)$p['quantity'];
+            }
+        } else {
+            $estimatedValue = $request->input('estimated_value', 0);
+        }
+
+        $validated['estimated_value'] = $estimatedValue;
+        $validated['products'] = $products;
+
+        $historyEntry = [
+            'id' => 'h' . time() . rand(1000, 9999),
+            'stage' => 'call_meeting',
+            'subType' => $request->subType,
+            'timestamp' => now()->toIso8601String(),
+            'note' => $request->notes,
+            'products' => $products,
+            'estimatedValue' => $estimatedValue,
+        ];
+        $validated['history_timeline'] = [$historyEntry];
+
         $opportunity = Opportunity::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'opportunity' => $opportunity]);
+        }
 
         return redirect()->route('pipeline.index')
             ->with('success', "Opportunity {$opportunity->opp_number} berhasil dibuat.");
@@ -164,8 +198,13 @@ class OpportunityController extends Controller
         $validated = $request->validate([
             'title'               => 'required|string|max:255',
             'client_id'           => 'required|exists:clients,id',
-            'product_id'          => 'nullable|exists:products,id',
             'stage'               => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
+            'products'            => 'nullable|array',
+            'products.*.id'       => 'nullable|string',
+            'products.*.category' => 'required|string',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.estimatedValue' => 'required|numeric|min:0',
+            'products.*.details'  => 'nullable|string',
             'estimated_value'     => 'nullable|numeric|min:0',
             'final_value'         => 'nullable|numeric|min:0',
             'pax'                 => 'nullable|integer|min:1',
@@ -173,11 +212,28 @@ class OpportunityController extends Controller
             'actual_close_date'   => 'nullable|date',
             'lost_reason'         => 'nullable|string',
             'notes'               => 'nullable|string',
+            'subType'             => 'nullable|string',
         ]);
 
+        $estimatedValue = 0;
+        if (!empty($validated['products'])) {
+            foreach ($validated['products'] as $p) {
+                $estimatedValue += (float)$p['estimatedValue'] * (int)$p['quantity'];
+            }
+        } else {
+            $estimatedValue = $request->input('estimated_value', $opportunity->estimated_value ?? 0);
+        }
+        $validated['estimated_value'] = $estimatedValue;
+
         // Stage change validation
-        if ($validated['stage'] !== $opportunity->stage) {
+        $oldStage = $opportunity->stage;
+        $isStageChanged = $validated['stage'] !== $oldStage;
+
+        if ($isStageChanged) {
             if (!$this->pipelineService->canTransition($opportunity->stage, $validated['stage'])) {
+                if ($request->wantsJson()) {
+                    return response()->json(['ok' => false, 'message' => "Tidak dapat berpindah ke {$validated['stage']}."], 422);
+                }
                 return back()->withErrors([
                     'stage' => "Tidak dapat berpindah dari {$opportunity->stage} ke {$validated['stage']}.",
                 ]);
@@ -194,12 +250,44 @@ class OpportunityController extends Controller
             ]);
 
             if ($validated['stage'] === 'won') {
-                $this->pipelineService->triggerWonActions($opportunity);
+                $validated['final_value'] = $validated['final_value'] ?? $estimatedValue;
                 $validated['actual_close_date'] = $validated['actual_close_date'] ?? now()->toDateString();
+            }
+
+            $history = $opportunity->history_timeline ?? [];
+            $history[] = [
+                'id' => 'h' . time() . rand(1000, 9999),
+                'stage' => $validated['stage'],
+                'subType' => $request->subType,
+                'timestamp' => now()->toIso8601String(),
+                'note' => $request->notes,
+                'products' => $validated['products'] ?? $opportunity->products,
+                'estimatedValue' => $estimatedValue,
+            ];
+            $validated['history_timeline'] = $history;
+        } else {
+            // Update latest history entry if products/estimatedValue changed
+            $history = $opportunity->history_timeline ?? [];
+            if (count($history) > 0) {
+                $lastIdx = count($history) - 1;
+                $history[$lastIdx]['products'] = $validated['products'] ?? $opportunity->products;
+                $history[$lastIdx]['estimatedValue'] = $estimatedValue;
+                if ($request->notes) {
+                    $history[$lastIdx]['note'] = $request->notes;
+                }
+                $validated['history_timeline'] = $history;
             }
         }
 
         $opportunity->update($validated);
+        
+        if ($isStageChanged && $validated['stage'] === 'won') {
+            $this->pipelineService->triggerWonActions($opportunity);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'opportunity' => $opportunity->fresh()]);
+        }
 
         return back()->with('success', 'Opportunity berhasil diperbarui.');
     }

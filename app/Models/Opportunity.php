@@ -29,6 +29,8 @@ class Opportunity extends Model
         'notes',
         'booking_id',
         'subscription_id',
+        'products',
+        'history_timeline',
     ];
 
     protected $casts = [
@@ -39,6 +41,8 @@ class Opportunity extends Model
         'expected_close_date' => 'date',
         'actual_close_date' => 'date',
         'pax' => 'integer',
+        'products' => 'array',
+        'history_timeline' => 'array',
     ];
 
     protected static function boot()

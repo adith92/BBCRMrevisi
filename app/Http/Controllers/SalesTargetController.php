@@ -22,80 +22,52 @@ class SalesTargetController extends Controller
         $year  = (int) $request->get('year', now()->year);
         $month = (int) $request->get('month', now()->month);
 
-        // Current user's own target
-        $ownTarget = SalesTarget::getOrCreate($user->id, $year, $month);
+        $users = User::all()->map(function($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'role' => $u->role === 'sales' ? 'Sales' : ($u->role === 'manager' ? 'Manager' : 'GM'),
+                'managerId' => $u->manager_id,
+            ];
+        });
 
-        // Chart data: last 6 months for own user
-        $chartData = $this->buildChartData($user->id, $year, $month);
+        $deals = \App\Models\Opportunity::all()->map(function($d) {
+            return [
+                'id' => $d->id,
+                'salesId' => $d->sales_id,
+                'stage' => $d->stage === 'won' ? 'Won' : ($d->stage === 'lost' ? 'Lost' : 'Active'),
+                'actualValue' => (float)$d->final_value,
+                'estimatedValue' => (float)$d->estimated_value,
+                'products' => $d->products, // JSON array
+            ];
+        });
 
-        // For manager/gm/director: also get team targets
-        $teamTargets = collect();
-        $teamUsers   = collect();
+        $dbTargets = SalesTarget::where('period_year', $year)
+            ->where('period_month', $month)
+            ->get();
 
-        // Sort team by: name | revenue | kpi_pct
-        $sortTeam = $request->get('sort_team', 'revenue');
+        $targets = $dbTargets->map(function($t) {
+            return [
+                'userId' => $t->user_id,
+                'productTargets' => [
+                    'Mobil Short Term' => (float)$t->target_revenue * 0.4,
+                    'Mobil Long Term' => (float)$t->target_revenue * 0.2,
+                    'Bus Pariwisata' => (float)$t->target_revenue * 0.15,
+                    'Shuttle Bus' => (float)$t->target_revenue * 0.1,
+                    'E-Voucher' => (float)$t->target_revenue * 0.05,
+                    'Mobil Box/Blind Van' => (float)$t->target_revenue * 0.1,
+                ]
+            ];
+        });
 
-        if ($user->isManager()) {
-            $teamUsers = User::where('manager_id', $user->id)->where('role', 'sales')->orderBy('name')->get();
-        } elseif ($user->isGM() || $user->isDirector()) {
-            $teamUsers = User::whereIn('role', ['sales', 'manager'])->orderBy('name')->get();
-        }
-
-        if ($teamUsers->isNotEmpty()) {
-            $userIds = $teamUsers->pluck('id');
-            $teamTargets = SalesTarget::whereIn('user_id', $userIds)
-                ->where('period_year', $year)
-                ->where('period_month', $month)
-                ->with('user')
-                ->get()
-                ->keyBy('user_id');
-
-            // Ensure every team user has a record
-            foreach ($teamUsers as $tu) {
-                if (!$teamTargets->has($tu->id)) {
-                    $newTarget = SalesTarget::getOrCreate($tu->id, $year, $month);
-                    $newTarget->load('user');
-                    $teamTargets->put($tu->id, $newTarget);
-                }
-            }
-        }
-
-        // Sort teamTargets collection
-        if ($teamTargets->isNotEmpty()) {
-            $teamTargets = match ($sortTeam) {
-                'name'    => $teamTargets->sortBy(fn($t) => $t->user->name ?? ''),
-                'kpi_pct' => $teamTargets->sortByDesc(fn($t) => $this->computeOverallScore($t)),
-                default   => $teamTargets->sortByDesc(fn($t) => (float) ($t->actual_revenue ?? 0)),
-            };
-        }
-
-        // Overall achievement (average of all KPIs for own target)
-        $overallScore = $this->computeOverallScore($ownTarget);
-
-        // Data for Radar Chart (Competency)
-        $radarData = [
-            $ownTarget->target_meetings > 0 ? min(100, round(($ownTarget->actual_meetings / $ownTarget->target_meetings) * 100)) : 0,
-            $ownTarget->target_calls > 0 ? min(100, round(($ownTarget->actual_calls / $ownTarget->target_calls) * 100)) : 0,
-            $ownTarget->target_visits > 0 ? min(100, round(($ownTarget->actual_visits / $ownTarget->target_visits) * 100)) : 0,
-            $ownTarget->target_opportunities > 0 ? min(100, round(($ownTarget->actual_opportunities / $ownTarget->target_opportunities) * 100)) : 0,
-            $ownTarget->target_won > 0 ? min(100, round(($ownTarget->actual_won / $ownTarget->target_won) * 100)) : 0,
+        $currentUser = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'role' => $user->role === 'sales' ? 'Sales' : ($user->role === 'manager' ? 'Manager' : 'GM'),
+            'managerId' => $user->manager_id,
         ];
 
-        // Sales users list for the "Set Target" modal
-        $salesUsers = User::whereIn('role', ['sales', 'manager'])->orderBy('name')->get();
-
-        return view('kpi.index', compact(
-            'ownTarget',
-            'chartData',
-            'teamTargets',
-            'sortTeam',
-            'teamUsers',
-            'overallScore',
-            'radarData',
-            'salesUsers',
-            'year',
-            'month'
-        ));
+        return view('kpi.index', compact('users', 'deals', 'targets', 'currentUser', 'year', 'month'));
     }
 
     public function store(Request $request)
