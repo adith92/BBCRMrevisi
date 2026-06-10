@@ -131,6 +131,7 @@ Urutan blok dari atas ke bawah (jangan diubah urutannya, jangan ditambah/dikuran
 | Tanggal | File | Perubahan | Alasan | Disetujui oleh |
 |---------|------|-----------|--------|----------------|
 | 2026-06-09 | — | Dokumen lock dibuat. Baseline = commit `f23867b`. | Mengunci UI/UX dashboard depan. | adithya |
+| 2026-06-10 | resources/css/app.css, resources/views/layouts/app.blade.php | Modifikasi .nav-item padding ke py-[13px] dan .topbar-icon-btn size ke w-11 h-11 pada mobile layout | Mengikuti standar touch target mobile minimal 44px | adithya |
 
 ---
 

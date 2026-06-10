@@ -462,4 +462,52 @@ class SmokeTest extends TestCase
                 ->assertStatus(200, "Route {$name} failed");
         }
     }
+
+    /** @test */
+    public function approvals_redirects_to_dashboard_with_warning(): void
+    {
+        $this->actAs('sales')
+            ->get('/approvals')
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('warning', 'Fitur Approvals akan segera hadir di v7.8!');
+    }
+
+    /** @test */
+    public function settings_redirects_to_dashboard_with_warning(): void
+    {
+        $this->actAs('sales')
+            ->get('/settings')
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('warning', 'Fitur Settings akan segera hadir di v7.8!');
+    }
+
+    /** @test */
+    public function opportunity_show_loads_approval_requests(): void
+    {
+        $sales = $this->user('sales');
+        $client = Client::factory()->create(['assigned_sales_id' => $sales->id]);
+        $opportunity = Opportunity::factory()->create([
+            'sales_id' => $sales->id,
+            'client_id' => $client->id,
+            'title' => 'Test Opportunity for approvals',
+        ]);
+        
+        $approvalRequest = \App\Models\ApprovalRequest::create([
+            'opportunity_id' => $opportunity->id,
+            'requested_by' => $sales->id,
+            'current_approver_id' => null,
+            'type' => 'discount',
+            'discount_percent' => 10.00,
+            'original_price' => 100000.00,
+            'final_price' => 90000.00,
+            'level' => 1,
+            'status' => 'pending',
+            'notes' => 'Looking for 10% discount',
+        ]);
+
+        $this->actingAs($sales)
+            ->get(route('opportunities.show', $opportunity))
+            ->assertOk()
+            ->assertViewHas('approvalRequests');
+    }
 }

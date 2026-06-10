@@ -180,14 +180,31 @@ php artisan serve
 
 ## <a name="demo-accounts"></a>🔑 DEMO ACCOUNTS
 
-| 👤 Role | 📧 Email | 🔐 Password | 🎯 Access |
+The database seeders configure two sets of demo accounts depending on the seeded dataset: Core accounts for standard database seeding (using the `@goldenbird.co.id` domain) and Massive accounts for large-scale data seeding (using the `@demo.crm` domain). Use the credentials below to log in and explore different role-based views of the system.
+
+### Core Demo Accounts (`@goldenbird.co.id`)
+
+These accounts are seeded during a standard database seed (`php artisan db:seed`). The password for all core accounts is `password123`.
+
+| 👤 Role | 📧 Email | 🔐 Password | 🎯 Access / Notes |
 |---|---|---|---|
-| 👑 **Director** | director@bluebird.id | password | Full system + approval |
-| 🏢 **GM** | gm@bluebird.id | password | Dashboard + reports + pipeline |
-| 📊 **Manager** | manager@bluebird.id | password | Team management + KPI |
-| 💼 **Sales** | sales@bluebird.id | password | Opportunities + activities |
-| 🔍 **Finance** | finance@bluebird.id | password | Revenue + approvals |
-| ⚙️ **Admin** | admin@bluebird.id | password | System settings |
+| 🏢 **GM** | `gm@goldenbird.co.id` | `password123` | Budi Santoso (pucuk pimpinan - full dashboard, pipeline, and approvals) |
+| 📊 **Manager** | `manager1@goldenbird.co.id` to `manager5@goldenbird.co.id` | `password123` | 5 Sales Managers (team management and KPI view) |
+| 💼 **Sales** | `sales1@goldenbird.co.id` to `sales15@goldenbird.co.id` | `password123` | 15 Sales Representatives (opportunities and activities tracker) |
+| ⚙️ **Operational** | `ops@goldenbird.co.id` | `password123` | Hendra Wijaya (operational management) |
+| 🔍 **Finance** | `finance@goldenbird.co.id` | `password123` | Maya Kusuma (financial approvals and dashboard) |
+
+### Massive Demo Accounts (`@demo.crm`)
+
+These accounts are seeded during a massive database seed (`DEMO_SCALE=x php artisan db:seed`). The password for all massive accounts is `password`.
+
+| 👤 Role | 📧 Email | 🔐 Password | 🎯 Access / Notes |
+|---|---|---|---|
+| 🏢 **GM** | `gm@demo.crm` | `password` | General Manager (dashboard and pipeline) |
+| 📊 **Manager** | `manager@demo.crm` | `password` | Sales Manager (team management and KPI) |
+| 💼 **Sales** | `sales1@demo.crm` to `sales10@demo.crm` | `password` | 10 Sales Representatives (opportunities and activities) |
+| 🔍 **Finance** | `finance@demo.crm` | `password` | Finance Dept (revenue and approvals) |
+
 
 ---
 

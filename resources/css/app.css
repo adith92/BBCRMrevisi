@@ -114,7 +114,7 @@ html.dark {
     .sidebar.collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden !important; }
 
     .nav-item {
-        @apply flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 no-underline;
+        @apply flex items-center gap-2.5 px-3.5 py-[13px] rounded-xl text-[13px] font-semibold transition-all duration-150 no-underline;
         color: rgba(255,255,255,0.72);
     }
     .nav-item:hover {
@@ -140,7 +140,7 @@ html.dark {
         transition: background var(--theme-speed), border-color var(--theme-speed);
     }
     .topbar-icon-btn {
-        @apply relative flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer transition-all duration-150;
+        @apply relative flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-lg cursor-pointer transition-all duration-150;
         color: var(--cc-text-muted);
         background: transparent;
         border: none;

@@ -33,8 +33,8 @@
             <div class="text-[13px] font-bold" style="color:var(--cc-text)">
                 ✨ New Opportunity
             </div>
-            <button @click="close()" class="topbar-icon-btn w-6 h-6">
-                <span class="material-symbols-outlined text-[16px]">close</span>
+            <button @click="close()" class="topbar-icon-btn w-11 h-11 md:w-6 md:h-6">
+                <span class="material-symbols-outlined text-[18px] md:text-[16px]">close</span>
             </button>
         </div>
 

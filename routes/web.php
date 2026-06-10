@@ -36,6 +36,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/gm', [DashboardController::class, 'gm'])->name('dashboard.gm')->middleware('role:gm');
     Route::post('/dashboard/save-layout', [DashboardController::class, 'saveLayout'])->name('dashboard.saveLayout');
 
+    // Redirects for coming features
+    Route::get('/approvals', function () {
+        return redirect()->route('dashboard')->with('warning', 'Fitur Approvals akan segera hadir di v7.8!');
+    })->name('approvals.index');
+
+    Route::get('/settings', function () {
+        return redirect()->route('dashboard')->with('warning', 'Fitur Settings akan segera hadir di v7.8!');
+    })->name('settings.index');
+
     // Bookings
     Route::resource('bookings', BookingController::class)->middleware('role:gm,manager,sales,operational');
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index')->withoutMiddleware('role:gm,manager,sales,operational');

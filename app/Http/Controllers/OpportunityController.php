@@ -172,10 +172,16 @@ class OpportunityController extends Controller
 
         $nextStages = $this->pipelineService->getNextStages($opportunity->stage);
 
+        $approvalRequests = $opportunity->approvalRequests()
+            ->with(['requester', 'currentApprover'])
+            ->latest()
+            ->get();
+
         return view('pipeline.show', compact(
             'opportunity',
             'activityLogs',
-            'nextStages'
+            'nextStages',
+            'approvalRequests'
         ));
     }
 
