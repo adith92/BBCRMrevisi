@@ -18,6 +18,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WidgetController;
+use App\Http\Controllers\SystemController;
 
 Route::redirect('/', '/dashboard');
 
@@ -118,6 +119,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/opportunities/by-client/{client}', [OpportunityController::class, 'byClient'])->middleware('role:gm,manager,sales');
         Route::get('/opportunities/{opportunity}/history', [OpportunityController::class, 'getHistory'])->middleware('role:gm,manager,sales');
     });
+
+    Route::post('/system/seed-demo', [SystemController::class, 'seedDemo'])
+        ->name('system.seed-demo')
+        ->middleware('role:gm');
 });
 
 require __DIR__.'/auth.php';

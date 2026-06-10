@@ -152,6 +152,113 @@
                 <div class="text-[9px] uppercase tracking-wider font-semibold truncate" style="color:#334155;">{{ $roleLabels[$role] ?? strtoupper($role) }}</div>
             </div>
         </div>
+        @if($role === 'gm')
+            <div x-data="{ open: false, amount: 100, customAmount: '', loading: false, message: '', isError: false }" class="mb-2">
+                <!-- Seeder Trigger Button -->
+                <button @click="open = true" type="button" class="w-full flex items-center justify-center gap-2 py-2 mb-2 rounded-lg text-xs font-semibold transition-all text-amber-400 border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15">
+                    <span class="material-symbols-outlined text-[15px]">database</span>
+                    <span>Seed Demo Data</span>
+                </button>
+
+                <!-- Alpine.js Modal overlay -->
+                <div x-show="open" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @keydown.escape.window="open = false">
+                    <!-- Modal card -->
+                    <div @click.away="if (!loading) open = false" class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4" style="background-color: #0f172a;">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-400">database</span>
+                                Seed Demo Data
+                            </h3>
+                            <button @click="open = false" :disabled="loading" class="text-slate-400 hover:text-white disabled:opacity-50">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </div>
+
+                        <div x-show="!loading" class="space-y-4 text-xs">
+                            <p class="text-slate-400 leading-relaxed text-left">
+                                Pilih jumlah data demo (Opportunity, Client, dll.) yang ingin Anda tambahkan ke sistem secara otomatis dengan kalkulasi finansial riil.
+                            </p>
+                            
+                            <div class="grid grid-cols-3 gap-2">
+                                <button type="button" @click="amount = 100" class="py-2 rounded-lg font-bold border transition-all"
+                                        :class="amount === 100 ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-800/40 border-slate-700/60 text-slate-300 hover:bg-slate-800'">
+                                    100 Data
+                                </button>
+                                <button type="button" @click="amount = 1000" class="py-2 rounded-lg font-bold border transition-all"
+                                        :class="amount === 1000 ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-800/40 border-slate-700/60 text-slate-300 hover:bg-slate-800'">
+                                    1.000 Data
+                                </button>
+                                <button type="button" @click="amount = 10000" class="py-2 rounded-lg font-bold border transition-all"
+                                        :class="amount === 10000 ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-800/40 border-slate-700/60 text-slate-300 hover:bg-slate-800'">
+                                    10.000 Data
+                                </button>
+                            </div>
+
+                            <div class="space-y-1 text-left">
+                                <label class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Atau Custom Jumlah Data</label>
+                                <input type="number" x-model="customAmount" placeholder="Contoh: 500" min="1" max="100000" 
+                                       class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50" />
+                            </div>
+
+                            <div class="flex gap-3 pt-2">
+                                <button type="button" @click="open = false" class="flex-1 py-2 bg-slate-800 text-slate-300 hover:text-white rounded-lg font-semibold transition-all">
+                                    Batal
+                                </button>
+                                <button type="button" 
+                                        @click="
+                                            loading = true;
+                                            message = '';
+                                            const finalAmount = customAmount ? parseInt(customAmount) : amount;
+                                            fetch('/system/seed-demo', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                },
+                                                body: JSON.stringify({ amount: finalAmount })
+                                            })
+                                            .then(res => res.json().then(data => ({ status: res.status, data })))
+                                            .then(resObj => {
+                                                loading = false;
+                                                if (resObj.status === 200) {
+                                                    message = 'Berhasil menambahkan ' + finalAmount + ' data demo!';
+                                                    isError = false;
+                                                    setTimeout(() => { open = false; window.location.reload(); }, 1500);
+                                                } else {
+                                                    message = resObj.data.message || 'Gagal menambahkan data demo.';
+                                                    isError = true;
+                                                }
+                                            })
+                                            .catch(err => {
+                                                loading = false;
+                                                message = 'Terjadi kesalahan sistem.';
+                                                isError = true;
+                                            });
+                                        "
+                                        class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-bold transition-all">
+                                    Mulai Seeding
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Loading Spinner -->
+                        <div x-show="loading" class="flex flex-col items-center justify-center py-6 space-y-3">
+                            <svg class="animate-spin h-8 w-8 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-xs text-slate-300 font-medium animate-pulse">Menghasilkan data demo riil, mohon tunggu...</span>
+                        </div>
+
+                        <!-- Success / Error Message -->
+                        <div x-show="message" class="text-center py-2 px-3 rounded-lg text-xs font-semibold"
+                             :class="isError ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'">
+                            <span x-text="message"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all"

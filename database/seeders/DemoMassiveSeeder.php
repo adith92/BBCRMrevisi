@@ -75,8 +75,14 @@ class DemoMassiveSeeder extends Seeder
         $this->scale = (int) env('DEMO_SCALE', 1);
         $this->command->info("🚀 DemoMassiveSeeder starting (scale={$this->scale})...");
 
-        DB::statement('PRAGMA journal_mode=WAL;'); // SQLite WAL for speed
-        DB::statement('PRAGMA synchronous=NORMAL;');
+        if (DB::transactionLevel() === 0) {
+            try {
+                DB::statement('PRAGMA journal_mode=WAL;'); // SQLite WAL for speed
+                DB::statement('PRAGMA synchronous=NORMAL;');
+            } catch (\Exception $e) {
+                // Ignore if transaction or not SQLite
+            }
+        }
 
         $this->seedUsers();
         $this->seedClients();
@@ -86,7 +92,9 @@ class DemoMassiveSeeder extends Seeder
         $this->seedApprovalRequests();
         $this->seedSalesTargets();
         $this->seedSubscriptions();
-        $this->ensureSalesMetrics();
+        if (!config('app.demo_append_amount')) {
+            $this->ensureSalesMetrics();
+        }
 
         $this->command->info('✅ DemoMassiveSeeder complete!');
         $this->printSummary();
@@ -130,12 +138,16 @@ class DemoMassiveSeeder extends Seeder
 
     private function seedClients(): void
     {
-        $target  = 100 * $this->scale;
-        $existing = Client::count();
-        $toCreate = max(0, $target - $existing);
+        if (config('app.demo_append_amount')) {
+            $toCreate = (int) ceil(config('app.demo_append_amount') / 5);
+        } else {
+            $target  = 100 * $this->scale;
+            $existing = Client::count();
+            $toCreate = max(0, $target - $existing);
+        }
 
         if ($toCreate === 0) {
-            $this->command->info("  ↳ Clients already at target ({$target}), skipping.");
+            $this->command->info("  ↳ Clients already at target, skipping.");
             return;
         }
 
@@ -221,12 +233,16 @@ class DemoMassiveSeeder extends Seeder
 
     private function seedOpportunities(): void
     {
-        $target  = 500 * $this->scale;
-        $existing = Opportunity::count();
-        $toCreate = max(0, $target - $existing);
+        if (config('app.demo_append_amount')) {
+            $toCreate = (int) config('app.demo_append_amount');
+        } else {
+            $target  = 500 * $this->scale;
+            $existing = Opportunity::count();
+            $toCreate = max(0, $target - $existing);
+        }
 
         if ($toCreate === 0) {
-            $this->command->info("  ↳ Opportunities already at target ({$target}), skipping.");
+            $this->command->info("  ↳ Opportunities already at target, skipping.");
             return;
         }
 
@@ -294,9 +310,13 @@ class DemoMassiveSeeder extends Seeder
 
     private function seedActivityLogs(): void
     {
-        $target   = 2000 * $this->scale;
-        $existing = ActivityLog::count();
-        $toCreate = max(0, $target - $existing);
+        if (config('app.demo_append_amount')) {
+            $toCreate = (int) (config('app.demo_append_amount') * 4);
+        } else {
+            $target   = 2000 * $this->scale;
+            $existing = ActivityLog::count();
+            $toCreate = max(0, $target - $existing);
+        }
 
         if ($toCreate === 0) {
             $this->command->info("  ↳ Activity logs already at target, skipping.");
@@ -351,9 +371,13 @@ class DemoMassiveSeeder extends Seeder
 
     private function seedApprovalRequests(): void
     {
-        $target   = 300 * $this->scale;
-        $existing = ApprovalRequest::count();
-        $toCreate = max(0, $target - $existing);
+        if (config('app.demo_append_amount')) {
+            $toCreate = (int) ceil(config('app.demo_append_amount') * 0.5);
+        } else {
+            $target   = 300 * $this->scale;
+            $existing = ApprovalRequest::count();
+            $toCreate = max(0, $target - $existing);
+        }
 
         if ($toCreate === 0) { $this->command->info("  ↳ Approval requests already at target, skipping."); return; }
 
@@ -446,9 +470,13 @@ class DemoMassiveSeeder extends Seeder
 
     private function seedSubscriptions(): void
     {
-        $target   = 50 * $this->scale;
-        $existing = Subscription::count();
-        $toCreate = max(0, $target - $existing);
+        if (config('app.demo_append_amount')) {
+            $toCreate = (int) ceil(config('app.demo_append_amount') * 0.1);
+        } else {
+            $target   = 50 * $this->scale;
+            $existing = Subscription::count();
+            $toCreate = max(0, $target - $existing);
+        }
 
         if ($toCreate === 0) { $this->command->info("  ↳ Subscriptions already at target, skipping."); return; }
 
