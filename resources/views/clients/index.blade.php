@@ -78,13 +78,13 @@
                 <tr class="transition-colors">
                     <td class="py-3 px-4">
                         <a href="{{ route('clients.show', $client->id) }}"
-                           class="text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                           class="text-cc-cyan font-medium hover:underline">
                             {{ $client->company_name }}
                         </a>
                         <div class="text-xs text-[var(--cc-text-muted)]">{{ $client->email }}</div>
                     </td>
                     <td class="py-3 px-4">
-                        <a href="mailto:{{ $client->email }}" class="text-blue-600 hover:underline">
+                        <a href="mailto:{{ $client->email }}" class="text-cc-cyan hover:underline">
                             {{ $client->pic_name }}
                         </a>
                     </td>
@@ -92,7 +92,7 @@
                     <td class="py-3 px-4">
                         @if($client->assignedSales)
                             <a href="{{ route('sales.performance', $client->assignedSales->id) }}"
-                               class="text-blue-600 hover:underline text-sm">
+                               class="text-cc-cyan hover:underline text-sm">
                                 {{ $client->assignedSales->name }}
                             </a>
                         @else
