@@ -14,14 +14,40 @@ class ClientController extends Controller
         $this->middleware('auth');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
-        $clients = Client::with(['assignedSales', 'invoices'])
-            ->when($user->isSales(), fn($q) => $q->where('assigned_sales_id', $user->id))
-            ->orderBy('company_name')
-            ->paginate(20);
+        $query = Client::with(['assignedSales', 'invoices'])
+            ->withCount(['opportunities as won_opportunities_count' => function ($q) {
+                $q->where('stage', 'won');
+            }])
+            ->withSum(['opportunities as won_opportunities_sum' => function ($q) {
+                $q->where('stage', 'won');
+            }], 'final_value')
+            ->when($user->isSales(), fn($q) => $q->where('assigned_sales_id', $user->id));
+
+        // Filter status
+        if ($request->filled('filter_status')) {
+            $status = $request->input('filter_status');
+            if (in_array($status, ['active', 'inactive'])) {
+                $query->where('status', $status);
+            }
+        }
+
+        // Sort
+        $sortBy = $request->input('sort_by', 'name_asc');
+        if ($sortBy === 'transactions_desc') {
+            $query->orderByDesc('won_opportunities_count');
+        } elseif ($sortBy === 'value_desc') {
+            $query->orderByDesc('won_opportunities_sum');
+        } elseif ($sortBy === 'name_desc') {
+            $query->orderBy('company_name', 'desc');
+        } else {
+            $query->orderBy('company_name', 'asc');
+        }
+
+        $clients = $query->paginate(20)->withQueryString();
 
         return view('clients.index', compact('clients'));
     }
