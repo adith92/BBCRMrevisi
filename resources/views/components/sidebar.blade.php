@@ -7,13 +7,13 @@
 <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out z-50 flex flex-col min-h-screen" style="width:224px; min-width:224px;">
 
     {{-- Brand --}}
-    <div class="hidden md:flex items-center gap-3 px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+    <div class="hidden md:flex items-center gap-3 px-5 py-5" style="border-bottom:1px solid var(--cc-sidebar-divider);">
         <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,rgba(0,229,255,0.15),rgba(59,130,246,0.15)); border:1px solid rgba(0,229,255,0.2);">
             <span class="material-symbols-outlined text-[20px]" style="color:#00e5ff;">directions_bus</span>
         </div>
         <div>
-            <div class="text-sm font-bold text-white leading-tight">{{ __('ui.bluebird_crm') }}</div>
-            <div class="text-[9px] uppercase tracking-widest font-semibold" style="color:#334155;">{{ __('ui.command_center') }}</div>
+            <div class="text-sm font-bold text-[var(--cc-sidebar-brand)] leading-tight">{{ __('ui.bluebird_crm') }}</div>
+            <div class="text-[9px] uppercase tracking-widest font-semibold text-[var(--cc-sidebar-user-role)]">{{ __('ui.command_center') }}</div>
         </div>
     </div>
 
@@ -108,7 +108,7 @@
                  x-transition:enter-start="opacity-0 -translate-y-1"
                  x-transition:enter-end="opacity-100 translate-y-0"
                  class="mt-1 ml-2 space-y-0.5 border-l-2 pl-3"
-                 style="border-color:rgba(255,255,255,0.06)">
+                 style="border-color: var(--cc-sidebar-divider)">
                 @if(in_array($role, ['gm','manager','sales']))
                 <a href="{{ route('opportunities.create') }}" class="nav-item text-[12px]">
                     <span class="material-symbols-outlined text-[14px]">star</span>
@@ -142,14 +142,14 @@
     </nav>
 
     {{-- Sidebar Footer --}}
-    <div class="px-3 py-4" style="border-top:1px solid rgba(255,255,255,0.05);">
+    <div class="px-3 py-4" style="border-top:1px solid var(--cc-sidebar-divider);">
         <div class="flex items-center gap-2.5 mb-3 px-1">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08);">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style="background: var(--cc-sidebar-user-bg); border: 1px solid var(--cc-sidebar-user-bd);">
                 {{ $roleIcons[$role] ?? '👤' }}
             </div>
             <div class="overflow-hidden">
-                <div class="text-xs font-bold text-slate-200 truncate">{{ Auth::user()->name ?? 'User' }}</div>
-                <div class="text-[9px] uppercase tracking-wider font-semibold truncate" style="color:#334155;">{{ $roleLabels[$role] ?? strtoupper($role) }}</div>
+                <div class="text-xs font-bold text-[var(--cc-sidebar-user)] truncate">{{ Auth::user()->name ?? 'User' }}</div>
+                <div class="text-[9px] uppercase tracking-wider font-semibold truncate text-[var(--cc-sidebar-user-role)]">{{ $roleLabels[$role] ?? strtoupper($role) }}</div>
             </div>
         </div>
         @if($role === 'gm')

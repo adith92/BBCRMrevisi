@@ -39,6 +39,21 @@ html, html.light {
     --cc-progress-bg: rgba(0,0,0,0.05);
     --cc-kbd:         rgba(0,0,0,0.05);
     --cc-kbd-text:    #475569;
+
+    /* Sidebar - Light Mode */
+    --cc-sidebar-brand:       #006aa6;
+    --cc-sidebar-text:        #475569;
+    --cc-sidebar-hover:       #006aa6;
+    --cc-sidebar-hover-bg:    rgba(0, 106, 166, 0.05);
+    --cc-sidebar-active:      #006aa6;
+    --cc-sidebar-active-bg:   rgba(0, 106, 166, 0.08);
+    --cc-sidebar-active-bd:   rgba(0, 106, 166, 0.15);
+    --cc-sidebar-label:       #64748b;
+    --cc-sidebar-divider:     rgba(0, 0, 0, 0.06);
+    --cc-sidebar-user:        #0f172a;
+    --cc-sidebar-user-role:   #64748b;
+    --cc-sidebar-user-bg:     rgba(0, 0, 0, 0.03);
+    --cc-sidebar-user-bd:     rgba(0, 0, 0, 0.05);
 }
 
 /* ── DARK ── */
@@ -64,6 +79,21 @@ html.dark {
     --cc-progress-bg: rgba(255,255,255,0.05);
     --cc-kbd:         rgba(255,255,255,0.05);
     --cc-kbd-text:    #94a3b8;
+
+    /* Sidebar - Dark Mode */
+    --cc-sidebar-brand:       #ffffff;
+    --cc-sidebar-text:        rgba(255, 255, 255, 0.72);
+    --cc-sidebar-hover:       #ffffff;
+    --cc-sidebar-hover-bg:    rgba(255, 255, 255, 0.09);
+    --cc-sidebar-active:      #d8efff;
+    --cc-sidebar-active-bg:   rgba(79, 159, 214, 0.28);
+    --cc-sidebar-active-bd:   rgba(162, 211, 242, 0.22);
+    --cc-sidebar-label:       rgba(255, 255, 255, 0.46);
+    --cc-sidebar-divider:     rgba(255, 255, 255, 0.08);
+    --cc-sidebar-user:        #e2e8f0;
+    --cc-sidebar-user-role:   #94a3b8;
+    --cc-sidebar-user-bg:     rgba(255, 255, 255, 0.06);
+    --cc-sidebar-user-bd:     rgba(255, 255, 255, 0.08);
 }
 
 @layer base {
@@ -115,21 +145,21 @@ html.dark {
 
     .nav-item {
         @apply flex items-center gap-2.5 px-3.5 py-[13px] rounded-xl text-[13px] font-semibold transition-all duration-150 no-underline;
-        color: rgba(255,255,255,0.72);
+        color: var(--cc-sidebar-text);
     }
     .nav-item:hover {
-        background: rgba(255,255,255,0.09);
-        color: #ffffff;
+        background: var(--cc-sidebar-hover-bg);
+        color: var(--cc-sidebar-hover);
     }
     .nav-item.active {
-        background: rgba(79,159,214,0.28);
-        color: #d8efff;
-        border: 1px solid rgba(162,211,242,0.22);
+        background: var(--cc-sidebar-active-bg);
+        color: var(--cc-sidebar-active);
+        border: 1px solid var(--cc-sidebar-active-bd);
     }
     .nav-item .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
     .nav-section-label {
         @apply text-[9px] font-bold uppercase tracking-widest px-3.5 pt-4 pb-1;
-        color: rgba(255,255,255,0.46);
+        color: var(--cc-sidebar-label);
     }
 
     /* ===== TOPBAR ===== */
