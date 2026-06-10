@@ -29,9 +29,14 @@
         @if(in_array($role, ['gm','manager','sales']))
         <div class="nav-section-label">{{ __('ui.sales') }}</div>
 
-        <a href="{{ route('pipeline.index') }}" class="nav-item {{ Request::routeIs('pipeline*','opportunities*') ? 'active' : '' }}">
+        <a href="{{ route('pipeline.index') }}" class="nav-item {{ Request::routeIs('pipeline*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">view_kanban</span>
             <span>{{ __('ui.sales_pipeline') }}</span>
+        </a>
+
+        <a href="{{ route('opportunities.index') }}" class="nav-item {{ Request::routeIs('opportunities*') ? 'active' : '' }}">
+            <span class="material-symbols-outlined">handshake</span>
+            <span>{{ __('ui.opportunities') }}</span>
         </a>
 
         <a href="{{ route('clients.index') }}" class="nav-item {{ Request::routeIs('clients*') ? 'active' : '' }}">
