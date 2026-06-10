@@ -3,12 +3,13 @@
 @section('header_title', 'Sales Dashboard')
 
 @section('content')
+<div x-data="salesDashboard()">
 <x-dashboard-grid :saved-layout="auth()->user()->dashboard_settings">
 
     {{-- Row 1: Revenue KPIs (4 cards, each gs-w=3) --}}
     <div class="grid-stack-item" gs-id="w-revenue-today" gs-x="0" gs-y="0" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl shadow p-5 border-l-4 border-blue-500 h-full">
+            <div @click="openBreakdown('today', 'My Revenue Today')" class="cc-card rounded-xl shadow p-5 border-l-4 border-blue-500 h-full cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">My Revenue Today</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ \App\Helpers\FormatHelper::formatIDR($todayRevenue) }}</p>
             </div>
@@ -17,7 +18,7 @@
 
     <div class="grid-stack-item" gs-id="w-revenue-week" gs-x="3" gs-y="0" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl shadow p-5 border-l-4 border-indigo-500 h-full">
+            <div @click="openBreakdown('week', 'My Revenue Week')" class="cc-card rounded-xl shadow p-5 border-l-4 border-indigo-500 h-full cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">My Revenue Week</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ \App\Helpers\FormatHelper::formatIDR($weekRevenue) }}</p>
             </div>
@@ -26,7 +27,7 @@
 
     <div class="grid-stack-item" gs-id="w-revenue-month" gs-x="6" gs-y="0" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl shadow p-5 border-l-4 border-purple-500 h-full">
+            <div @click="openBreakdown('month', 'My Revenue Month')" class="cc-card rounded-xl shadow p-5 border-l-4 border-purple-500 h-full cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">My Revenue Month</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ \App\Helpers\FormatHelper::formatIDR($monthRevenue) }}</p>
             </div>
@@ -35,7 +36,7 @@
 
     <div class="grid-stack-item" gs-id="w-revenue-year" gs-x="9" gs-y="0" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl shadow p-5 border-l-4 border-green-500 h-full">
+            <div @click="openBreakdown('year', 'My Revenue Year')" class="cc-card rounded-xl shadow p-5 border-l-4 border-green-500 h-full cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">My Revenue Year</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ \App\Helpers\FormatHelper::formatIDR($yearRevenue) }}</p>
             </div>
@@ -140,9 +141,122 @@
 
 </x-dashboard-grid>
 
+    <!-- Modal Breakdown Revenue -->
+    <div x-show="showModal" 
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         x-cloak
+         @keydown.escape.window="showModal = false">
+        <!-- Backdrop -->
+        <div x-show="showModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity"
+             @click="showModal = false"></div>
+
+        <!-- Modal Content -->
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div x-show="showModal"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="relative transform overflow-hidden rounded-2xl bg-[var(--cc-surface)] border border-[var(--cc-border)] p-6 shadow-2xl transition-all w-full max-w-4xl max-h-[85vh] flex flex-col">
+                
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-[var(--cc-border)] pb-4 mb-4">
+                    <h3 class="text-lg font-bold text-[var(--cc-text)] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-blue-500">payments</span>
+                        <span x-text="title"></span>
+                    </h3>
+                    <button @click="showModal = false" class="text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <!-- Content Area (Scrollable) -->
+                <div class="flex-1 overflow-y-auto space-y-4 min-h-[200px] max-h-[60vh] pr-2">
+                    <!-- Loading State -->
+                    <div x-show="loading" class="flex flex-col items-center justify-center py-12 space-y-3">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+                        <p class="text-[var(--cc-text-muted)] text-sm">Memuat data breakdown...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div x-show="!loading && items.length === 0" class="text-center py-12">
+                        <span class="material-symbols-outlined text-5xl text-[var(--cc-text-muted)] mb-2">assignment_late</span>
+                        <p class="text-[var(--cc-text)] font-semibold">Tidak Ada Data</p>
+                        <p class="text-[var(--cc-text-muted)] text-sm mt-1">Belum ada deal won yang tercatat untuk periode ini.</p>
+                    </div>
+
+                    <!-- Cards Grid -->
+                    <div x-show="!loading && items.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <template x-for="item in items" :key="item.id">
+                            <div class="flex flex-col justify-between p-4 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface-secondary)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-200">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-500" x-text="item.opp_number"></span>
+                                        <span class="text-xs text-[var(--cc-text-muted)]" x-text="item.actual_close_date"></span>
+                                    </div>
+                                    <h4 class="font-bold text-[var(--cc-text)] text-sm mb-1 line-clamp-1" x-text="item.title"></h4>
+                                    <p class="text-xs text-[var(--cc-text-muted)] mb-2 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">business</span>
+                                        <span x-text="item.client_name"></span>
+                                    </p>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-[var(--cc-border)] pt-2 mt-2">
+                                    <span class="text-xs text-[var(--cc-text-muted)] flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">person</span>
+                                        <span x-text="item.sales_name"></span>
+                                    </span>
+                                    <span class="font-bold text-blue-500 text-sm" x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.value)"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
+function salesDashboard() {
+    return {
+        showModal: false,
+        period: 'today',
+        title: '',
+        items: [],
+        loading: false,
+        
+        openBreakdown(period, title) {
+            this.period = period;
+            this.title = title;
+            this.showModal = true;
+            this.loading = true;
+            this.items = [];
+            
+            fetch(`/api/revenue/breakdown?period=${period}`)
+                .then(r => r.json())
+                .then(data => {
+                    this.items = data;
+                    this.loading = false;
+                })
+                .catch(() => {
+                    this.loading = false;
+                    CRM_Toast.show('⚠️ Gagal mengambil detail breakdown', 'error');
+                });
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     var isDark = document.documentElement.classList.contains('dark');
     var textColor = isDark ? '#94a3b8' : '#64748b';

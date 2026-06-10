@@ -110,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
     // API Endpoints
     Route::prefix('api')->group(function () {
         Route::get('/revenue', [RevenueController::class, 'getRevenue']);
+        Route::get('/revenue/breakdown', [\App\Http\Controllers\Api\RevenueBreakdownController::class, 'index'])->name('api.revenue.breakdown');
         Route::get('/revenue/per-sales', [RevenueController::class, 'getRevenuePerSales'])->middleware('role:gm,manager');
         Route::get('/products/search', [ProductController::class, 'apiSearch'])->name('api.products.search');
         Route::get('/search/global', [SearchController::class, 'global'])->name('search.global');
