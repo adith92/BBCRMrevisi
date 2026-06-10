@@ -40,7 +40,7 @@ class KanbanTest extends TestCase
         ], $attrs));
     }
 
-    // ── pipeline index (smoke) ────────────────────────────────────────────────
+    // ── pipeline index (smoke & filters) ──────────────────────────────────────
 
     public function test_pipeline_kanban_view_loads(): void
     {
@@ -53,6 +53,69 @@ class KanbanTest extends TestCase
         $response->assertSee('Active Pipeline Funnel');
         $response->assertSee('Demo Fleet Deal');
         $response->assertSee('pipelineManager()'); // Alpine component present
+    }
+
+    public function test_pipeline_kanban_filters_by_month(): void
+    {
+        $sales = $this->salesUser();
+        
+        $prevOpp = $this->makeOpp($sales, [
+            'title' => 'Prev Month Opp',
+            'expected_close_date' => now()->subMonth()->startOfMonth()->toDateString()
+        ]);
+        $currOpp = $this->makeOpp($sales, [
+            'title' => 'Curr Month Opp',
+            'expected_close_date' => now()->startOfMonth()->toDateString()
+        ]);
+        $nextOpp = $this->makeOpp($sales, [
+            'title' => 'Next Month Opp',
+            'expected_close_date' => now()->addMonth()->startOfMonth()->toDateString()
+        ]);
+
+        // Filter current
+        $response = $this->actingAs($sales)->get('/pipeline?filter_month=current');
+        $response->assertOk();
+        $response->assertSee('Curr Month Opp');
+        $response->assertDontSee('Prev Month Opp');
+        $response->assertDontSee('Next Month Opp');
+
+        // Filter previous
+        $response = $this->actingAs($sales)->get('/pipeline?filter_month=previous');
+        $response->assertOk();
+        $response->assertSee('Prev Month Opp');
+        $response->assertDontSee('Curr Month Opp');
+        $response->assertDontSee('Next Month Opp');
+
+        // Filter next
+        $response = $this->actingAs($sales)->get('/pipeline?filter_month=next');
+        $response->assertOk();
+        $response->assertSee('Next Month Opp');
+        $response->assertDontSee('Curr Month Opp');
+        $response->assertDontSee('Prev Month Opp');
+    }
+
+    public function test_pipeline_kanban_filters_by_year(): void
+    {
+        $sales = $this->salesUser();
+        
+        $opp2025 = $this->makeOpp($sales, [
+            'title' => 'Opp in 2025',
+            'expected_close_date' => '2025-06-15'
+        ]);
+        $opp2026 = $this->makeOpp($sales, [
+            'title' => 'Opp in 2026',
+            'expected_close_date' => '2026-06-15'
+        ]);
+
+        $response = $this->actingAs($sales)->get('/pipeline?filter_year=2025');
+        $response->assertOk();
+        $response->assertSee('Opp in 2025');
+        $response->assertDontSee('Opp in 2026');
+
+        $response = $this->actingAs($sales)->get('/pipeline?filter_year=2026');
+        $response->assertOk();
+        $response->assertSee('Opp in 2026');
+        $response->assertDontSee('Opp in 2025');
     }
 
     public function test_unauthenticated_cannot_access_pipeline(): void

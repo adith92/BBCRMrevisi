@@ -101,6 +101,24 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
+    /* Glowing Card Keyframe and Class */
+    @keyframes cardGlow {
+        0%, 100% {
+            box-shadow: 0 0 5px rgba(239, 68, 68, 0.2), 0 0 10px rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), 0 0 25px rgba(239, 68, 68, 0.5);
+            border-color: rgba(239, 68, 68, 0.9);
+            transform: scale(1.02);
+        }
+    }
+    .kanban-card-glow {
+        animation: cardGlow 1.2s ease-in-out infinite;
+        border-color: rgba(239, 68, 68, 0.8) !important;
+        background: rgba(239, 68, 68, 0.05) !important;
+    }
+
     /* For smooth animations in alpine */
     [x-cloak] { display: none !important; }
 </style>
@@ -136,6 +154,29 @@
                 <input type="text" x-model="searchQuery" placeholder="Cari deal / klien..."
                        class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card)] pl-9 pr-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500 w-48 transition-all focus:w-64 placeholder:text-[var(--cc-text-faint)]">
             </div>
+
+            {{-- Month Filter --}}
+            <select id="filter-month-select"
+                    class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card)] px-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500"
+                    onchange="applyFilters()">
+                <option value="all" {{ $filterMonth === 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                <option value="previous" {{ $filterMonth === 'previous' ? 'selected' : '' }}>Bulan Lalu</option>
+                <option value="current" {{ $filterMonth === 'current' ? 'selected' : '' }}>Bulan Ini</option>
+                <option value="next" {{ $filterMonth === 'next' ? 'selected' : '' }}>Bulan Depan</option>
+            </select>
+
+            {{-- Year Filter --}}
+            <select id="filter-year-select"
+                    class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card)] px-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500"
+                    onchange="applyFilters()">
+                <option value="all" {{ $filterYear === 'all' ? 'selected' : '' }}>Semua Tahun</option>
+                @php
+                    $currentYear = date('Y');
+                @endphp
+                @for ($y = $currentYear - 2; $y <= $currentYear + 2; $y++)
+                    <option value="{{ $y }}" {{ (string)$filterYear === (string)$y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
 
             {{-- Sort By --}}
             <select x-model="sortBy"
@@ -490,6 +531,28 @@ function pipelineManager() {
                 }
                 return d;
             });
+
+            // Auto-scroll and highlight if highlight_id is in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = urlParams.get('highlight_id');
+            if (highlightId) {
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        const card = document.querySelector(`[data-id="${highlightId}"]`);
+                        if (card) {
+                            const deal = this.rawDeals.find(d => d.id == highlightId);
+                            if (deal) {
+                                deal.expanded = true;
+                            }
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                            card.classList.add('kanban-card-glow');
+                            setTimeout(() => {
+                                card.classList.remove('kanban-card-glow');
+                            }, 5000); // Glow for 5 seconds
+                        }
+                    }, 500); // Wait a bit for layout to settle
+                });
+            }
         },
 
         filteredDeals(stage) {
@@ -722,6 +785,15 @@ function pipelineManager() {
         },
 
     }
+}
+
+function applyFilters() {
+    const month = document.getElementById('filter-month-select').value;
+    const year = document.getElementById('filter-year-select').value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('filter_month', month);
+    url.searchParams.set('filter_year', year);
+    window.location.href = url.toString();
 }
 </script>
 @endpush

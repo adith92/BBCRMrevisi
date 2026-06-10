@@ -197,13 +197,13 @@
                     <!-- Cards Grid -->
                     <div x-show="!loading && items.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <template x-for="item in items" :key="item.id">
-                            <div class="flex flex-col justify-between p-4 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface-secondary)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-200">
+                            <a :href="'/pipeline?highlight_id=' + item.id" class="flex flex-col justify-between p-4 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface-secondary)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-200 cursor-pointer group">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
                                         <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-500" x-text="item.opp_number"></span>
                                         <span class="text-xs text-[var(--cc-text-muted)]" x-text="item.actual_close_date"></span>
                                     </div>
-                                    <h4 class="font-bold text-[var(--cc-text)] text-sm mb-1 line-clamp-1" x-text="item.title"></h4>
+                                    <h4 class="font-bold text-[var(--cc-text)] text-sm mb-1 line-clamp-1 group-hover:text-blue-500 transition-colors" x-text="item.title"></h4>
                                     <p class="text-xs text-[var(--cc-text-muted)] mb-2 flex items-center gap-1">
                                         <span class="material-symbols-outlined text-xs">business</span>
                                         <span x-text="item.client_name"></span>
@@ -216,7 +216,7 @@
                                     </span>
                                     <span class="font-bold text-blue-500 text-sm" x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.value)"></span>
                                 </div>
-                            </div>
+                            </a>
                         </template>
                     </div>
                 </div>

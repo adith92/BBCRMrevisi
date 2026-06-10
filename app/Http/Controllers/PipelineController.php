@@ -33,6 +33,37 @@ class PipelineController extends Controller
             $baseQuery->where('sales_id', $request->filter_sales);
         }
 
+        // Filter by month (previous, current, next)
+        $filterMonth = $request->get('filter_month', 'all');
+        if (in_array($filterMonth, ['previous', 'current', 'next'])) {
+            $date = match ($filterMonth) {
+                'previous' => now()->subMonth(),
+                'current'  => now(),
+                'next'     => now()->addMonth(),
+            };
+            $targetMonth = $date->month;
+            $targetYear = $date->year;
+
+            $baseQuery->where(function ($q) use ($targetMonth, $targetYear) {
+                $q->where(function ($sq) use ($targetMonth, $targetYear) {
+                    $sq->whereMonth('expected_close_date', $targetMonth)
+                       ->whereYear('expected_close_date', $targetYear);
+                })->orWhere(function ($sq) use ($targetMonth, $targetYear) {
+                    $sq->whereMonth('actual_close_date', $targetMonth)
+                       ->whereYear('actual_close_date', $targetYear);
+                });
+            });
+        }
+
+        // Filter by year
+        $filterYear = $request->get('filter_year', 'all');
+        if ($filterYear !== 'all') {
+            $baseQuery->where(function ($q) use ($filterYear) {
+                $q->whereYear('expected_close_date', $filterYear)
+                  ->orWhereYear('actual_close_date', $filterYear);
+            });
+        }
+
         // Sort within each column
         $sortBy = $request->get('sort_by', 'updated');
         $baseQuery = match ($sortBy) {
@@ -65,6 +96,6 @@ class PipelineController extends Controller
             }
         }
 
-        return view('pipeline.index', compact('stages', 'salesUsers', 'sortBy', 'clients', 'opportunities'));
+        return view('pipeline.index', compact('stages', 'salesUsers', 'sortBy', 'clients', 'opportunities', 'filterMonth', 'filterYear'));
     }
 }
