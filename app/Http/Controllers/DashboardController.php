@@ -74,7 +74,7 @@ class DashboardController extends Controller
                             ->where('status', 'completed')->sum('price');
 
         // Dynamic Active Bookings Count
-        $activeBookings = Booking::whereIn('status', ['confirmed', 'active'])->count();
+        $activeBookings = Booking::whereIn('status', ['confirmed', 'on_trip'])->count();
 
         // 1. Recent Bookings from DB
         $recentBookings = Booking::with('client')
@@ -471,21 +471,25 @@ class DashboardController extends Controller
         $monthStart = $now->copy()->startOfMonth();
         $yearStart  = $now->copy()->startOfYear();
 
+        $weekEnd   = $now->copy()->endOfWeek();
+        $monthEnd  = $now->copy()->endOfMonth();
+        $yearEnd   = $now->copy()->endOfYear();
+
         $todayRevenue = Opportunity::where('sales_id', $user->id)->where('stage', 'won')->whereDate('actual_close_date', $today)
                             ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
-        $weekRevenue  = Opportunity::where('sales_id', $user->id)->where('stage', 'won')->whereBetween('actual_close_date', [$weekStart, $now])
+        $weekRevenue  = Opportunity::where('sales_id', $user->id)->where('stage', 'won')->whereBetween('actual_close_date', [$weekStart, $weekEnd])
                             ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
-        $monthRevenue = Opportunity::where('sales_id', $user->id)->where('stage', 'won')->whereBetween('actual_close_date', [$monthStart, $now])
+        $monthRevenue = Opportunity::where('sales_id', $user->id)->where('stage', 'won')->whereBetween('actual_close_date', [$monthStart, $monthEnd])
                             ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
-        $yearRevenue  = Opportunity::where('sales_id', $user->id)->where('stage', 'won')->whereBetween('actual_close_date', [$yearStart, $now])
+        $yearRevenue  = Opportunity::where('sales_id', $user->id)->where('stage', 'won')->whereBetween('actual_close_date', [$yearStart, $yearEnd])
                             ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
 
         $myClients      = Client::where('assigned_sales_id', $user->id)->count();
-        $activeBookings = Booking::where('sales_id', $user->id)->where('status', 'active')->count();
+        $activeBookings = Booking::where('sales_id', $user->id)->whereIn('status', ['confirmed', 'on_trip'])->count();
         $recentBookings = Booking::where('sales_id', $user->id)->latest()->take(5)->get();
 
         // Chart Data: Pipeline Funnel
-        $pipelineStages = ['prospecting', 'proposal', 'negotiation', 'won'];
+        $pipelineStages = ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won'];
         $salesFunnel = [];
         foreach($pipelineStages as $s) {
             $salesFunnel[] = Opportunity::where('sales_id', $user->id)->where('stage', $s)->count();
@@ -518,8 +522,8 @@ class DashboardController extends Controller
         $availableFleet   = Vehicle::where('status', 'available')->count();
         $onTripFleet      = Vehicle::where('status', 'on_trip')->count();
         $maintenanceFleet = Vehicle::where('status', 'maintenance')->count();
-        $activeBookings   = Booking::where('status', 'active')->count();
-        $activeBookingList= Booking::where('status', 'active')->latest()->take(10)->get();
+        $activeBookings   = Booking::whereIn('status', ['confirmed', 'on_trip'])->count();
+        $activeBookingList= Booking::whereIn('status', ['confirmed', 'on_trip'])->latest()->take(10)->get();
 
         return view('dashboard.operational', compact(
             'availableFleet', 'onTripFleet', 'maintenanceFleet',

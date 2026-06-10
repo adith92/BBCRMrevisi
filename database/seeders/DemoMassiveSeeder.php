@@ -86,6 +86,7 @@ class DemoMassiveSeeder extends Seeder
         $this->seedApprovalRequests();
         $this->seedSalesTargets();
         $this->seedSubscriptions();
+        $this->ensureSalesMetrics();
 
         $this->command->info('✅ DemoMassiveSeeder complete!');
         $this->printSummary();
@@ -514,5 +515,91 @@ class DemoMassiveSeeder extends Seeder
                 ['subscriptions',     Subscription::count()],
             ]
         );
+    }
+
+    private function ensureSalesMetrics(): void
+    {
+        $this->command->info('  → Ensuring all sales users have active bookings and won opportunities...');
+        $salesUsers = User::where('role', 'sales')->get();
+        $clients = Client::pluck('id')->toArray();
+        $vehicles = Vehicle::pluck('id')->toArray();
+        $drivers = Driver::pluck('id')->toArray();
+        $products = Product::pluck('id')->toArray();
+
+        if (empty($clients) || empty($vehicles) || empty($drivers)) {
+            $this->command->warn('Skip ensuring sales bookings due to missing dependencies.');
+        } else {
+            foreach ($salesUsers as $user) {
+                $activeBookingCount = Booking::where('sales_id', $user->id)
+                    ->whereIn('status', ['confirmed', 'on_trip'])
+                    ->count();
+
+                if ($activeBookingCount < 2) {
+                    foreach (['confirmed', 'on_trip'] as $status) {
+                        $pickup = Carbon::now()->addHours(rand(1, 24));
+                        $dropoff = $pickup->copy()->addHours(rand(2, 8));
+                        $vehicleId = $vehicles[array_rand($vehicles)];
+                        $vehicle = Vehicle::find($vehicleId);
+
+                        Booking::create([
+                            'booking_number' => 'BB-' . $pickup->format('Ymd') . '-' . str_pad(rand(100, 999), 3, '0', STR_PAD_LEFT) . '-' . $user->id,
+                            'client_id' => $clients[array_rand($clients)],
+                            'sales_id' => $user->id,
+                            'created_by' => $user->id,
+                            'vehicle_id' => $vehicleId,
+                            'driver_id' => $drivers[array_rand($drivers)],
+                            'pickup_datetime' => $pickup,
+                            'dropoff_datetime' => $dropoff,
+                            'destination' => 'Bandung',
+                            'vehicle_type' => $vehicle ? $vehicle->brand : 'goldenbird',
+                            'price' => rand(1500000, 8000000),
+                            'status' => $status,
+                            'notes' => 'Ensured active booking for sales dashboard',
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if (empty($clients)) {
+            $this->command->warn('Skip ensuring sales opportunities due to missing clients.');
+            return;
+        }
+
+        $now = now();
+        $today = Carbon::today();
+
+        foreach ($salesUsers as $user) {
+            $wonOppsCount = Opportunity::where('sales_id', $user->id)
+                ->where('stage', 'won')
+                ->whereDate('actual_close_date', $today)
+                ->count();
+
+            if ($wonOppsCount === 0) {
+                $yearMonth = $now->format('Ym');
+                $seq = Opportunity::where('opp_number', 'like', "OPP-{$yearMonth}-%")->count() + 1;
+                $value = rand(10, 50) * 1_000_000;
+
+                Opportunity::create([
+                    'opp_number'          => 'OPP-' . $yearMonth . '-D-' . str_pad($seq, 4, '0', STR_PAD_LEFT) . '-' . $user->id,
+                    'client_id'           => $clients[array_rand($clients)],
+                    'sales_id'            => $user->id,
+                    'product_id'          => !empty($products) ? $products[array_rand($products)] : null,
+                    'title'               => 'Ensured Sales Revenue Deal — ' . rand(2, 5) . ' unit',
+                    'stage'               => 'won',
+                    'estimated_value'     => $value,
+                    'final_value'         => $value,
+                    'pax'                 => rand(10, 50),
+                    'discount_percent'    => 0,
+                    'discount_approved'   => 0,
+                    'approved_by'         => null,
+                    'expected_close_date' => $now->toDateString(),
+                    'actual_close_date'   => $now->toDateString(),
+                    'notes'               => 'Ensured revenue closed deal',
+                    'created_at'          => $now,
+                    'updated_at'          => $now,
+                ]);
+            }
+        }
     }
 }

@@ -152,9 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
         series: [{ name: "Deals", data: {!! json_encode($salesFunnel ?? []) !!} }],
         chart: { type: 'bar', height: 280, toolbar: { show: false }, background: 'transparent' },
         plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true, dataLabels: { position: 'bottom' } } },
-        colors: ['#6366f1', '#3b82f6', '#f59e0b', '#10b981'],
+        colors: ['#a78bfa', '#6366f1', '#3b82f6', '#f59e0b', '#10b981'],
         dataLabels: { enabled: true, textAnchor: 'start', style: { colors: ['#fff'] }, offsetX: 0 },
-        xaxis: { categories: ['Prospecting', 'Proposal', 'Negotiation', 'Won'], labels: { style: { colors: textColor } } },
+        xaxis: { categories: ['Call Meeting', 'Prospecting', 'Proposal', 'Negotiation', 'Won'], labels: { style: { colors: textColor } } },
         yaxis: { labels: { style: { colors: textColor } } },
         tooltip: { theme: isDark ? 'dark' : 'light' }
     };
