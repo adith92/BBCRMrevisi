@@ -17,7 +17,7 @@ class FleetController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->isSales() || $user->isFinance()) {
+        if ($user->isFinance()) {
             abort(403, 'Unauthorized');
         }
 
@@ -44,7 +44,7 @@ class FleetController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->isSales() || $user->isFinance()) {
+        if ($user->isFinance()) {
             abort(403, 'Unauthorized');
         }
 

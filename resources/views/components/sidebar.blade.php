@@ -46,12 +46,16 @@
 
         @endif
 
-        @if(in_array($role, ['gm','manager','operational']))
+        @if(in_array($role, ['gm','manager','operational','sales']))
         <div class="nav-section-label">{{ __('ui.operations') }}</div>
 
         <a href="{{ route('fleet.index') }}" class="nav-item {{ Request::routeIs('fleet*','vehicles*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">local_shipping</span>
-            <span>{{ __('ui.fleet_armada') }}</span>
+            <span>Fleet / Armada</span>
+        </a>
+        <a href="{{ route('drivers.index') }}" class="nav-item {{ Request::routeIs('drivers*') ? 'active' : '' }}">
+            <span class="material-symbols-outlined">badge</span>
+            <span>Driver / Supir</span>
         </a>
         @endif
 

@@ -44,7 +44,7 @@
     </div>
 
     {{-- Row 2: Operational KPIs --}}
-    <div class="grid-stack-item" gs-id="w-active-bookings" gs-x="0" gs-y="2" gs-w="4" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-active-bookings" gs-x="0" gs-y="2" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
             <a href="{{ route('bookings.index', ['status' => 'active']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-yellow-500 h-full hover:shadow-md transition-all">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Active Bookings</p>
@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="w-my-clients" gs-x="4" gs-y="2" gs-w="4" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-my-clients" gs-x="3" gs-y="2" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
             <a href="{{ route('clients.index') }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-orange-500 h-full hover:shadow-md transition-all">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">My Clients</p>
@@ -64,13 +64,23 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="w-new-booking" gs-x="8" gs-y="2" gs-w="4" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-available-fleet" gs-x="6" gs-y="2" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl shadow p-5 flex items-center justify-center h-full">
-                <a href="{{ route('bookings.create') }}" class="block w-full bg-blue-600 text-white px-4 py-3 rounded-lg text-center font-semibold hover:bg-blue-700 transition-colors">
-                    ➕ New Booking
-                </a>
-            </div>
+            <a href="{{ route('fleet.index') }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-emerald-500 h-full hover:shadow-md transition-all">
+                <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Fleet / Armada</p>
+                <p class="text-2xl font-bold text-[var(--cc-text)] mt-2 flex items-center gap-2"><span class="material-symbols-outlined">local_shipping</span> View</p>
+                <p class="text-xs text-emerald-600 dark:text-emerald-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Browse vehicles →</p>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid-stack-item" gs-id="w-available-drivers" gs-x="9" gs-y="2" gs-w="3" gs-h="2">
+        <div class="grid-stack-item-content">
+            <a href="{{ route('drivers.index') }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-blue-500 h-full hover:shadow-md transition-all">
+                <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Drivers / Supir</p>
+                <p class="text-2xl font-bold text-[var(--cc-text)] mt-2 flex items-center gap-2"><span class="material-symbols-outlined">badge</span> View</p>
+                <p class="text-xs text-blue-600 dark:text-blue-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Browse drivers →</p>
+            </a>
         </div>
     </div>
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\FleetController;
+use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SalesController;
@@ -86,7 +87,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/subscriptions/{subscription}/terminate', [SubscriptionController::class, 'terminate'])->name('subscriptions.terminate')->middleware('role:gm,finance');
 
     // Fleet (Operational)
-    Route::resource('fleet', FleetController::class)->middleware('role:gm,manager,operational');
+    Route::resource('fleet', FleetController::class)->middleware('role:gm,manager,operational,sales');
+    
+    // Drivers (Operational)
+    Route::resource('drivers', DriverController::class)->middleware('role:gm,manager,operational,sales');
 
     // Finance
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index')->middleware('role:gm,manager,finance');
