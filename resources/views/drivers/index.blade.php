@@ -1,104 +1,183 @@
 @extends('layouts.app')
 
-@section('header_title', 'Drivers Management')
+@section('header_title', 'Operational Supir')
+
+@push('styles')
+<style>
+    .driver-card {
+        transition: all 0.2s ease-in-out;
+    }
+    .driver-card:hover {
+        border-color: rgba(99, 102, 241, 0.2);
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+</style>
+@endpush
 
 @section('content')
-<x-breadcrumb :items="[
-    ['url' => route('dashboard'), 'label' => 'Dashboard'],
-    ['url' => '#', 'label' => 'Drivers'],
-]" />
+@php
+    $canModify = auth()->user()->isOperational() || auth()->user()->isManager() || auth()->user()->isGM();
+    $statusColors = [
+        'available' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        'assigned'  => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        'reserved'  => 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        'inactive'  => 'bg-rose-500/10 text-rose-400 border-rose-500/20', // leave
+    ];
+@endphp
 
-{{-- Driver Stats --}}
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <!-- Available -->
-    <a href="{{ route('drivers.index', ['status' => 'available']) }}" 
-       class="group relative block overflow-hidden rounded-2xl p-5 border border-emerald-200 dark:border-emerald-900/30 bg-gradient-to-br from-emerald-50 to-emerald-100/30 dark:from-emerald-950/20 dark:to-emerald-900/5 hover:-translate-y-1 hover:shadow-[0_12px_24px_-8px_rgba(16,185,129,0.3)] dark:hover:shadow-[0_12px_24px_-8px_rgba(16,185,129,0.15)] transition-all duration-300 text-center">
-        <div class="absolute -right-3 -top-3 w-16 h-16 bg-emerald-500/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <span class="material-symbols-outlined text-[32px] text-emerald-500/20">check_circle</span>
+<div class="space-y-6 pb-20">
+    
+    {{-- Header Panel --}}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined h-8 w-8 text-indigo-400" style="font-size: 32px">person</span>
+                Operational Supir
+            </h1>
+            <p class="text-[var(--cc-text-muted)] max-w-2xl text-sm">
+                Operational dashboard to register, allocate, and monitor driver (Supir) fleets.
+            </p>
         </div>
-        <p class="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{{ $stats['available'] }}</p>
-        <p class="text-xs font-bold uppercase tracking-widest text-emerald-800/60 dark:text-emerald-400/60 mt-1">Available</p>
-    </a>
-
-    <!-- Assigned -->
-    <a href="{{ route('drivers.index', ['status' => 'assigned']) }}" 
-       class="group relative block overflow-hidden rounded-2xl p-5 border border-blue-200 dark:border-blue-900/30 bg-gradient-to-br from-blue-50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/5 hover:-translate-y-1 hover:shadow-[0_12px_24px_-8px_rgba(59,130,246,0.3)] dark:hover:shadow-[0_12px_24px_-8px_rgba(59,130,246,0.15)] transition-all duration-300 text-center">
-        <div class="absolute -right-3 -top-3 w-16 h-16 bg-blue-500/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <span class="material-symbols-outlined text-[32px] text-blue-500/20">assignment_ind</span>
-        </div>
-        <p class="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-tight">{{ $stats['assigned'] }}</p>
-        <p class="text-xs font-bold uppercase tracking-widest text-blue-800/60 dark:text-blue-400/60 mt-1">Assigned</p>
-    </a>
-
-    <!-- Reserved -->
-    <a href="{{ route('drivers.index', ['status' => 'reserved']) }}" 
-       class="group relative block overflow-hidden rounded-2xl p-5 border border-orange-200 dark:border-orange-900/30 bg-gradient-to-br from-orange-50 to-orange-100/30 dark:from-orange-950/20 dark:to-orange-900/5 hover:-translate-y-1 hover:shadow-[0_12px_24px_-8px_rgba(249,115,22,0.3)] dark:hover:shadow-[0_12px_24px_-8px_rgba(249,115,22,0.15)] transition-all duration-300 text-center">
-        <div class="absolute -right-3 -top-3 w-16 h-16 bg-orange-500/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <span class="material-symbols-outlined text-[32px] text-orange-500/20">hourglass_empty</span>
-        </div>
-        <p class="text-3xl font-black text-orange-600 dark:text-orange-400 tracking-tight">{{ $stats['reserved'] }}</p>
-        <p class="text-xs font-bold uppercase tracking-widest text-orange-800/60 dark:text-orange-400/60 mt-1">Reserved</p>
-    </a>
-
-    <!-- Inactive -->
-    <div class="group relative block overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-slate-100/30 dark:from-slate-900/40 dark:to-slate-850/10 hover:-translate-y-1 hover:shadow-[0_12px_24px_-8px_rgba(100,116,139,0.3)] dark:hover:shadow-[0_12px_24px_-8px_rgba(100,116,139,0.15)] transition-all duration-300 text-center">
-        <div class="absolute -right-3 -top-3 w-16 h-16 bg-slate-500/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <span class="material-symbols-outlined text-[32px] text-slate-500/20">cancel</span>
-        </div>
-        <p class="text-3xl font-black text-slate-600 dark:text-slate-400 tracking-tight">{{ $stats['inactive'] }}</p>
-        <p class="text-xs font-bold uppercase tracking-widest text-slate-800/60 dark:text-slate-400/60 mt-1">Inactive</p>
-    </div>
-</div>
-
-{{-- Drivers List --}}
-<div class="cc-card rounded-lg shadow p-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 class="text-xl font-semibold text-[var(--cc-text)]">
-            All Drivers
-            <span class="text-sm font-normal text-[var(--cc-text-muted)] ml-2">({{ $drivers->total() }} total)</span>
-        </h2>
         
-        <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-            {{-- Filter by status --}}
-            <div class="flex gap-1 text-sm bg-[var(--cc-bg-muted)] rounded-lg p-1 border border-[var(--cc-border)]">
-                <a href="{{ route('drivers.index') }}" class="{{ !request('status') ? 'bg-blue-600 text-white' : 'text-[var(--cc-text-muted)] hover:text-[var(--cc-text)]' }} px-3 py-1 rounded-md transition-colors font-medium">All</a>
-                <a href="{{ route('drivers.index', ['status' => 'available']) }}" class="{{ request('status') === 'available' ? 'bg-green-600 text-white' : 'text-[var(--cc-text-muted)] hover:text-[var(--cc-text)]' }} px-3 py-1 rounded-md transition-colors font-medium">Available</a>
-                <a href="{{ route('drivers.index', ['status' => 'assigned']) }}" class="{{ request('status') === 'assigned' ? 'bg-blue-600 text-white' : 'text-[var(--cc-text-muted)] hover:text-[var(--cc-text)]' }} px-3 py-1 rounded-md transition-colors font-medium">Assigned</a>
-                <a href="{{ route('drivers.index', ['status' => 'reserved']) }}" class="{{ request('status') === 'reserved' ? 'bg-orange-600 text-white' : 'text-[var(--cc-text-muted)] hover:text-[var(--cc-text)]' }} px-3 py-1 rounded-md transition-colors font-medium">Reserved</a>
-            </div>
+        @if($canModify)
+        <div class="flex items-center gap-3">
+            <button class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                Register Driver
+            </button>
+        </div>
+        @endif
+    </div>
+
+    {{-- Stats Grid --}}
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-surface)] p-4 backdrop-blur-md">
+            <div class="text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-wider">Total Supir</div>
+            <div class="text-3xl font-mono font-bold text-[var(--cc-text)] mt-1">{{ $stats['total'] }}</div>
+            <div class="text-[10px] text-[var(--cc-text-muted)] mt-1">Registered drivers</div>
+        </div>
+        <div class="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 backdrop-blur-md">
+            <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Available</div>
+            <div class="text-3xl font-mono font-bold text-emerald-400 mt-1">{{ $stats['available'] }}</div>
+            <div class="text-[10px] text-emerald-500 mt-1">Ready for assignment</div>
+        </div>
+        <div class="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 backdrop-blur-md">
+            <div class="text-xs font-bold text-blue-400 uppercase tracking-wider">Assigned</div>
+            <div class="text-3xl font-mono font-bold text-blue-400 mt-1">{{ $stats['assigned'] }}</div>
+            <div class="text-[10px] text-[var(--cc-text-muted)] mt-1">On active duty</div>
+        </div>
+        <div class="rounded-2xl border border-purple-500/20 bg-purple-500/10 p-4 backdrop-blur-md">
+            <div class="text-xs font-bold text-purple-400 uppercase tracking-wider">Reserved</div>
+            <div class="text-3xl font-mono font-bold text-purple-400 mt-1">{{ $stats['reserved'] }}</div>
+            <div class="text-[10px] text-[var(--cc-text-muted)] mt-1">Booked for contract</div>
+        </div>
+        <div class="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 backdrop-blur-md">
+            <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Leave</div>
+            <div class="text-3xl font-mono font-bold text-rose-400 mt-1">{{ $stats['leave'] }}</div>
+            <div class="text-[10px] text-[var(--cc-text-muted)] mt-1">Not available</div>
         </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm resizable-table" data-table-id="drivers-table">
-            <thead class="border-b bg-[var(--cc-bg-muted)]">
-                <tr class="text-[var(--cc-text-muted)]">
-                    <th class="text-left py-3 px-4">Name</th>
-                    <th class="text-left py-3 px-4">Phone</th>
-                    <th class="text-left py-3 px-4">License Number</th>
-                    <th class="text-left py-3 px-4">Pool</th>
-                    <th class="text-left py-3 px-4">Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($drivers as $driver)
-                <tr class="border-b hover:bg-[var(--cc-row-hover)] transition-colors">
-                    <td class="py-3 px-4">
-                        <span class="font-bold text-[var(--cc-text)]">{{ $driver->name }}</span>
-                    </td>
-                    <td class="py-3 px-4 text-[var(--cc-text-muted)]">{{ $driver->phone_number }}</td>
-                    <td class="py-3 px-4 text-[var(--cc-text-muted)]">{{ $driver->license_number }}</td>
-                    <td class="py-3 px-4 text-[var(--cc-text-muted)]">{{ $driver->pool?->name ?? '—' }}</td>
-                    <td class="py-3 px-4"><x-status-badge :status="$driver->status" /></td>
-                </tr>
-                @empty
-                <tr><td colspan="5" class="py-8 text-center text-[var(--cc-text-muted)]">No drivers found</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+    {{-- Control Filters Panel --}}
+    <form id="driver-filter-form" method="GET" action="{{ route('drivers.index') }}" class="flex flex-col md:flex-row gap-4 bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-2xl p-4 backdrop-blur-md">
+        <div class="flex-1 relative">
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--cc-text-muted)]" style="font-size: 16px;">search</span>
+            <input
+                type="text"
+                name="search"
+                placeholder="Search by name, phone..."
+                value="{{ request('search') }}"
+                class="w-full bg-[var(--cc-bg-muted)] border border-[var(--cc-border)] rounded-xl py-2 pl-10 pr-4 text-sm text-[var(--cc-text)] placeholder-[var(--cc-text-muted)] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+            />
+            <button type="submit" class="hidden"></button>
+        </div>
+        
+        <div class="flex flex-wrap gap-3">
+            <select
+                name="location"
+                onchange="this.form.submit()"
+                class="bg-[var(--cc-bg-muted)] border border-[var(--cc-border)] rounded-xl px-3 py-2 text-sm text-[var(--cc-text-muted)] focus:outline-none focus:border-indigo-500"
+            >
+                <option value="All" {{ request('location') === 'All' ? 'selected' : '' }}>All Locations</option>
+                <option value="Jakarta" {{ request('location') === 'Jakarta' ? 'selected' : '' }}>Jakarta Pool</option>
+                <option value="Surabaya" {{ request('location') === 'Surabaya' ? 'selected' : '' }}>Surabaya Pool</option>
+            </select>
 
-    <div class="mt-6">{{ $drivers->links() }}</div>
+            <select
+                name="status"
+                onchange="this.form.submit()"
+                class="bg-[var(--cc-bg-muted)] border border-[var(--cc-border)] rounded-xl px-3 py-2 text-sm text-[var(--cc-text-muted)] focus:outline-none focus:border-indigo-500"
+            >
+                <option value="All" {{ request('status') === 'All' ? 'selected' : '' }}>All Statuses</option>
+                <option value="available" {{ request('status') === 'available' ? 'selected' : '' }}>Available Only</option>
+                <option value="assigned" {{ request('status') === 'assigned' ? 'selected' : '' }}>Assigned Only</option>
+                <option value="reserved" {{ request('status') === 'reserved' ? 'selected' : '' }}>Reserved Only</option>
+                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Leave Only</option>
+            </select>
+        </div>
+    </form>
+
+    {{-- Drivers Grid --}}
+    @if($drivers->isEmpty())
+        <div class="text-center py-16 bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-3xl backdrop-blur-md">
+            <span class="material-symbols-outlined mx-auto text-slate-500 mb-3" style="font-size: 48px;">person_off</span>
+            <h3 class="text-lg font-bold text-[var(--cc-text)] mb-1">No Drivers Found</h3>
+            <p class="text-sm text-[var(--cc-text-muted)]">Try adjusting your filters or search criteria.</p>
+        </div>
+    @else
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            @foreach($drivers as $d)
+            <div class="group relative rounded-3xl border border-[var(--cc-border)] bg-[var(--cc-surface)] p-6 backdrop-blur-lg driver-card">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center gap-4">
+                        {{-- Avatar --}}
+                        <div class="w-12 h-12 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-lg shrink-0 border border-indigo-500/30">
+                            {{ strtoupper(substr($d->name, 0, 1)) }}
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-bold text-[var(--cc-text)] tracking-tight group-hover:text-indigo-400 transition-colors">
+                                {{ $d->name }}
+                            </h3>
+                            <div class="text-xs text-[var(--cc-text-muted)] mt-0.5">{{ $d->phone ?? 'No phone' }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col items-end gap-1.5">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider {{ $statusColors[$d->status] ?? $statusColors['available'] }}">
+                            {{ str_replace('_', ' ', $d->status === 'inactive' ? 'leave' : $d->status) }}
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-xs text-[var(--cc-text-muted)] font-medium mt-1">
+                            <span class="material-symbols-outlined text-[12px] text-red-400">location_on</span>
+                            {{ $d->pool?->name ?? 'Unknown' }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Relational Linked Contract --}}
+                @if(!in_array($d->status, ['available', 'inactive']))
+                    @if($d->assignedOpportunity)
+                        <div class="mt-4 p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs">
+                            <span class="block text-[10px] uppercase font-bold tracking-wider text-indigo-400 mb-1">Assigned Client</span>
+                            <div class="font-bold text-[var(--cc-text)] mb-0.5">{{ $d->assignedOpportunity->client->company_name ?? 'Unknown Company' }}</div>
+                            <div class="text-[var(--cc-text-muted)] flex items-center gap-1.5 mt-1">
+                                <span class="truncate">{{ $d->assignedOpportunity->title }}</span>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+                
+                @if($canModify)
+                <div class="mt-4 flex gap-2">
+                    <button class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] hover:bg-[var(--cc-surface)] py-2 text-xs font-semibold text-[var(--cc-text)] transition-all">
+                        <span class="material-symbols-outlined text-[14px]">edit</span>
+                        Edit
+                    </button>
+                </div>
+                @endif
+            </div>
+            @endforeach
+        </div>
+    @endif
 </div>
-
 @endsection

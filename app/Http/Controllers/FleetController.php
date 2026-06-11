@@ -21,20 +21,44 @@ class FleetController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $vehicles = Vehicle::with('pool')
-            ->withCount([
-                'bookings',
-                'bookings as active_booking_count' => fn($q) => $q->whereIn('status', ['confirmed', 'on_trip']),
-            ])
-            ->when(request('status'), fn($q, $s) => $q->where('status', $s))
-            ->orderBy('brand')
-            ->paginate(20);
+        $query = Vehicle::with(['pool', 'assignedOpportunity.client']);
+
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('plate_number', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%");
+            });
+        }
+
+        if (request('location') && request('location') !== 'All') {
+            $loc = request('location');
+            $query->whereHas('pool', function($q) use ($loc) {
+                $q->where('name', 'like', "%{$loc}%");
+            });
+        }
+
+        if (request('status') && request('status') !== 'All') {
+            if (request('status') === 'Being Serviced' || request('status') === 'In Queue') {
+                $query->where('status', 'Maintenance');
+                // Assume notes contains maintenance status or add a scope if we had a column. For now, filter in memory or ignore sub-status.
+            } else {
+                $query->where('status', request('status'));
+            }
+        }
+
+        $vehicles = $query->orderBy('brand')->get();
 
         $stats = [
+            'total'       => Vehicle::count(),
             'available'   => Vehicle::where('status', 'available')->count(),
-            'on_trip'     => Vehicle::where('status', 'on_trip')->count(),
+            'rented'      => Vehicle::where('status', 'rent_out')->orWhere('status', 'assigned')->count(),
+            'booked'      => Vehicle::where('status', 'booked')->count(),
+            'hold'        => Vehicle::where('status', 'hold')->count(),
             'maintenance' => Vehicle::where('status', 'maintenance')->count(),
-            'inactive'    => Vehicle::where('status', 'inactive')->count(),
+            'beingServiced'=> Vehicle::where('status', 'maintenance')->where('notes', 'like', '%Servicing%')->count(),
+            'inQueue'     => Vehicle::where('status', 'maintenance')->where('notes', 'not like', '%Servicing%')->count(),
         ];
 
         return view('fleet.index', compact('vehicles', 'stats'));

@@ -19,16 +19,36 @@ class DriverController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $drivers = Driver::with('pool')
-            ->when(request('status'), fn($q, $s) => $q->where('status', $s))
-            ->orderBy('name')
-            ->paginate(20);
+        $query = Driver::with(['pool', 'assignedOpportunity.client']);
+
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('license_number', 'like', "%{$search}%");
+            });
+        }
+
+        if (request('location') && request('location') !== 'All') {
+            $loc = request('location');
+            $query->whereHas('pool', function($q) use ($loc) {
+                $q->where('name', 'like', "%{$loc}%");
+            });
+        }
+
+        if (request('status') && request('status') !== 'All') {
+            $query->where('status', request('status'));
+        }
+
+        $drivers = $query->orderBy('name')->get();
 
         $stats = [
+            'total'       => Driver::count(),
             'available'   => Driver::where('status', 'available')->count(),
             'assigned'    => Driver::where('status', 'assigned')->count(),
             'reserved'    => Driver::where('status', 'reserved')->count(),
-            'inactive'    => Driver::where('status', 'inactive')->count(),
+            'leave'       => Driver::where('status', 'inactive')->count(), // Using inactive as leave
         ];
 
         return view('drivers.index', compact('drivers', 'stats'));
