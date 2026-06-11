@@ -31,12 +31,12 @@
 
         <a href="{{ route('pipeline.index') }}" class="nav-item {{ Request::routeIs('pipeline*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">view_kanban</span>
-            <span>{{ __('ui.sales_pipeline') }}</span>
+            <span>Deals Board (Kanban)</span>
         </a>
 
         <a href="{{ route('opportunities.index') }}" class="nav-item {{ Request::routeIs('opportunities*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">handshake</span>
-            <span>{{ __('ui.opportunities') }}</span>
+            <span>All Opportunities</span>
         </a>
 
         <a href="{{ route('clients.index') }}" class="nav-item {{ Request::routeIs('clients*') ? 'active' : '' }}">

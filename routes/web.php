@@ -115,6 +115,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('api')->group(function () {
         Route::get('/revenue', [RevenueController::class, 'getRevenue']);
         Route::get('/revenue/breakdown', [\App\Http\Controllers\Api\RevenueBreakdownController::class, 'index'])->name('api.revenue.breakdown');
+        Route::get('/breakdown/clients', [\App\Http\Controllers\Api\DashboardApiController::class, 'clients'])->name('api.breakdown.clients');
+        Route::get('/breakdown/bookings', [\App\Http\Controllers\Api\DashboardApiController::class, 'bookings'])->name('api.breakdown.bookings');
+        Route::get('/breakdown/fleet', [\App\Http\Controllers\Api\DashboardApiController::class, 'fleet'])->name('api.breakdown.fleet');
+        Route::get('/breakdown/drivers', [\App\Http\Controllers\Api\DashboardApiController::class, 'drivers'])->name('api.breakdown.drivers');
+        Route::get('/breakdown/opportunities', [\App\Http\Controllers\Api\DashboardApiController::class, 'opportunities'])->name('api.breakdown.opportunities');
         Route::get('/revenue/per-sales', [RevenueController::class, 'getRevenuePerSales'])->middleware('role:gm,manager');
         Route::get('/products/search', [ProductController::class, 'apiSearch'])->name('api.products.search');
         Route::get('/search/global', [SearchController::class, 'global'])->name('search.global');

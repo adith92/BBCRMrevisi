@@ -507,10 +507,20 @@ class DashboardController extends Controller
                 ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
         }
 
+        $targetRecord = \App\Models\SalesTarget::where('user_id', $user->id)
+                            ->where('period_year', $now->year)
+                            ->where('period_month', $now->month)
+                            ->first();
+        $targetRevenue = $targetRecord ? (float)$targetRecord->target_revenue : 0;
+
+        $pipelineValue = Opportunity::where('sales_id', $user->id)
+                            ->whereNotIn('stage', ['won', 'lost'])
+                            ->sum('estimated_value');
+
         return view('dashboard.sales', compact(
             'todayRevenue', 'weekRevenue', 'monthRevenue', 'yearRevenue',
             'myClients', 'activeBookings', 'recentBookings',
-            'salesFunnel', 'revenueTrend'
+            'salesFunnel', 'revenueTrend', 'targetRevenue', 'pipelineValue'
         ));
     }
 
