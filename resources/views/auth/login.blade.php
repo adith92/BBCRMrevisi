@@ -9,14 +9,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        :root { --color-primary: #0066ff; --color-bg: #000d1f; } * { box-sizing: border-box; margin: 0; padding: 0; }
-@media (prefers-color-scheme: light) {
-    :root {
-        --color-primary: #0066ff;
-        --color-bg: #f0f4ff;
-    }
-    body { background: var(--color-bg); }
-}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -96,7 +89,7 @@
         }
         .bus-lg { width: 110px; height: 50px; }
         .bus-md { width: 90px; height: 44px; }
-
+        .bus-sm { width: 70px; height: 36px; opacity: 0.6; }
 
         /* Window strips on buses */
         .bus-windows {
@@ -121,7 +114,7 @@
         }
         .orb-1 { width: 350px; height: 350px; background: #0052cc; opacity: 0.2; top: -60px; left: -60px; }
         .orb-2 { width: 250px; height: 250px; background: #001f6e; opacity: 0.35; bottom: 100px; right: -40px; }
-
+        .orb-3 { width: 180px; height: 180px; background: #0066ff; opacity: 0.12; top: 40%; left: 30%; }
 
         /* Left panel content */
         .left-content {
@@ -165,9 +158,6 @@
             overflow-y: auto;
         }
         @media (min-width: 900px) { .right-panel { width: 480px; flex-shrink: 0; } }
-@media (max-width: 639px) {
-    .right-panel { padding: 24px 16px; }
-}
 
         /* Blue top accent line */
         .right-panel::before {
@@ -314,12 +304,11 @@
         spline-viewer::part(logo) {
             display: none;
         }
-    #logo {display:none !important;}
     </style>
     <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.3/build/spline-viewer.js"></script>
 </head>
 <body>
-    <a href=\"#login-form\" class=\"skip-link\">Skip to login</a>
+
     {{-- ═══ LEFT PANEL — Spline 3D Robot ═══ --}}
     <div class="left-panel">
         <spline-viewer url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"></spline-viewer>
@@ -341,13 +330,14 @@
 
             {{-- Header --}}
             <div class="mb-7">
-                <h1 class="text-2xl font-black text-white tracking-tight mb-1">Selamat Datang <svg class="icon-wave" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg></h1>
+                <h1 class="text-2xl font-black text-white tracking-tight mb-1">Selamat Datang 👋</h1>
                 <p class="text-sm" style="color:#94a3b8;">Masuk ke Golden Bird CRM Command Center</p>
             </div>
 
             {{-- Error --}}
             @if($errors->any())
-            <div class="mb-4 flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-semibold" role="alert" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;">
+            <div class="mb-4 flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-semibold"
+                 style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;">
                 <span class="material-symbols-outlined text-[15px]">error</span>
                 {{ $errors->first() }}
             </div>
@@ -379,7 +369,7 @@
                             }
                         " 
                         class="w-full flex items-center justify-center py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-lg text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] mb-6">
-                    <svg class="icon-bolt" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M11 21L9 13H5L13 3V11H17L11 21Z"/></svg> 1-Click Login GM
+                    ⚡ 1-Click Login GM
                 </button>
 
                 <form id="login-form" method="POST" action="{{ route('login') }}" class="space-y-4">
@@ -389,8 +379,8 @@
                     <input type="hidden" name="password" :value="selectedPassword">
 
                     <div>
-                        <label class="lbl" for="role-select">Kategori Jabatan</label>
-                        <select x-model="selectedRole" @change="selectedEmail = ''; selectedPassword = ''" class="inp" id="role-select" style="background-color: rgba(0, 20, 60, 0.95);">
+                        <label class="lbl">Kategori Jabatan</label>
+                        <select x-model="selectedRole" @change="selectedEmail = ''; selectedPassword = ''" class="inp" style="background-color: rgba(0, 20, 60, 0.95);">
                             <option class="text-slate-900" value="">-- Pilih Kategori Jabatan --</option>
                             <option class="text-slate-900" value="gm">🏢 General Manager (GM)</option>
                             <option class="text-slate-900" value="manager">📊 Sales Manager</option>
@@ -401,8 +391,8 @@
                     </div>
 
                     <div x-show="selectedRole" x-transition class="space-y-1">
-                        <label class="lbl" for="account-select">Pilih Akun / Nama</label>
-                        <select @change="updateAccount($event.target.value)" class="inp" id="account-select" style="background-color: rgba(0, 20, 60, 0.95);">
+                        <label class="lbl">Pilih Akun / Nama</label>
+                        <select @change="updateAccount($event.target.value)" class="inp" style="background-color: rgba(0, 20, 60, 0.95);">
                             <option class="text-slate-900" value="">-- Pilih Nama Akun --</option>
                             <template x-for="u in filteredUsers" :key="u.email">
                                 <option class="text-slate-900" :value="u.email" x-text="u.manager_name ? `${u.name} (Tim: ${u.manager_name})` : u.name"></option>
