@@ -431,14 +431,25 @@
             const interval = setInterval(() => {
                 const viewer = document.querySelector('spline-viewer');
                 if (viewer && viewer.shadowRoot) {
-                    const logo = viewer.shadowRoot.querySelector('#logo') || viewer.shadowRoot.querySelector('a[href*="spline.design"]');
-                    if (logo) {
-                        logo.style.display = 'none';
+                    if (!viewer.shadowRoot.querySelector('#hide-spline-logo')) {
+                        const style = document.createElement('style');
+                        style.id = 'hide-spline-logo';
+                        style.textContent = `
+                            #logo, a[href*="spline.design"], #logo-container, .logo {
+                                display: none !important;
+                                opacity: 0 !important;
+                                visibility: hidden !important;
+                                width: 0 !important;
+                                height: 0 !important;
+                                pointer-events: none !important;
+                            }
+                        `;
+                        viewer.shadowRoot.appendChild(style);
                         clearInterval(interval);
                     }
                 }
-            }, 100);
-            setTimeout(() => clearInterval(interval), 8000);
+            }, 50);
+            setTimeout(() => clearInterval(interval), 10000);
         });
     </script>
 </body>
