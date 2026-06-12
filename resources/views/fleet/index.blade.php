@@ -186,8 +186,7 @@
                 <div>
                     {{-- Top row: plate status & location --}}
                     <div class="flex items-start justify-between mb-4">
-                        {{-- Indonesian Plate Number Representation --}}
-                        <div class="flex flex-col items-center border border-slate-700 bg-slate-900 text-gray-900 font-mono px-3 py-1 rounded shadow-md select-none shrink-0 border-t-2 border-t-indigo-500">
+                        <div class="flex flex-col items-center border border-slate-700 bg-slate-900 text-slate-100 font-mono px-3 py-1 rounded shadow-md select-none shrink-0 border-t-2 border-t-indigo-500">
                             <span class="text-base font-bold tracking-widest">{{ $u->plate_number }}</span>
                             <div class="w-full h-px bg-slate-800 my-0.5"></div>
                             <span class="text-[8px] tracking-widest text-slate-400">06.31</span>
