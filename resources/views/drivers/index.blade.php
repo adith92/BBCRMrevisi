@@ -137,7 +137,9 @@
                         
                         <div>
                             <h3 class="font-bold text-[var(--cc-text)] tracking-tight group-hover:text-indigo-400 transition-colors">
-                                {{ $d->name }}
+                                <a href="{{ route('drivers.show', $d->id) }}" class="hover:underline">
+                                    {{ $d->name }}
+                                </a>
                             </h3>
                             <div class="text-xs text-[var(--cc-text-muted)] mt-0.5">{{ $d->phone ?? 'No phone' }}</div>
                         </div>
@@ -167,14 +169,18 @@
                     @endif
                 @endif
                 
-                @if($canModify)
                 <div class="mt-4 flex gap-2">
+                    @if($canModify)
                     <button class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] hover:bg-[var(--cc-surface)] py-2 text-xs font-semibold text-[var(--cc-text)] transition-all">
                         <span class="material-symbols-outlined text-[14px]">edit</span>
                         Edit
                     </button>
+                    @endif
+                    <a href="{{ route('drivers.show', $d->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:bg-[var(--cc-bg-muted)] py-2 text-xs font-semibold text-[var(--cc-text)] text-center transition-all">
+                        <span class="material-symbols-outlined text-[14px] text-[var(--cc-text-muted)]">visibility</span>
+                        Detail
+                    </a>
                 </div>
-                @endif
             </div>
             @endforeach
         </div>

@@ -200,7 +200,9 @@
                     {{-- Car info --}}
                     <div class="mb-4">
                         <h3 class="font-bold text-[var(--cc-text)] text-lg tracking-tight group-hover:text-indigo-400 transition-colors">
-                            {{ $u->brand }} {{ $u->model }}
+                            <a href="{{ route('fleet.show', $u->id) }}" class="hover:underline">
+                                {{ $u->brand }} {{ $u->model }}
+                            </a>
                         </h3>
                         <div class="inline-flex items-center gap-1.5 mt-1 bg-[var(--cc-bg-muted)] px-2 py-0.5 rounded text-[10px] text-[var(--cc-text-muted)] uppercase font-black tracking-wider">
                             <span class="material-symbols-outlined text-[12px] text-indigo-400">sell</span>
@@ -275,18 +277,18 @@
                 </div>
 
                 {{-- Bottom Actions --}}
-                @if($canModify)
                 <div class="mt-6 pt-4 border-t border-[var(--cc-border)] flex gap-2">
+                    @if($canModify)
                     <button class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 py-2 text-xs font-semibold transition-all">
                         <span class="material-symbols-outlined text-[14px]">build</span>
                         Status
                     </button>
-                    <button class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:bg-[var(--cc-bg-muted)] py-2 text-xs font-semibold text-[var(--cc-text)] transition-all">
-                        <span class="material-symbols-outlined text-[14px] text-[var(--cc-text-muted)]">settings</span>
-                        Data
-                    </button>
+                    @endif
+                    <a href="{{ route('fleet.show', $u->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:bg-[var(--cc-bg-muted)] py-2 text-xs font-semibold text-[var(--cc-text)] text-center transition-all">
+                        <span class="material-symbols-outlined text-[14px] text-[var(--cc-text-muted)]">visibility</span>
+                        Detail
+                    </a>
                 </div>
-                @endif
             </div>
             @endforeach
         </div>

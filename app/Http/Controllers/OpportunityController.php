@@ -56,9 +56,15 @@ class OpportunityController extends Controller
         $opportunities = $query->paginate(20)->withQueryString();
 
         $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $salesUsers = User::where('role', 'sales')->orderBy('name')->get(['id', 'name']);
+        
+        $viewData = compact('opportunities', 'clients');
+        if ($user->isGM()) {
+            $viewData['salesUsers'] = User::where('role', 'sales')->orderBy('name')->get(['id', 'name']);
+        } elseif ($user->isManager()) {
+            $viewData['salesUsers'] = User::where('manager_id', $user->id)->where('role', 'sales')->orderBy('name')->get(['id', 'name']);
+        }
 
-        return view('opportunities.index', compact('opportunities', 'clients', 'salesUsers'));
+        return view('opportunities.index', $viewData);
     }
 
     // ------------------------------------------------------------------
