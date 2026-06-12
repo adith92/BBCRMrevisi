@@ -10,14 +10,14 @@
 
 {{-- Due Today Warning --}}
 @if($dueTodayCount > 0)
-<div class="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg px-4 py-3">
+<div class="mb-4 flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl px-4 py-3">
     <span class="text-xl">⚠️</span>
     <div>
         <span class="font-semibold">{{ $dueTodayCount }} kontrak</span> jatuh tempo hari ini dan belum ditagih.
         @can('role:gm,finance,manager')
         <a href="{{ route('subscriptions.billing.run') }}"
            onclick="return confirm('Jalankan billing sekarang?')"
-           class="ml-2 underline font-semibold hover:text-amber-900">Proses Sekarang</a>
+           class="ml-2 underline font-semibold hover:text-amber-300">Proses Sekarang</a>
         @endcan
     </div>
 </div>
@@ -25,12 +25,12 @@
 
 {{-- Flash Messages --}}
 @if(session('success'))
-<div class="mb-4 bg-green-50 border border-green-300 text-green-800 rounded-lg px-4 py-3">
+<div class="mb-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl px-4 py-3">
     ✅ {{ session('success') }}
 </div>
 @endif
 @if(session('error'))
-<div class="mb-4 bg-red-50 border border-red-300 text-red-800 rounded-lg px-4 py-3">
+<div class="mb-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl px-4 py-3">
     ❌ {{ session('error') }}
 </div>
 @endif
@@ -44,14 +44,14 @@
         </div>
         @can('role:gm,finance,manager')
         <a href="{{ route('subscriptions.create') }}"
-           class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+           class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-500 transition-all text-sm font-semibold shadow-lg shadow-indigo-600/20">
             ➕ Tambah Kontrak
         </a>
         @endcan
     </div>
 
     {{-- Status Filter Tabs --}}
-    <div class="flex flex-wrap gap-2 mb-6 border-b border-[var(--cc-border)] pb-4">
+    <div class="flex flex-wrap gap-2 mb-6 border-b border-[var(--cc-border)]/50 pb-4">
         @php
         $tabs = [
             ''            => 'Semua',
@@ -64,7 +64,7 @@
         @foreach($tabs as $val => $label)
         <a href="{{ route('subscriptions.index', array_merge(request()->query(), ['status' => $val])) }}"
            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-           {{ $status === $val ? 'bg-blue-600 text-white' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] hover:bg-gray-200' }}">
+           {{ $status === $val ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] hover:bg-[var(--cc-surface)] hover:text-[var(--cc-text)] border border-[var(--cc-border)]/50' }}">
             {{ $label }}
         </a>
         @endforeach
@@ -74,12 +74,12 @@
     <form method="GET" action="{{ route('subscriptions.index') }}" class="mb-4 flex gap-3 items-end">
         <input type="hidden" name="status" value="{{ $status }}">
         <div>
-            <label class="block text-xs font-medium text-[var(--cc-text-muted)] mb-1">Filter Client</label>
+            <label class="block text-xs font-semibold text-[var(--cc-text-muted)] mb-1">Filter Client</label>
             <select name="client_id" onchange="this.form.submit()"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]">
-                <option value="">— Semua Client —</option>
+                    class="bg-[var(--cc-bg-muted)] border border-[var(--cc-border)] text-[var(--cc-text)] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 min-w-[200px]">
+                <option value="" class="bg-[var(--cc-surface)]">— Semua Client —</option>
                 @foreach($clients as $c)
-                <option value="{{ $c->id }}" {{ $clientId == $c->id ? 'selected' : '' }}>
+                <option value="{{ $c->id }}" class="bg-[var(--cc-surface)]" {{ $clientId == $c->id ? 'selected' : '' }}>
                     {{ $c->company_name }}
                 </option>
                 @endforeach
@@ -94,7 +94,7 @@
     {{-- Table --}}
     <div class="overflow-x-auto">
         <table class="w-full text-sm resizable-table" data-table-id="subscriptions-table">
-            <thead class="bg-[var(--cc-bg-muted)] border-b">
+            <thead class="bg-[var(--cc-bg-muted)] border-b border-[var(--cc-border)]/50">
                 <tr class="text-[var(--cc-text-muted)] text-left">
                     <th class="py-3 px-4">Sub #</th>
                     <th class="py-3 px-4">Client</th>
@@ -112,11 +112,11 @@
                 @php
                 $isOverdue = $sub->status === 'active' && $sub->next_billing_date && $sub->next_billing_date->isPast();
                 @endphp
-                <tr class="border-b hover:bg-[var(--cc-row-hover)] transition-colors {{ $isOverdue ? 'bg-amber-50' : '' }}">
+                <tr class="border-b border-[var(--cc-border)]/50 hover:bg-[var(--cc-row-hover)] transition-colors {{ $isOverdue ? 'bg-amber-500/5' : '' }}">
                     <td class="py-3 px-4">
                         <a href="{{ route('subscriptions.show', $sub) }}"
-                           class="text-blue-600 hover:underline font-mono font-medium text-xs">
-                            {{ $sub->sub_number }}
+                           class="text-blue-500 hover:underline font-mono font-medium text-xs">
+                             {{ $sub->sub_number }}
                         </a>
                     </td>
                     <td class="py-3 px-4">
@@ -130,22 +130,22 @@
                     </td>
                     <td class="py-3 px-4 text-right font-medium text-[var(--cc-text)]">
                         Rp {{ number_format((float)$sub->monthly_rate, 0, ',', '.') }}
-                        <div class="text-xs text-gray-400 font-normal">
+                        <div class="text-xs text-[var(--cc-text-muted)] font-normal">
                             /{{ $sub->billing_cycle === 'monthly' ? 'bulan' : ($sub->billing_cycle === 'quarterly' ? '3 bulan' : 'tahun') }}
                         </div>
                     </td>
                     <td class="py-3 px-4 text-xs text-[var(--cc-text-muted)]">
                         <div>{{ $sub->start_date?->format('d M Y') ?? '—' }}</div>
-                        <div class="text-gray-400">s/d {{ $sub->end_date?->format('d M Y') ?? '—' }}</div>
+                        <div class="text-[var(--cc-text-muted)]/70">s/d {{ $sub->end_date?->format('d M Y') ?? '—' }}</div>
                     </td>
                     <td class="py-3 px-4">
                         @if($sub->next_billing_date)
-                        <span class="text-xs {{ $isOverdue ? 'text-red-600 font-semibold' : 'text-[var(--cc-text-muted)]' }}">
+                        <span class="text-xs {{ $isOverdue ? 'text-red-400 font-semibold' : 'text-[var(--cc-text-muted)]' }}">
                             {{ $sub->next_billing_date->format('d M Y') }}
-                            @if($isOverdue) <span class="text-red-500">⚠</span> @endif
+                            @if($isOverdue) <span class="text-red-400">⚠</span> @endif
                         </span>
                         @else
-                        <span class="text-gray-400 text-xs">—</span>
+                        <span class="text-[var(--cc-text-muted)] text-xs">—</span>
                         @endif
                     </td>
                     <td class="py-3 px-4">

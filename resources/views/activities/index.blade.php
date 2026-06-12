@@ -8,8 +8,8 @@
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Log Aktivitas</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Rekam setiap interaksi dengan klien & prospek</p>
+            <h1 class="text-2xl font-bold text-[var(--cc-text)]">Log Aktivitas</h1>
+            <p class="text-sm text-[var(--cc-text-muted)] mt-0.5">Rekam setiap interaksi dengan klien & prospek</p>
         </div>
         <a href="{{ route('activities.create') }}"
            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
@@ -22,23 +22,23 @@
 
     {{-- Upcoming Follow-up Reminders --}}
     @if($upcomingFollowUps->isNotEmpty())
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6">
         <div class="flex items-start gap-3">
             <span class="text-2xl">🔔</span>
             <div class="flex-1">
-                <h3 class="font-semibold text-amber-900 mb-2">Pengingat Follow-up (7 Hari Ke Depan)</h3>
+                <h3 class="font-semibold text-amber-400 mb-2">Pengingat Follow-up (7 Hari Ke Depan)</h3>
                 <div class="space-y-2">
                     @foreach($upcomingFollowUps as $fu)
-                    <div class="flex flex-wrap items-center gap-2 text-sm">
-                        <span class="font-medium text-amber-800">{{ $fu->next_action_date->format('d M') }}</span>
-                        <span class="text-amber-700">—</span>
-                        <span class="text-amber-900">{{ $fu->next_action ?? $fu->subject }}</span>
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-[var(--cc-text-muted)]">
+                        <span class="font-medium text-amber-300">{{ $fu->next_action_date->format('d M') }}</span>
+                        <span>—</span>
+                        <span class="text-[var(--cc-text)] font-medium">{{ $fu->next_action ?? $fu->subject }}</span>
                         @if($fu->client)
-                        <span class="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">{{ $fu->client->company_name }}</span>
+                        <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium">{{ $fu->client->company_name }}</span>
                         @endif
                         @if($fu->opportunity)
                         <a href="{{ route('opportunities.show', $fu->opportunity_id) }}"
-                           class="text-xs text-amber-700 underline hover:text-amber-900">{{ $fu->opportunity->opp_number }}</a>
+                           class="text-xs text-amber-400 underline hover:text-amber-300 font-mono font-semibold">{{ $fu->opportunity->opp_number }}</a>
                         @endif
                     </div>
                     @endforeach
@@ -49,7 +49,7 @@
     @endif
 
     {{-- Type Filter Tabs --}}
-    <div class="cc-card rounded-xl border border-gray-200 mb-4">
+    <div class="cc-card rounded-xl border border-[var(--cc-border)]/50 mb-4">
         <div class="flex overflow-x-auto">
             @php
                 $types = [
@@ -66,7 +66,7 @@
             @foreach($types as $value => $info)
             <a href="{{ request()->fullUrlWithQuery(['type' => $value, 'page' => 1]) }}"
                class="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors
-                      {{ $currentType === $value ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300' }}">
+                      {{ $currentType === $value ? 'border-indigo-500 text-indigo-400 font-semibold' : 'border-transparent text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] hover:border-[var(--cc-border)]/30' }}">
                 <span>{{ $info['icon'] }}</span>
                 <span>{{ $info['label'] }}</span>
             </a>

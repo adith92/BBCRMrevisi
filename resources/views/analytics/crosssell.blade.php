@@ -120,33 +120,33 @@
             @endphp
 
             <div class="space-y-4">
-                <div class="p-4 bg-blue-900/30 rounded-lg border border-blue-100">
+                <div class="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="font-semibold text-blue-800">Short Term Only</p>
-                            <p class="text-xs text-blue-600 mt-0.5">Potensial upgrade ke Long Term / E-Voucher</p>
+                            <p class="font-semibold text-blue-400">Short Term Only</p>
+                            <p class="text-xs text-[var(--cc-text-muted)] mt-0.5">Potensial upgrade ke Long Term / E-Voucher</p>
                         </div>
-                        <span class="text-3xl font-bold text-blue-700">{{ $shortTermOnly->count() }}</span>
+                        <span class="text-3xl font-bold text-blue-400">{{ $shortTermOnly->count() }}</span>
                     </div>
                 </div>
 
-                <div class="p-4 bg-green-900/30 rounded-lg border border-green-100">
+                <div class="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="font-semibold text-green-800">Long Term Only</p>
-                            <p class="text-xs text-green-600 mt-0.5">Potensial tambah Short Term / E-Voucher</p>
+                            <p class="font-semibold text-emerald-400">Long Term Only</p>
+                            <p class="text-xs text-[var(--cc-text-muted)] mt-0.5">Potensial tambah Short Term / E-Voucher</p>
                         </div>
-                        <span class="text-3xl font-bold text-green-700">{{ $longTermOnly->count() }}</span>
+                        <span class="text-3xl font-bold text-emerald-400">{{ $longTermOnly->count() }}</span>
                     </div>
                 </div>
 
-                <div class="p-4 bg-yellow-900/20 rounded-lg border border-yellow-100">
+                <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="font-semibold text-yellow-800">E-Voucher Only</p>
-                            <p class="text-xs text-yellow-600 mt-0.5">Potensial upgrade ke layanan reguler</p>
+                            <p class="font-semibold text-amber-400">E-Voucher Only</p>
+                            <p class="text-xs text-[var(--cc-text-muted)] mt-0.5">Potensial upgrade ke layanan reguler</p>
                         </div>
-                        <span class="text-3xl font-bold text-yellow-700">{{ $evoucherOnly->count() }}</span>
+                        <span class="text-3xl font-bold text-amber-400">{{ $evoucherOnly->count() }}</span>
                     </div>
                 </div>
 

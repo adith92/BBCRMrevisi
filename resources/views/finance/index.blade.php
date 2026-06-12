@@ -10,26 +10,27 @@
 
 {{-- Summary Cards --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-[var(--cc-bg-muted)] rounded-lg p-4 border-l-4 border-gray-400">
-        <p class="text-xs text-[var(--cc-text-muted)]">Total Invoiced</p>
+    <div class="bg-[var(--cc-bg-muted)] rounded-xl p-4 border-l-4 border-slate-500 border border-[var(--cc-border)]/30">
+        <p class="text-xs text-[var(--cc-text-muted)] font-medium">Total Invoiced</p>
         <p class="text-lg font-bold text-[var(--cc-text)] mt-1">{{ \App\Helpers\FormatHelper::formatIDR($summary['total']) }}</p>
     </div>
     <a href="{{ route('finance.index', array_merge(request()->query(), ['status' => 'paid'])) }}"
-       class="group block bg-green-50 rounded-lg p-4 border-l-4 border-green-500 hover:shadow-md transition-all">
-        <p class="text-xs text-[var(--cc-text-muted)]">Paid</p>
-        <p class="text-lg font-bold text-green-700 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($summary['paid']) }}</p>
-        <p class="text-xs text-green-600 mt-1">{{ $summary['paid_count'] }} invoices</p>
+       class="group block bg-emerald-500/10 rounded-xl p-4 border-l-4 border-emerald-500 hover:shadow-md hover:bg-emerald-500/20 border border-[var(--cc-border)]/30 transition-all">
+        <p class="text-xs text-[var(--cc-text-muted)] font-medium">Paid</p>
+        <p class="text-lg font-bold text-emerald-400 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($summary['paid']) }}</p>
+        <p class="text-xs text-emerald-500 mt-1">{{ $summary['paid_count'] }} invoices</p>
     </a>
     <a href="{{ route('finance.index', array_merge(request()->query(), ['status' => 'sent'])) }}"
-       class="group block bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-500 hover:shadow-md transition-all">
-        <p class="text-xs text-[var(--cc-text-muted)]">Pending</p>
-        <p class="text-lg font-bold text-yellow-700 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($summary['pending']) }}</p>
+       class="group block bg-amber-500/10 rounded-xl p-4 border-l-4 border-amber-500 hover:shadow-md hover:bg-amber-500/20 border border-[var(--cc-border)]/30 transition-all">
+        <p class="text-xs text-[var(--cc-text-muted)] font-medium">Pending</p>
+        <p class="text-lg font-bold text-amber-400 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($summary['pending']) }}</p>
+        <p class="text-xs text-amber-500 mt-1">Sent invoices</p>
     </a>
     <a href="{{ route('finance.index', array_merge(request()->query(), ['status' => 'overdue'])) }}"
-       class="group block bg-red-50 rounded-lg p-4 border-l-4 border-red-500 hover:shadow-md transition-all">
-        <p class="text-xs text-[var(--cc-text-muted)]">Overdue</p>
-        <p class="text-lg font-bold text-red-700 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($summary['overdue']) }}</p>
-        <p class="text-xs text-red-600 mt-1">{{ $summary['overdue_count'] }} invoices</p>
+       class="group block bg-rose-500/10 rounded-xl p-4 border-l-4 border-rose-500 hover:shadow-md hover:bg-rose-500/20 border border-[var(--cc-border)]/30 transition-all">
+        <p class="text-xs text-[var(--cc-text-muted)] font-medium">Overdue</p>
+        <p class="text-lg font-bold text-rose-400 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($summary['overdue']) }}</p>
+        <p class="text-xs text-rose-500 mt-1">{{ $summary['overdue_count'] }} invoices</p>
     </a>
 </div>
 
@@ -48,13 +49,13 @@
         {{-- Status filters --}}
         <div class="flex gap-2 text-sm flex-wrap">
             <a href="{{ route('finance.index', ['filter' => request('filter')]) }}"
-               class="{{ !request('status') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-[var(--cc-text)]' }} px-3 py-1 rounded">All</a>
+               class="{{ !request('status') ? 'bg-indigo-600 text-white font-semibold' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] border border-[var(--cc-border)]/50 hover:bg-[var(--cc-surface)] hover:text-[var(--cc-text)]' }} px-3 py-1.5 rounded-lg transition-colors font-medium">All</a>
             <a href="{{ route('finance.index', ['filter' => request('filter'), 'status' => 'paid']) }}"
-               class="{{ request('status') === 'paid' ? 'bg-green-600 text-white' : 'bg-gray-200 text-[var(--cc-text)]' }} px-3 py-1 rounded">Paid</a>
+               class="{{ request('status') === 'paid' ? 'bg-emerald-600 text-white font-semibold' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] border border-[var(--cc-border)]/50 hover:bg-[var(--cc-surface)] hover:text-[var(--cc-text)]' }} px-3 py-1.5 rounded-lg transition-colors font-medium">Paid</a>
             <a href="{{ route('finance.index', ['filter' => request('filter'), 'status' => 'sent']) }}"
-               class="{{ request('status') === 'sent' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-[var(--cc-text)]' }} px-3 py-1 rounded">Pending</a>
+               class="{{ request('status') === 'sent' ? 'bg-amber-500 text-white font-semibold' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] border border-[var(--cc-border)]/50 hover:bg-[var(--cc-surface)] hover:text-[var(--cc-text)]' }} px-3 py-1.5 rounded-lg transition-colors font-medium">Pending</a>
             <a href="{{ route('finance.index', ['filter' => request('filter'), 'status' => 'overdue']) }}"
-               class="{{ request('status') === 'overdue' ? 'bg-red-600 text-white' : 'bg-gray-200 text-[var(--cc-text)]' }} px-3 py-1 rounded">Overdue</a>
+               class="{{ request('status') === 'overdue' ? 'bg-rose-600 text-white font-semibold' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] border border-[var(--cc-border)]/50 hover:bg-[var(--cc-surface)] hover:text-[var(--cc-text)]' }} px-3 py-1.5 rounded-lg transition-colors font-medium">Overdue</a>
         </div>
     </div>
 

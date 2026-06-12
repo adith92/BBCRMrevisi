@@ -9,16 +9,16 @@
 ]" />
 
 {{-- Hero --}}
-<div class="bg-gradient-to-br from-blue-900 to-indigo-800 rounded-lg shadow p-8 mb-6 text-white">
+<div class="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-2xl shadow p-8 mb-6 text-white border border-indigo-700/50">
     <div class="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
-            <p class="text-blue-200 text-sm uppercase tracking-widest mb-1">Sales Performance</p>
+            <p class="text-indigo-200 text-xs uppercase tracking-widest font-semibold mb-1">Sales Performance</p>
             <h2 class="text-3xl font-bold">{{ $user->name }}</h2>
-            <p class="text-blue-200 mt-2">{{ $user->email }}</p>
+            <p class="text-indigo-200 text-sm mt-2">{{ $user->email }}</p>
         </div>
         <div class="text-right">
-            <p class="text-blue-200 text-sm">Total Revenue</p>
-            <p class="text-4xl font-bold">{{ \App\Helpers\FormatHelper::formatIDR($stats['total_revenue']) }}</p>
+            <p class="text-indigo-200 text-sm">Total Revenue</p>
+            <p class="text-4xl font-bold mt-1">{{ \App\Helpers\FormatHelper::formatIDR($stats['total_revenue']) }}</p>
         </div>
     </div>
 </div>
@@ -26,35 +26,37 @@
 {{-- KPI Cards --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
     <a href="{{ route('bookings.index', ['sales_id' => $user->id, 'status' => 'completed']) }}"
-       class="group block bg-green-50 rounded-lg shadow p-4 border-l-4 border-green-500 hover:shadow-md transition-all text-center">
-        <p class="text-2xl font-bold text-green-700">{{ $stats['completed'] }}</p>
-        <p class="text-sm text-gray-600 mt-1">Completed</p>
-        <p class="text-xs text-green-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">View bookings →</p>
+       class="group block bg-emerald-500/10 rounded-xl shadow p-4 border-l-4 border-emerald-500 hover:shadow-md transition-all text-center border border-[var(--cc-border)]/30 hover:bg-emerald-500/20">
+        <p class="text-2xl font-bold text-emerald-400">{{ $stats['completed'] }}</p>
+        <p class="text-sm text-[var(--cc-text-muted)] mt-1 font-medium">Completed</p>
+        <p class="text-[10px] text-emerald-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">View bookings →</p>
     </a>
     <a href="{{ route('bookings.index', ['sales_id' => $user->id, 'status' => 'active']) }}"
-       class="group block bg-blue-50 rounded-lg shadow p-4 border-l-4 border-blue-500 hover:shadow-md transition-all text-center">
-        <p class="text-2xl font-bold text-blue-700">{{ $stats['active'] }}</p>
-        <p class="text-sm text-gray-600 mt-1">Active</p>
-        <p class="text-xs text-blue-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">View active →</p>
+       class="group block bg-blue-500/10 rounded-xl shadow p-4 border-l-4 border-blue-500 hover:shadow-md transition-all text-center border border-[var(--cc-border)]/30 hover:bg-blue-500/20">
+        <p class="text-2xl font-bold text-blue-400">{{ $stats['active'] }}</p>
+        <p class="text-sm text-[var(--cc-text-muted)] mt-1 font-medium">Active</p>
+        <p class="text-[10px] text-blue-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">View active →</p>
     </a>
-    <div class="bg-purple-50 rounded-lg shadow p-4 border-l-4 border-purple-500 text-center">
-        <p class="text-2xl font-bold text-purple-700">{{ $stats['total_bookings'] }}</p>
-        <p class="text-sm text-gray-600 mt-1">Total Bookings</p>
+    <div class="bg-purple-500/10 rounded-xl shadow p-4 border-l-4 border-purple-500 text-center border border-[var(--cc-border)]/30">
+        <p class="text-2xl font-bold text-purple-400">{{ $stats['total_bookings'] }}</p>
+        <p class="text-sm text-[var(--cc-text-muted)] mt-1 font-medium">Total Bookings</p>
+        <p class="text-[10px] text-purple-400/50 mt-1">&nbsp;</p>
     </div>
-    <div class="bg-indigo-50 rounded-lg shadow p-4 border-l-4 border-indigo-500 text-center">
-        <p class="text-lg font-bold text-indigo-700">{{ \App\Helpers\FormatHelper::formatIDR($stats['avg_per_booking']) }}</p>
-        <p class="text-sm text-gray-600 mt-1">Avg / Booking</p>
+    <div class="bg-indigo-500/10 rounded-xl shadow p-4 border-l-4 border-indigo-500 text-center border border-[var(--cc-border)]/30">
+        <p class="text-lg font-bold text-indigo-400">{{ \App\Helpers\FormatHelper::formatIDR($stats['avg_per_booking']) }}</p>
+        <p class="text-sm text-[var(--cc-text-muted)] mt-1 font-medium">Avg / Booking</p>
+        <p class="text-[10px] text-indigo-400/50 mt-1">&nbsp;</p>
     </div>
 </div>
 
 {{-- Revenue Chart --}}
-<div class="cc-card rounded-lg shadow p-6 mb-6">
+<div class="cc-card rounded-xl shadow p-6 mb-6">
     <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Revenue Trend</h3>
+        <h3 class="text-lg font-semibold text-[var(--cc-text)]">Revenue Trend</h3>
         <div class="flex gap-2 text-sm">
             @foreach(['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'yearly' => 'Yearly'] as $p => $label)
                 <a href="{{ route('sales.performance', ['user' => $user->id, 'period' => $p]) }}"
-                   class="{{ $period === $p ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }} px-3 py-1 rounded font-medium text-sm">
+                   class="{{ $period === $p ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/10' : 'bg-[var(--cc-bg-muted)] text-[var(--cc-text-muted)] hover:bg-[var(--cc-surface)] border border-[var(--cc-border)]/50' }} px-3 py-1.5 rounded-lg font-medium text-xs transition-all">
                     {{ $label }}
                 </a>
             @endforeach
@@ -67,47 +69,47 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
     {{-- Assigned Clients --}}
-    <div class="cc-card rounded-lg shadow p-6">
+    <div class="cc-card rounded-xl shadow p-6">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Assigned Clients</h3>
-            <a href="{{ route('clients.index') }}" class="text-blue-600 hover:text-blue-800 text-sm">View all →</a>
+            <h3 class="text-lg font-semibold text-[var(--cc-text)]">Assigned Clients</h3>
+            <a href="{{ route('clients.index') }}" class="text-blue-500 hover:text-blue-400 text-sm font-semibold">View all →</a>
         </div>
         <div class="space-y-2">
             @forelse($clients->take(8) as $client)
-            <div class="flex items-center justify-between py-2 border-b last:border-0">
+            <div class="flex items-center justify-between py-2 border-b border-[var(--cc-border)]/50 last:border-0">
                 <div>
                     <a href="{{ route('clients.show', $client->id) }}"
-                       class="text-blue-600 hover:underline font-medium text-sm">
+                       class="text-blue-500 hover:underline font-semibold text-sm">
                         {{ $client->company_name }}
                     </a>
-                    <p class="text-xs text-gray-400">{{ $client->industry }}</p>
+                    <p class="text-xs text-[var(--cc-text-muted)] mt-0.5">{{ $client->industry }}</p>
                 </div>
                 <div class="text-right">
                     <x-status-badge :status="$client->status" />
-                    <p class="text-xs text-gray-500 mt-1">{{ $client->bookings_count }} bookings</p>
+                    <p class="text-xs text-[var(--cc-text-muted)] mt-1 font-mono font-medium">{{ $client->bookings_count }} bookings</p>
                 </div>
             </div>
             @empty
-            <p class="text-gray-400 text-sm text-center py-4">No assigned clients</p>
+            <p class="text-[var(--cc-text-muted)] text-sm text-center py-4">No assigned clients</p>
             @endforelse
         </div>
     </div>
 
     {{-- Recent Bookings --}}
-    <div class="cc-card rounded-lg shadow p-6">
+    <div class="cc-card rounded-xl shadow p-6">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Recent Bookings</h3>
-            <a href="{{ route('bookings.index', ['sales_id' => $user->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm">View all →</a>
+            <h3 class="text-lg font-semibold text-[var(--cc-text)]">Recent Bookings</h3>
+            <a href="{{ route('bookings.index', ['sales_id' => $user->id]) }}" class="text-blue-500 hover:text-blue-400 text-sm font-semibold">View all →</a>
         </div>
         <div class="space-y-2">
             @forelse($bookings->take(8) as $booking)
-            <div class="flex items-center justify-between py-2 border-b last:border-0 text-sm">
+            <div class="flex items-center justify-between py-2 border-b border-[var(--cc-border)]/50 last:border-0 text-sm">
                 <div>
                     <a href="{{ route('bookings.show', $booking->id) }}"
-                       class="text-blue-600 hover:underline font-mono font-medium">
+                       class="text-blue-500 hover:underline font-mono font-medium">
                         {{ $booking->booking_number }}
                     </a>
-                    <div class="text-xs text-gray-500 mt-0.5">
+                    <div class="text-xs text-[var(--cc-text-muted)] mt-0.5">
                         <a href="{{ route('clients.show', $booking->client_id) }}" class="text-blue-500 hover:underline">
                             {{ $booking->client->company_name }}
                         </a>
@@ -116,11 +118,11 @@
                 </div>
                 <div class="text-right">
                     <x-status-badge :status="$booking->status" />
-                    <p class="text-xs font-semibold text-gray-700 mt-1">{{ \App\Helpers\FormatHelper::formatIDR($booking->price) }}</p>
+                    <p class="text-xs font-semibold text-[var(--cc-text)] mt-1">{{ \App\Helpers\FormatHelper::formatIDR($booking->price) }}</p>
                 </div>
             </div>
             @empty
-            <p class="text-gray-400 text-sm text-center py-4">No bookings yet</p>
+            <p class="text-[var(--cc-text-muted)] text-sm text-center py-4">No bookings yet</p>
             @endforelse
         </div>
     </div>
@@ -140,8 +142,8 @@ new Chart(ctx, {
         datasets: [{
             label: 'Revenue',
             data: values,
-            backgroundColor: 'rgba(24, 95, 165, 0.7)',
-            borderColor: '#185FA5',
+            backgroundColor: 'rgba(99, 102, 241, 0.7)', // Indigo tint
+            borderColor: '#6366f1',
             borderWidth: 1,
             borderRadius: 6,
         }]
