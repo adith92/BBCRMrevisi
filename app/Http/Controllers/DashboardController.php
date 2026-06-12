@@ -33,6 +33,7 @@ class DashboardController extends Controller
             'manager'     => $this->manager(),
             'sales'       => $this->sales(),
             'operational' => $this->operational(),
+            'pool'        => $this->operational(),
             'finance'     => $this->finance(),
             default       => $this->gm(),
         };
@@ -366,12 +367,9 @@ class DashboardController extends Controller
             return [
                 'userId' => $t->user_id,
                 'productTargets' => [
-                    'Mobil Short Term' => (float)$t->target_revenue * 0.4,
-                    'Bis Short Term'   => (float)$t->target_revenue * 0.2,
-                    'Mobil Long Term'  => (float)$t->target_revenue * 0.15,
-                    'Bis Long Term'    => (float)$t->target_revenue * 0.1,
-                    'E-Voucher'        => (float)$t->target_revenue * 0.1,
-                    'Supir'            => (float)$t->target_revenue * 0.05,
+                    'Mobil Long Term'  => (float)$t->target_revenue * 0.6,
+                    'E-Voucher'        => (float)$t->target_revenue * 0.3,
+                    'Supir'            => (float)$t->target_revenue * 0.1,
                 ]
             ];
         });

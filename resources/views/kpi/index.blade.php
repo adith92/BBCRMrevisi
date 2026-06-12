@@ -255,7 +255,7 @@ function dashboardManager() {
         deals: @json($deals),
         targets: @json($targets),
         
-        productCategories: ['Mobil Short Term', 'Bis Short Term', 'Mobil Long Term', 'Bis Long Term', 'E-Voucher', 'Supir'],
+        productCategories: ['Mobil Long Term', 'E-Voucher', 'Supir'],
         
         metrics: { totalTarget: 0, totalActual: 0, productMetrics: {}, activeDealsCount: 0, activePipelineValue: 0, winRate: 0 },
         personalMetrics: null,

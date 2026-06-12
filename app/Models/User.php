@@ -7,7 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * Role can be: gm|manager|sales|operational|finance
+ * Role can be: gm|manager|sales|operational|finance|pool
  * (Director dihapus — wewenangnya digabung ke GM sebagai pucuk pimpinan.)
  */
 class User extends Authenticatable
@@ -114,6 +114,11 @@ class User extends Authenticatable
     public function isOperational(): bool
     {
         return $this->role === 'operational';
+    }
+
+    public function isPool(): bool
+    {
+        return $this->role === 'pool';
     }
 
     public function isFinance(): bool

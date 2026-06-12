@@ -21,7 +21,12 @@ class FleetController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $query = Vehicle::with(['pool', 'assignedOpportunity.client']);
+        $query = Vehicle::with(['pool', 'assignedOpportunity.client'])
+            ->whereIn('brand', ['goldenbird', 'executive']);
+
+        if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
+            $query->where('pool_id', $user->pool_id);
+        }
 
         if (request('search')) {
             $search = request('search');
@@ -42,7 +47,6 @@ class FleetController extends Controller
         if (request('status') && request('status') !== 'All') {
             if (request('status') === 'Being Serviced' || request('status') === 'In Queue') {
                 $query->where('status', 'Maintenance');
-                // Assume notes contains maintenance status or add a scope if we had a column. For now, filter in memory or ignore sub-status.
             } else {
                 $query->where('status', request('status'));
             }
@@ -50,15 +54,20 @@ class FleetController extends Controller
 
         $vehicles = $query->orderBy('brand')->get();
 
+        $statsQuery = Vehicle::whereIn('brand', ['goldenbird', 'executive']);
+        if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
+            $statsQuery->where('pool_id', $user->pool_id);
+        }
+
         $stats = [
-            'total'       => Vehicle::count(),
-            'available'   => Vehicle::where('status', 'available')->count(),
-            'rented'      => Vehicle::where('status', 'rent_out')->orWhere('status', 'assigned')->count(),
-            'booked'      => Vehicle::where('status', 'booked')->count(),
-            'hold'        => Vehicle::where('status', 'hold')->count(),
-            'maintenance' => Vehicle::where('status', 'maintenance')->count(),
-            'beingServiced'=> Vehicle::where('status', 'maintenance')->where('notes', 'like', '%Servicing%')->count(),
-            'inQueue'     => Vehicle::where('status', 'maintenance')->where('notes', 'not like', '%Servicing%')->count(),
+            'total'       => (clone $statsQuery)->count(),
+            'available'   => (clone $statsQuery)->where('status', 'available')->count(),
+            'rented'      => (clone $statsQuery)->where(function($q) { $q->where('status', 'rent_out')->orWhere('status', 'assigned'); })->count(),
+            'booked'      => (clone $statsQuery)->where('status', 'booked')->count(),
+            'hold'        => (clone $statsQuery)->where('status', 'hold')->count(),
+            'maintenance' => (clone $statsQuery)->where('status', 'maintenance')->count(),
+            'beingServiced'=> (clone $statsQuery)->where('status', 'maintenance')->where('notes', 'like', '%Servicing%')->count(),
+            'inQueue'     => (clone $statsQuery)->where('status', 'maintenance')->where('notes', 'not like', '%Servicing%')->count(),
         ];
 
         return view('fleet.index', compact('vehicles', 'stats'));
@@ -99,10 +108,14 @@ class FleetController extends Controller
 
     public function apiAvailable()
     {
+        $user = auth()->user();
         $query = Vehicle::with('pool')
-            ->where('status', 'available');
+            ->where('status', 'available')
+            ->whereIn('brand', ['goldenbird', 'executive']);
             
-        if (request()->has('pool_id')) {
+        if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
+            $query->where('pool_id', $user->pool_id);
+        } else if (request()->has('pool_id')) {
             $query->where('pool_id', request('pool_id'));
         }
 
@@ -111,10 +124,13 @@ class FleetController extends Controller
 
     public function apiDriversAvailable()
     {
+        $user = auth()->user();
         $query = \App\Models\Driver::with('pool')
             ->where('status', 'available');
 
-        if (request()->has('pool_id')) {
+        if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
+            $query->where('pool_id', $user->pool_id);
+        } else if (request()->has('pool_id')) {
             $query->where('pool_id', request('pool_id'));
         }
 

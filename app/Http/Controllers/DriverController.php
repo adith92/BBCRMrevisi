@@ -21,6 +21,10 @@ class DriverController extends Controller
 
         $query = Driver::with(['pool', 'assignedOpportunity.client']);
 
+        if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
+            $query->where('pool_id', $user->pool_id);
+        }
+
         if (request('search')) {
             $search = request('search');
             $query->where(function($q) use ($search) {
@@ -43,12 +47,17 @@ class DriverController extends Controller
 
         $drivers = $query->orderBy('name')->get();
 
+        $statsQuery = Driver::query();
+        if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
+            $statsQuery->where('pool_id', $user->pool_id);
+        }
+
         $stats = [
-            'total'       => Driver::count(),
-            'available'   => Driver::where('status', 'available')->count(),
-            'assigned'    => Driver::where('status', 'assigned')->count(),
-            'reserved'    => Driver::where('status', 'reserved')->count(),
-            'leave'       => Driver::where('status', 'inactive')->count(), // Using inactive as leave
+            'total'       => (clone $statsQuery)->count(),
+            'available'   => (clone $statsQuery)->where('status', 'available')->count(),
+            'assigned'    => (clone $statsQuery)->where('status', 'assigned')->count(),
+            'reserved'    => (clone $statsQuery)->where('status', 'reserved')->count(),
+            'leave'       => (clone $statsQuery)->where('status', 'inactive')->count(), // Using inactive as leave
         ];
 
         return view('drivers.index', compact('drivers', 'stats'));

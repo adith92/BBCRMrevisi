@@ -1,7 +1,7 @@
 @php
     $role = Auth::user()->role ?? '';
-    $roleIcons  = ['director'=>'👔','gm'=>'🏢','manager'=>'📊','sales'=>'💼','operational'=>'🚗','finance'=>'💰'];
-    $roleLabels = ['director'=>'Director HQ','gm'=>'General Manager','manager'=>'Manager','sales'=>'Sales Officer','operational'=>'Operations','finance'=>'Finance'];
+    $roleIcons  = ['director'=>'👔','gm'=>'🏢','manager'=>'📊','sales'=>'💼','operational'=>'🚗','pool'=>'🅿️','finance'=>'💰'];
+    $roleLabels = ['director'=>'Director HQ','gm'=>'General Manager','manager'=>'Manager','sales'=>'Sales Officer','operational'=>'Operations','pool'=>'Pool Admin','finance'=>'Finance'];
 @endphp
 
 <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out z-50 flex flex-col min-h-screen" style="width:224px; min-width:224px;">
@@ -46,7 +46,7 @@
 
         @endif
 
-        @if(in_array($role, ['gm','manager','operational','sales']))
+        @if(in_array($role, ['gm','manager','operational','sales','pool']))
         <div class="nav-section-label">{{ __('ui.operations') }}</div>
 
         <a href="{{ route('fleet.index') }}" class="nav-item {{ Request::routeIs('fleet*','vehicles*') ? 'active' : '' }}">
@@ -100,7 +100,7 @@
         @endif
 
         {{-- Quick Add Dropdown --}}
-        @if(in_array($role, ['gm','manager','sales','operational']))
+        @if(in_array($role, ['gm','manager','sales','operational','pool']))
         <div class="nav-section-label mt-3">{{ __('ui.quick_add') ?? 'Tambah Baru' }}</div>
         <div x-data="{ open: false }" class="relative">
             <button @click="open = !open"
@@ -128,13 +128,13 @@
                     <span>Klien Baru</span>
                 </a>
                 @endif
-                @if(in_array($role, ['gm','manager','sales','operational']))
+                @if(in_array($role, ['gm','manager','sales','operational','pool']))
                 <a href="{{ route('bookings.create') }}" class="nav-item text-[12px]">
                     <span class="material-symbols-outlined text-[14px]">route</span>
                     <span>Booking</span>
                 </a>
                 @endif
-                @if(in_array($role, ['gm','operational']))
+                @if(in_array($role, ['gm','operational','pool']))
                 <a href="{{ route('fleet.create') }}" class="nav-item text-[12px]">
                     <span class="material-symbols-outlined text-[14px]">directions_bus</span>
                     <span>Armada</span>

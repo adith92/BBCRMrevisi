@@ -129,21 +129,11 @@ class DatabaseSeeder extends Seeder
 
         // ==================== 20 VEHICLES ====================
         $brands = [
-            ['bigbird', 'Coach Bus Big', 45],
-            ['bigbird', 'Coach Bus', 45],
-            ['bigbird', 'Executive Coach', 35],
-            ['bigbird', 'Luxury Coach', 35],
-            ['bigbird', 'Standard Coach', 40],
             ['goldenbird', 'Premium Sedan', 6],
             ['goldenbird', 'Executive Sedan', 6],
             ['goldenbird', 'Luxury Sedan', 4],
             ['goldenbird', 'VIP Sedan', 4],
             ['goldenbird', 'Business Sedan', 6],
-            ['cititrans', 'Executive Bus', 25],
-            ['cititrans', 'Shuttle Bus', 20],
-            ['cititrans', 'Commuter Bus', 25],
-            ['cititrans', 'City Bus', 25],
-            ['cititrans', 'Standard Bus', 25],
             ['executive', 'SUV Premium', 8],
             ['executive', 'Executive SUV', 8],
             ['executive', 'Luxury SUV', 6],

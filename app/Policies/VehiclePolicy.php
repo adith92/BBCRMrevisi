@@ -14,7 +14,7 @@ class VehiclePolicy
 
     public function view(User $user, Vehicle $vehicle): bool
     {
-        if ($user->isOperational() && $user->pool_id !== null) {
+        if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
             return $vehicle->pool_id === $user->pool_id;
         }
         return true;
@@ -22,12 +22,12 @@ class VehiclePolicy
 
     public function create(User $user): bool
     {
-        return $user->isOperational();
+        return $user->isOperational() || $user->isPool();
     }
 
     public function update(User $user, Vehicle $vehicle): bool
     {
-        if (!$user->isOperational()) {
+        if (!$user->isOperational() && !$user->isPool()) {
             return false;
         }
         if ($user->pool_id !== null) {
@@ -38,7 +38,7 @@ class VehiclePolicy
 
     public function delete(User $user, Vehicle $vehicle): bool
     {
-        if (!$user->isOperational()) {
+        if (!$user->isOperational() && !$user->isPool()) {
             return false;
         }
         if ($user->pool_id !== null) {
