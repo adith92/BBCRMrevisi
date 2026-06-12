@@ -32,6 +32,7 @@ class Opportunity extends Model
         'products',
         'history_timeline',
         'stage_changed_at',
+        'contract_duration_months',
     ];
 
     protected $casts = [
@@ -45,6 +46,7 @@ class Opportunity extends Model
         'products' => 'array',
         'history_timeline' => 'array',
         'stage_changed_at' => 'datetime',
+        'contract_duration_months' => 'integer',
     ];
 
     protected static function boot()

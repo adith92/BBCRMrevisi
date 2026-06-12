@@ -94,5 +94,70 @@
         </div>
     </div>
 
+    {{-- Action Required Panel --}}
+    <div class="grid-stack-item" gs-id="w-action-required" gs-x="0" gs-y="8" gs-w="12" gs-h="5">
+        <div class="grid-stack-item-content">
+            <div class="cc-card rounded-xl shadow p-5 h-full overflow-auto border-l-4 border-red-500">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-red-500">warning</span>
+                    <h3 class="text-base font-semibold text-[var(--cc-text)]">Action Required: Unassigned Won Opportunities</h3>
+                    <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/10 text-red-400">
+                        {{ $unassignedOpportunities->count() }} Pending Allocation
+                    </span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b" style="border-color:var(--cc-border)">
+                            <tr style="color:var(--cc-text-muted)">
+                                <th class="text-left py-2">Oportunitas</th>
+                                <th class="text-left py-2">Client</th>
+                                <th class="text-left py-2">Sales</th>
+                                <th class="text-left py-2">Missing Allocation</th>
+                                <th class="text-left py-2">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($unassignedOpportunities as $opp)
+                            @php
+                                $hasVehicles = $opp->assignedVehicles()->exists();
+                                $hasDrivers = $opp->assignedDrivers()->exists();
+                                $missing = [];
+                                if (!$hasVehicles) $missing[] = 'Kendaraan';
+                                if (!$hasDrivers) $missing[] = 'Supir';
+                            @endphp
+                            <tr class="border-b hover:bg-black/5 dark:hover:bg-gray-100/5 transition-colors" style="border-color:var(--cc-border)">
+                                <td class="py-2.5">
+                                    <a href="{{ route('opportunities.show', $opp->id) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                                        {{ $opp->title }}
+                                    </a>
+                                    <span class="text-xs text-[var(--cc-text-muted)] block font-mono">{{ $opp->opp_number }}</span>
+                                </td>
+                                <td class="py-2.5 text-[var(--cc-text)]">{{ $opp->client->company_name ?? '—' }}</td>
+                                <td class="py-2.5 text-[var(--cc-text)]">{{ $opp->sales->name ?? '—' }}</td>
+                                <td class="py-2.5">
+                                    <span class="inline-flex items-center gap-1 text-xs text-red-400 font-medium">
+                                        {{ implode(' & ', $missing) }} belum di-assign
+                                    </span>
+                                </td>
+                                <td class="py-2.5">
+                                    <a href="{{ route('opportunities.show', $opp->id) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 px-3 py-1.5 text-xs font-semibold transition-all">
+                                        <span class="material-symbols-outlined text-[14px]">link</span> Assign Now
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="py-6 text-center text-emerald-500 font-medium">
+                                    🎉 Semua opportunity WON sudah memiliki alokasi kendaraan dan supir!
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </x-dashboard-grid>
 @endsection

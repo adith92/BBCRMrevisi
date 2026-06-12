@@ -277,7 +277,41 @@
                                 STNK Exp: {{ $u->stnk_expiry->format('Y-m-d') }}
                             </div>
                         @endif
+                        @if($u->insurance_expiry)
+                            <div class="text-[10px] text-slate-500 font-medium flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[12px] text-indigo-400/70">description</span>
+                                Ins Exp: {{ $u->insurance_expiry->format('Y-m-d') }}
+                            </div>
+                        @endif
                     </div>
+
+                    @if(auth()->user()->isOperational() || auth()->user()->isGM() || auth()->user()->isManager())
+                        @php
+                            $today = now()->startOfDay();
+                            $isStnkNear = $u->stnk_expiry && $today->diffInDays($u->stnk_expiry, false) < 30;
+                            $isPajakNear = $u->pajak_expiry && $today->diffInDays($u->pajak_expiry, false) < 30;
+                            $isInsuranceNear = $u->insurance_expiry && $today->diffInDays($u->insurance_expiry, false) < 30;
+                        @endphp
+                        @if($isStnkNear || $isPajakNear || $isInsuranceNear)
+                            <div class="mt-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[11px] text-red-400 space-y-1">
+                                <div class="font-bold uppercase tracking-wider flex items-center gap-1 mb-1">
+                                    <span class="material-symbols-outlined text-[14px]">warning</span> Expiry Warning
+                                </div>
+                                @if($isStnkNear)
+                                    @php $days = $today->diffInDays($u->stnk_expiry, false); @endphp
+                                    <div>• STNK: {{ $days < 0 ? 'Expired' : ($days == 0 ? 'Expires today' : "$days days left") }} ({{ $u->stnk_expiry->format('Y-m-d') }})</div>
+                                @endif
+                                @if($isPajakNear)
+                                    @php $days = $today->diffInDays($u->pajak_expiry, false); @endphp
+                                    <div>• Tax: {{ $days < 0 ? 'Expired' : ($days == 0 ? 'Expires today' : "$days days left") }} ({{ $u->pajak_expiry->format('Y-m-d') }})</div>
+                                @endif
+                                @if($isInsuranceNear)
+                                    @php $days = $today->diffInDays($u->insurance_expiry, false); @endphp
+                                    <div>• Insurance: {{ $days < 0 ? 'Expired' : ($days == 0 ? 'Expires today' : "$days days left") }} ({{ $u->insurance_expiry->format('Y-m-d') }})</div>
+                                @endif
+                            </div>
+                        @endif
+                    @endif
 
                     @php
                         // Fetch latest maintenance log if any (Requires relationship to be loaded or just placeholder if not)

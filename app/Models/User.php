@@ -23,6 +23,7 @@ class User extends Authenticatable
         'sales_level',
         'dashboard_settings',
         'billing_pin',
+        'pool_id',
     ];
 
     protected $hidden = [
@@ -35,9 +36,15 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'dashboard_settings' => 'array',
+        'pool_id' => 'integer',
     ];
 
     // Relationships
+    public function pool()
+    {
+        return $this->belongsTo(Pool::class);
+    }
+
     public function clients()
     {
         return $this->hasMany(Client::class, 'assigned_sales_id');

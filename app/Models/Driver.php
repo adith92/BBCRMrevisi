@@ -15,7 +15,26 @@ class Driver extends Model
         'license_number',
         'status',
         'notes',
+        'pool_id',
+        'assigned_opportunity_id',
     ];
+
+    protected $casts = [
+        'pool_id' => 'integer',
+        'assigned_opportunity_id' => 'integer',
+    ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('pool', function ($query) {
+            if (auth()->check()) {
+                $user = auth()->user();
+                if ($user->isOperational() && $user->pool_id !== null) {
+                    $query->where('drivers.pool_id', $user->pool_id);
+                }
+            }
+        });
+    }
 
     public function bookings()
     {

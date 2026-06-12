@@ -535,9 +535,18 @@ class DashboardController extends Controller
         $activeBookings   = Booking::whereIn('status', ['confirmed', 'on_trip'])->count();
         $activeBookingList= Booking::whereIn('status', ['confirmed', 'on_trip'])->latest()->take(10)->get();
 
+        $unassignedOpportunities = Opportunity::where('stage', 'won')
+            ->where(function ($q) {
+                $q->whereDoesntHave('assignedVehicles')
+                  ->orWhereDoesntHave('assignedDrivers');
+            })
+            ->with(['client', 'sales', 'product'])
+            ->latest()
+            ->get();
+
         return view('dashboard.operational', compact(
             'availableFleet', 'onTripFleet', 'maintenanceFleet',
-            'activeBookings', 'activeBookingList'
+            'activeBookings', 'activeBookingList', 'unassignedOpportunities'
         ));
     }
 

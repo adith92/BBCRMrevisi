@@ -91,4 +91,35 @@ class ClientController extends Controller
 
         return view('clients.show', compact('client', 'stats'));
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'company_name'      => 'required|string|max:255|unique:clients,company_name',
+            'pic_name'          => 'required|string|max:255',
+            'phone'             => 'required|string|max:255',
+            'email'             => 'required|email|max:255',
+            'address'           => 'required|string|max:255',
+            'industry'          => 'nullable|string|max:255',
+            'status'            => 'nullable|in:active,prospect,inactive',
+            'assigned_sales_id' => 'nullable|exists:users,id',
+            'notes'             => 'nullable|string',
+        ]);
+
+        if (empty($validated['assigned_sales_id'])) {
+            $validated['assigned_sales_id'] = auth()->id();
+        }
+
+        if (empty($validated['status'])) {
+            $validated['status'] = 'active';
+        }
+
+        $client = Client::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'client' => $client], 201);
+        }
+
+        return redirect()->route('clients.index')->with('success', 'Client berhasil didaftarkan.');
+    }
 }

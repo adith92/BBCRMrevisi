@@ -33,13 +33,6 @@ class OpportunityController extends Controller
                 fn ($q) => $q->where('sales_id', $user->id)
             )
             ->when(
-                $user->isManager(),
-                function ($q) use ($user) {
-                    $teamIds = User::where('manager_id', $user->id)->where('role', 'sales')->pluck('id');
-                    $q->whereIn('sales_id', $teamIds);
-                }
-            )
-            ->when(
                 $request->filled('stage'),
                 fn ($q) => $q->where('stage', $request->stage)
             )
@@ -209,14 +202,15 @@ class OpportunityController extends Controller
             'products.*.quantity' => 'required|integer|min:1',
             'products.*.estimatedValue' => 'required|numeric|min:0',
             'products.*.details'  => 'nullable|string',
-            'estimated_value'     => 'nullable|numeric|min:0',
-            'final_value'         => 'nullable|numeric|min:0',
-            'pax'                 => 'nullable|integer|min:1',
-            'expected_close_date' => 'nullable|date',
-            'actual_close_date'   => 'nullable|date',
-            'lost_reason'         => 'nullable|string',
-            'notes'               => 'nullable|string',
-            'subType'             => 'nullable|string',
+            'estimated_value'           => 'nullable|numeric|min:0',
+            'final_value'               => 'required_if:stage,won|nullable|numeric|min:0',
+            'contract_duration_months'  => 'required_if:stage,won|nullable|integer|min:1',
+            'pax'                       => 'nullable|integer|min:1',
+            'expected_close_date'       => 'nullable|date',
+            'actual_close_date'         => 'nullable|date',
+            'lost_reason'               => 'nullable|string',
+            'notes'                     => 'nullable|string',
+            'subType'                   => 'nullable|string',
         ]);
 
         $estimatedValue = 0;
@@ -232,6 +226,19 @@ class OpportunityController extends Controller
         // Stage change validation
         $oldStage = $opportunity->stage;
         $isStageChanged = $validated['stage'] !== $oldStage;
+
+        // Enforce that assignments are only allowed if the Opportunity stage is 'won' (case-insensitive)
+        $targetStage = strtolower($validated['stage'] ?? $opportunity->stage);
+        $hasFleet = !empty($request->input('fleet_ids'));
+        $hasDrivers = !empty($request->input('driver_ids'));
+        if ($targetStage !== 'won' && ($hasFleet || $hasDrivers)) {
+            if ($request->wantsJson()) {
+                return response()->json(['ok' => false, 'message' => 'Assignments are only allowed if the Opportunity stage is won.'], 422);
+            }
+            return back()->withErrors([
+                'stage' => 'Unit kendaraan dan supir hanya dapat diassign jika status oportunitas adalah WON.',
+            ]);
+        }
 
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
@@ -399,18 +406,30 @@ class OpportunityController extends Controller
         }
 
         $validated = $request->validate([
-            'stage'       => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
-            'lost_reason' => 'required_if:stage,lost|nullable|string',
-            'notes'       => 'nullable|string',
-            'fleet_ids'   => 'nullable|array',
-            'fleet_ids.*' => 'exists:vehicles,id',
-            'driver_ids'  => 'nullable|array',
-            'driver_ids.*'=> 'exists:drivers,id',
+            'stage'                     => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
+            'lost_reason'               => 'required_if:stage,lost|nullable|string',
+            'final_value'               => 'required_if:stage,won|nullable|numeric|min:0',
+            'contract_duration_months'  => 'required_if:stage,won|nullable|integer|min:1',
+            'notes'                     => 'nullable|string',
+            'fleet_ids'                 => 'nullable|array',
+            'fleet_ids.*'               => 'exists:vehicles,id',
+            'driver_ids'                => 'nullable|array',
+            'driver_ids.*'              => 'exists:drivers,id',
         ]);
 
         if (!$this->pipelineService->canTransition($opportunity->stage, $validated['stage'])) {
             return back()->withErrors([
                 'stage' => "Transisi dari {$opportunity->stage} ke {$validated['stage']} tidak diizinkan.",
+            ]);
+        }
+
+        // Enforce that assignments are only allowed if the Opportunity stage is 'won' (case-insensitive)
+        $targetStage = strtolower($validated['stage'] ?? $opportunity->stage);
+        $hasFleet = !empty($request->input('fleet_ids'));
+        $hasDrivers = !empty($request->input('driver_ids'));
+        if ($targetStage !== 'won' && ($hasFleet || $hasDrivers)) {
+            return back()->withErrors([
+                'stage' => 'Unit kendaraan dan supir hanya dapat diassign jika status oportunitas adalah WON.',
             ]);
         }
 
@@ -507,6 +526,8 @@ class OpportunityController extends Controller
 
             if ($validated['stage'] === 'won') {
                 $updates['actual_close_date']  = now()->toDateString();
+                $updates['final_value']        = $validated['final_value'];
+                $updates['contract_duration_months'] = $validated['contract_duration_months'];
                 $opportunity->update($updates);
                 $this->pipelineService->triggerWonActions($opportunity->fresh());
                 
@@ -540,10 +561,12 @@ class OpportunityController extends Controller
         }
 
         $validated = $request->validate([
-            'stage'           => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
-            'lost_reason'     => 'nullable|string|max:500',
-            'estimated_value' => 'nullable|numeric|min:0',
-            'notes'           => 'nullable|string',
+            'stage'                     => 'required|in:call_meeting,prospecting,proposal,negotiation,won,lost',
+            'lost_reason'               => 'nullable|string|max:500',
+            'estimated_value'           => 'nullable|numeric|min:0',
+            'final_value'               => 'required_if:stage,won|nullable|numeric|min:0',
+            'contract_duration_months'  => 'required_if:stage,won|nullable|integer|min:1',
+            'notes'                     => 'nullable|string',
         ]);
 
         $fromStage = $opportunity->stage;
@@ -576,6 +599,8 @@ class OpportunityController extends Controller
 
         if ($toStage === 'won') {
             $updates['actual_close_date'] = now()->toDateString();
+            $updates['final_value']        = $validated['final_value'];
+            $updates['contract_duration_months'] = $validated['contract_duration_months'];
         }
 
         $opportunity->update($updates);
@@ -686,35 +711,11 @@ class OpportunityController extends Controller
 
     protected function authorizeView(Opportunity $opportunity): void
     {
-        $user = auth()->user();
-        if ($user->isSales() && $opportunity->sales_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('view', $opportunity);
     }
 
     protected function authorizeEdit(Opportunity $opportunity): void
     {
-        $user = auth()->user();
-
-        // GM has full edit access
-        if ($user->isGM()) {
-            return;
-        }
-
-        // Manager can edit if the opportunity belongs to a subordinate sales rep
-        if ($user->isManager()) {
-            $opportunityOwner = User::find($opportunity->sales_id);
-            if ($opportunityOwner && $opportunityOwner->manager_id === $user->id) {
-                return;
-            }
-            abort(403, 'Akses ditolak: Hanya Manager dari Sales pemilik yang dapat mengedit.');
-        }
-
-        // Sales can only edit if they are the owner
-        if ($user->isSales() && $opportunity->sales_id === $user->id) {
-            return;
-        }
-
-        abort(403, 'Akses ditolak: Anda tidak memiliki wewenang untuk mengedit oportunitas ini.');
+        $this->authorize('update', $opportunity);
     }
 }

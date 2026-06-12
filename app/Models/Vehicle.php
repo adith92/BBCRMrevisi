@@ -25,13 +25,30 @@ class Vehicle extends Model
         'bbm_type',
         'current_km',
         'year_manufactured',
+        'fuel_indicator',
+        'insurance_expiry',
+        'assigned_opportunity_id',
     ];
 
     protected $casts = [
         'stnk_expiry' => 'date',
         'pajak_expiry' => 'date',
         'current_km' => 'integer',
+        'insurance_expiry' => 'date',
+        'assigned_opportunity_id' => 'integer',
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('pool', function ($query) {
+            if (auth()->check()) {
+                $user = auth()->user();
+                if ($user->isOperational() && $user->pool_id !== null) {
+                    $query->where('vehicles.pool_id', $user->pool_id);
+                }
+            }
+        });
+    }
 
     public function pool()
     {
