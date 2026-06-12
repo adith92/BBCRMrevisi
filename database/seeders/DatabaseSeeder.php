@@ -152,16 +152,46 @@ class DatabaseSeeder extends Seeder
         ];
 
         $pool_ids = [1, 2, 3];
+        $colors = ['Hitam', 'Putih', 'Silver', 'Abu-Abu', 'Biru Navy'];
+        $transmissions = ['automatic', 'manual'];
+        $bbm_types = ['bensin', 'solar'];
+        $vehicle_logs = [
+            'Layanan pemeliharaan rutin selesai, rotasi ban.',
+            'Unit dalam kondisi prima, siap untuk kontrak jangka panjang.',
+            'Pembersihan interior menyeluruh dan AC diservis.',
+            'Oli mesin diganti, kampas rem depan baru.',
+            'Inspeksi keselamatan lolos, dokumen pajak diperbarui.'
+        ];
+
         foreach ($brands as $idx => $brand) {
+            // Tentukan status awal (nanti akan dikaitkan lebih detail di akhir seeder)
+            $status = 'available';
+            if ($idx === 4 || $idx === 9) $status = 'maintenance';
+            elseif ($idx >= 10 && $idx <= 13) $status = 'rent_out';
+            elseif ($idx === 14 || $idx === 15) $status = 'booked';
+            elseif ($idx === 16 || $idx === 17) $status = 'hold';
+
+            $log = $vehicle_logs[$idx % count($vehicle_logs)];
+            if ($status === 'maintenance') {
+                $log = ($idx === 4) ? 'Servicing - Overhaul mesin rutin' : 'In Queue - Ganti oli & filter';
+            }
+
             Vehicle::create([
                 'plate_number' => 'BB ' . str_pad($idx + 1, 4, '0', STR_PAD_LEFT) . ' XX',
                 'brand' => $brand[0],
                 'model' => $brand[1],
                 'capacity' => $brand[2],
                 'year' => 2024 - ($idx % 3),
-                'status' => 'available',
+                'status' => $status,
                 'pool_id' => $pool_ids[$idx % 3],
-                'notes' => 'Vehicle ' . ($idx + 1),
+                'notes' => $log,
+                'color' => $colors[$idx % count($colors)],
+                'transmission' => $transmissions[$idx % count($transmissions)],
+                'bbm_type' => $bbm_types[$idx % count($bbm_types)],
+                'current_km' => random_int(12000, 245000),
+                'year_manufactured' => 2024 - ($idx % 5),
+                'stnk_expiry' => Carbon::now()->addDays(random_int(180, 1200)),
+                'pajak_expiry' => Carbon::now()->addDays(random_int(30, 365)),
             ]);
         }
 
@@ -170,13 +200,27 @@ class DatabaseSeeder extends Seeder
                         'Farah Nabila', 'Gunawan Setiawan', 'Haris Gunawan', 'Iwan Pratama', 'Joko Susanto',
                         'Karina Sehati', 'Laris Gunardi', 'Maryanto Wijaya', 'Nuri Azizah', 'Ongki Wijaya'];
 
+        $driver_notes = [
+            'Sertifikasi mengemudi defensif aktif. Record bersih.',
+            'Sangat berpengalaman untuk rute jarak jauh Jawa-Bali.',
+            'Lolos sertifikasi supir VIP, ramah dan disiplin.',
+            'Menguasai rute logistik perkotaan dan bandara.',
+            'Supir cadangan operasional pool.'
+        ];
+
         foreach ($driver_names as $idx => $name) {
+            $status = 'available';
+            if ($idx >= 8 && $idx <= 11) $status = 'assigned';
+            elseif ($idx === 12 || $idx === 13) $status = 'reserved';
+            elseif ($idx === 14) $status = 'inactive';
+
             Driver::create([
                 'name' => $name,
                 'phone' => '082' . random_int(1000000000, 9999999999),
                 'license_number' => 'SIM' . str_pad($idx + 1, 8, '0', STR_PAD_LEFT),
-                'status' => 'available',
-                'notes' => 'Driver ' . ($idx + 1),
+                'status' => $status,
+                'notes' => $driver_notes[$idx % count($driver_notes)],
+                'pool_id' => $pool_ids[$idx % 3], // Isi pool_id agar tidak "Pool: —"
             ]);
         }
 
@@ -284,6 +328,50 @@ class DatabaseSeeder extends Seeder
 
         // ==================== MASSIVE DEMO DATA ====================
         $this->call(DemoMassiveSeeder::class);
+
+        // ==================== LINK VEHICLES & DRIVERS TO OPPORTUNITIES ====================
+        $wonOpps = \App\Models\Opportunity::where('stage', 'won')->limit(10)->get();
+        $otherOpps = \App\Models\Opportunity::whereIn('stage', ['proposal', 'negotiation'])->limit(5)->get();
+
+        if ($wonOpps->isNotEmpty()) {
+            // Link rented out vehicles
+            $rentedVehicles = Vehicle::where('status', 'rent_out')->get();
+            foreach ($rentedVehicles as $vIdx => $vehicle) {
+                if (isset($wonOpps[$vIdx])) {
+                    $vehicle->assigned_opportunity_id = $wonOpps[$vIdx]->id;
+                    $vehicle->save();
+                }
+            }
+
+            // Link assigned drivers
+            $assignedDrivers = Driver::where('status', 'assigned')->get();
+            foreach ($assignedDrivers as $dIdx => $driver) {
+                if (isset($wonOpps[$dIdx])) {
+                    $driver->assigned_opportunity_id = $wonOpps[$dIdx]->id;
+                    $driver->save();
+                }
+            }
+        }
+
+        if ($otherOpps->isNotEmpty()) {
+            // Link booked vehicles
+            $bookedVehicles = Vehicle::where('status', 'booked')->get();
+            foreach ($bookedVehicles as $bIdx => $vehicle) {
+                if (isset($otherOpps[$bIdx])) {
+                    $vehicle->assigned_opportunity_id = $otherOpps[$bIdx]->id;
+                    $vehicle->save();
+                }
+            }
+
+            // Link reserved drivers
+            $reservedDrivers = Driver::where('status', 'reserved')->get();
+            foreach ($reservedDrivers as $rIdx => $driver) {
+                if (isset($otherOpps[$rIdx])) {
+                    $driver->assigned_opportunity_id = $otherOpps[$rIdx]->id;
+                    $driver->save();
+                }
+            }
+        }
 
         // ==================== MASSIVE VEHICLE + BOOKING + VOUCHER + KPI ====================
         // $this->call(MassiveVehicleBookingSeeder::class);

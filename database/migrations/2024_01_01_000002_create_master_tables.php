@@ -34,7 +34,7 @@ return new class extends Migration {
             $table->string('name');
             $table->string('phone');
             $table->string('license_number')->unique();
-            $table->enum('status', ['available', 'on_duty', 'off'])->default('available');
+            $table->string('status')->default('available');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
@@ -46,7 +46,7 @@ return new class extends Migration {
             $table->string('model');
             $table->integer('capacity');
             $table->year('year');
-            $table->enum('status', ['available', 'on_trip', 'maintenance', 'inactive'])->default('available');
+            $table->string('status')->default('available');
             $table->foreignId('pool_id')->nullable()->constrained()->nullOnDelete();
             $table->text('notes')->nullable();
             $table->timestamps();
