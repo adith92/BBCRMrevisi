@@ -39,9 +39,7 @@
         </button>
 
         {{-- Dark/Light toggle --}}
-        <button class="topbar-icon-btn" onclick="CRM_Theme.toggle()" title="Toggle theme ⌘D" id="theme-toggle-btn">
-            <span id="theme-icon" class="text-[16px]">☀️</span>
-        </button>
+        <x-theme-toggle />
 
         {{-- Focus / Presentation mode --}}
         <button class="topbar-icon-btn hidden md:flex" onclick="CRM_Focus.toggle()" title="Presentation mode ⌘B">
