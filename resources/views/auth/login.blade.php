@@ -196,10 +196,18 @@
             display: block;
             font-size: 10px;
             font-weight: 700;
-            color: #3d5a99;
+            color: #60a5fa;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 6px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Primary blue button */
@@ -308,22 +316,22 @@
 
     {{-- ═══ RIGHT PANEL — Login Form ═══ --}}
     <div class="right-panel">
-        <div class="form-wrap">
+        <div class="form-wrap animate-fade-in-up">
 
             {{-- Mobile logo (hidden on desktop) --}}
             <div class="flex items-center gap-3 mb-8" style="display:flex;" @media(min-width:900px){display:none!important;}>
                 <img src="/images/golden-bird-logo.svg" alt="Logo"
                      style="width:40px;height:40px;border-radius:10px;background:rgba(0,82,204,0.15);border:1px solid rgba(0,102,255,0.3);padding:5px;">
                 <div>
-                    <div class="text-base font-black text-gray-900">Golden Bird <span style="color:#3385ff;">CRM</span></div>
-                    <div class="text-[9px] uppercase tracking-widest font-semibold" style="color:#1e4080;">Command Center</div>
+                    <div class="text-base font-black text-white">Golden Bird <span style="color:#3385ff;">CRM</span></div>
+                    <div class="text-[9px] uppercase tracking-widest font-semibold" style="color:#60a5fa;">Command Center</div>
                 </div>
             </div>
 
             {{-- Header --}}
             <div class="mb-7">
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight mb-1">Selamat Datang 👋</h1>
-                <p class="text-sm" style="color:#2d4a7a;">Masuk ke Golden Bird CRM Command Center</p>
+                <h1 class="text-2xl font-black text-white tracking-tight mb-1">Selamat Datang 👋</h1>
+                <p class="text-sm" style="color:#94a3b8;">Masuk ke Golden Bird CRM Command Center</p>
             </div>
 
             {{-- Error --}}
@@ -350,6 +358,20 @@
                     this.selectedPassword = email.endsWith('@demo.crm') ? 'password' : 'password123';
                 }
             }">
+                <!-- 1-Click Login GM Button -->
+                <button type="button" 
+                        @click="
+                            const gm = users.find(u => u.role === 'gm');
+                            if (gm) {
+                                selectedRole = 'gm';
+                                updateAccount(gm.email);
+                                $nextTick(() => document.getElementById('login-form').submit());
+                            }
+                        " 
+                        class="w-full flex items-center justify-center py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-lg text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] mb-6">
+                    ⚡ 1-Click Login GM
+                </button>
+
                 <form id="login-form" method="POST" action="{{ route('login') }}" class="space-y-4">
                     @csrf
                     
@@ -403,5 +425,21 @@
         </div>
     </div>
 
+    <!-- Script to remove Spline watermark -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const interval = setInterval(() => {
+                const viewer = document.querySelector('spline-viewer');
+                if (viewer && viewer.shadowRoot) {
+                    const logo = viewer.shadowRoot.querySelector('#logo') || viewer.shadowRoot.querySelector('a[href*="spline.design"]');
+                    if (logo) {
+                        logo.style.display = 'none';
+                        clearInterval(interval);
+                    }
+                }
+            }, 100);
+            setTimeout(() => clearInterval(interval), 8000);
+        });
+    </script>
 </body>
 </html>
