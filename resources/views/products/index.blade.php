@@ -4,7 +4,7 @@
 
 @section('content')
 <div
-    x-data="{ searchTerm: '', activeTab: '{{ request('type', '') }}' }"
+    x-data="{ searchTerm: '', activeTab: '{{ request('type', '') }}', viewMode: localStorage.getItem('product_view_mode') || 'grid' }"
     class="p-4 md:p-6 space-y-5"
 >
 
@@ -71,27 +71,129 @@
             @endif
         </form>
     </div>
-
-    {{-- Category Filter Tabs --}}
-    <div class="flex gap-1 overflow-x-auto pb-1">
-        @php
-        $tabs = [
-            ''            => 'Semua',
-            'short_term'  => 'Short Term',
-            'long_term'   => 'Long Term',
-            'evoucher'    => 'E-Voucher',
-        ];
-        @endphp
-        @foreach($tabs as $val => $label)
-        <a href="{{ route('products.index', array_merge(request()->except('type','page'), $val ? ['type' => $val] : [])) }}"
-           class="flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors cursor-pointer {{ request('type', '') === $val ? 'bg-blue-600 text-gray-900 shadow-sm' : 'cc-card border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
-            {{ $label }}
-        </a>
-        @endforeach
+    {{-- Filter & View Toggle container --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1">
+        <div class="flex gap-1 overflow-x-auto">
+            @php
+            $tabs = [
+                ''            => 'Semua',
+                'short_term'  => 'Short Term',
+                'long_term'   => 'Long Term',
+                'evoucher'    => 'E-Voucher',
+            ];
+            @endphp
+            @foreach($tabs as $val => $label)
+            <a href="{{ route('products.index', array_merge(request()->except('type','page'), $val ? ['type' => $val] : [])) }}"
+               class="flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors cursor-pointer {{ request('type', '') === $val ? 'bg-blue-600 text-gray-900 shadow-sm' : 'cc-card border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+                {{ $label }}
+            </a>
+            @endforeach
+        </div>
+        <div class="flex items-center gap-1 border border-slate-200 dark:border-white/10 rounded-lg p-1 bg-slate-50 dark:bg-black/10 shrink-0">
+            <button @click="viewMode = 'grid'; localStorage.setItem('product_view_mode', 'grid')"
+                    :class="viewMode === 'grid' ? 'bg-blue-600 text-gray-900 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                    class="p-1.5 rounded-md transition-colors cursor-pointer"
+                    title="Grid View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                </svg>
+            </button>
+            <button @click="viewMode = 'list'; localStorage.setItem('product_view_mode', 'list')"
+                    :class="viewMode === 'list' ? 'bg-blue-600 text-gray-900 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                    class="p-1.5 rounded-md transition-colors cursor-pointer"
+                    title="List View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+    </div>    {{-- Table --}}
+    {{-- Grid View --}}
+    <div x-show="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        @forelse($products as $product)
+        <div class="glass-panel cc-card rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <span class="font-mono text-xs px-2 py-0.5 rounded" style="background:var(--cc-sidebar);color:var(--cc-text)">
+                        {{ $product->sku }}
+                    </span>
+                    @if($product->is_active)
+                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                        Aktif
+                    </span>
+                    @else
+                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                        Nonaktif
+                    </span>
+                    @endif
+                </div>
+                <h3 class="font-bold text-lg mb-1" style="color:var(--cc-text)">
+                    <a href="{{ route('products.show', $product->id) }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                        {{ $product->name }}
+                    </a>
+                </h3>
+                @if($product->category)
+                @php
+                $typeBadge = [
+                    'short_term' => 'bg-blue-100 text-blue-700',
+                    'long_term'  => 'bg-purple-100 text-purple-700',
+                    'evoucher'   => 'bg-emerald-100 text-emerald-700',
+                ];
+                $typeLabel = [
+                    'short_term' => 'Short Term',
+                    'long_term'  => 'Long Term',
+                    'evoucher'   => 'E-Voucher',
+                ];
+                @endphp
+                <div class="mb-2">
+                    <span class="text-xs px-1.5 py-0.5 rounded-full font-medium {{ $typeBadge[$product->category->type] ?? 'bg-slate-100 text-slate-600' }}">
+                        {{ $typeLabel[$product->category->type] ?? $product->category->type }}
+                    </span>
+                </div>
+                @endif
+                @if($product->description)
+                <p class="text-xs line-clamp-3 mb-4" style="color:var(--cc-text-muted)">{{ $product->description }}</p>
+                @endif
+            </div>
+            
+            <div class="pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between mt-auto">
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Harga Dasar ({{ $product->unit }})</span>
+                    <span class="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                        Rp {{ number_format((float)$product->base_price, 0, ',', '.') }}
+                    </span>
+                </div>
+                
+                <div class="flex items-center gap-1">
+                    <a href="{{ route('products.show', $product->id) }}" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Detail">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </a>
+                    @if(auth()->user()->isGM() || auth()->user()->isManager() || auth()->user()->isDirector())
+                    <a href="{{ route('products.edit', $product->id) }}" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="col-span-full py-16 text-center glass-panel cc-card rounded-2xl border border-slate-200 dark:border-white/10">
+            <svg class="w-12 h-12 mx-auto text-slate-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <p class="text-sm text-slate-400 font-medium">Tidak ada produk ditemukan</p>
+        </div>
+        @endforelse
     </div>
 
-    {{-- Table --}}
-    <div class="glass-panel cc-card rounded-2xl shadow-sm overflow-hidden border border-slate-200 dark:border-white/10">
+    {{-- List View --}}
+    <div x-show="viewMode === 'list'" class="glass-panel cc-card rounded-2xl shadow-sm overflow-hidden border border-slate-200 dark:border-white/10">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>

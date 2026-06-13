@@ -235,7 +235,7 @@ window.CRM_Palette = {
             i.label.toLowerCase().includes(ql) || i.sub.toLowerCase().includes(ql)
         );
         try {
-            const res = await fetch(`/search/global?q=${encodeURIComponent(q)}`, {
+            const res = await fetch(`/api/search/global?q=${encodeURIComponent(q)}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             if (!res.ok) throw new Error();

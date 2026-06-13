@@ -116,8 +116,49 @@
             <a href="{{ route('bookings.index') }}" style="background:rgba(215,167,47,0.14);color:#8c6814;border:1px solid rgba(215,167,47,0.26);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">{{ __('ui.render_deploy') }}</a>
         </div>
     </div>
-    <div class="flex items-center gap-2 flex-shrink-0">
-        <a href="{{ route('analytics.index') }}" class="btn-secondary text-xs py-2 px-4">
+    <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
+        {{-- Date Range / Month / Year Filter Controls --}}
+        <form method="GET" action="{{ route('dashboard.gm') }}" class="flex flex-wrap items-center gap-2 bg-black/10 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-2 rounded-xl text-xs" x-data="{ filterType: '{{ request('filter_type', 'month') }}' }">
+            <div class="flex items-center gap-1.5 border-r border-slate-200 dark:border-white/10 pr-2">
+                <span class="material-symbols-outlined text-[15px] text-slate-500">filter_alt</span>
+                <select name="filter_type" x-model="filterType" @change="$el.form.submit()" class="bg-transparent text-[var(--cc-text)] font-semibold border-none focus:ring-0 cursor-pointer p-0 select-none">
+                    <option value="month" {{ request('filter_type', 'month') === 'month' ? 'selected' : '' }}>Bulanan</option>
+                    <option value="year" {{ request('filter_type') === 'year' ? 'selected' : '' }}>Tahunan</option>
+                    <option value="range" {{ request('filter_type') === 'range' ? 'selected' : '' }}>Rentang Tanggal</option>
+                </select>
+            </div>
+            
+            <div x-show="filterType === 'month'" class="flex items-center gap-2">
+                <select name="month" @change="$el.form.submit()" class="bg-transparent text-[var(--cc-text)] border-none focus:ring-0 rounded px-1 py-0.5 cursor-pointer">
+                    @foreach(range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ request('month', now()->month) == $m ? 'selected' : '' }}>
+                            {{ Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                        </option>
+                    @endforeach
+                </select>
+                <select name="year" @change="$el.form.submit()" class="bg-transparent text-[var(--cc-text)] border-none focus:ring-0 rounded px-1 py-0.5 cursor-pointer">
+                    @foreach(range(now()->year - 3, now()->year + 2) as $y)
+                        <option value="{{ $y }}" {{ request('year', now()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div x-show="filterType === 'year'">
+                <select name="year" @change="$el.form.submit()" class="bg-transparent text-[var(--cc-text)] border-none focus:ring-0 rounded px-1 py-0.5 cursor-pointer">
+                    @foreach(range(now()->year - 3, now()->year + 2) as $y)
+                        <option value="{{ $y }}" {{ request('year', now()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div x-show="filterType === 'range'" class="flex items-center gap-2">
+                <input type="date" name="start_date" value="{{ request('start_date', now()->startOfMonth()->toDateString()) }}" @change="$el.form.submit()" class="bg-transparent text-[var(--cc-text)] border-none focus:ring-0 rounded p-0 w-28">
+                <span class="text-slate-400 font-bold">-</span>
+                <input type="date" name="end_date" value="{{ request('end_date', now()->endOfMonth()->toDateString()) }}" @change="$el.form.submit()" class="bg-transparent text-[var(--cc-text)] border-none focus:ring-0 rounded p-0 w-28">
+            </div>
+        </form>
+
+        <a href="{{ route('analytics.index') }}" class="btn-secondary text-xs py-2 px-4 h-9 flex items-center">
             <span class="material-symbols-outlined text-[14px]">query_stats</span>
             {{ __('ui.reports') }}
         </a>

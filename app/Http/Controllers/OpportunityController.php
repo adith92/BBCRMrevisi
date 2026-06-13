@@ -269,11 +269,31 @@ class OpportunityController extends Controller
                 }
 
                 // Database Transaction for Fleet & Driver
+                // Check if opportunity has Mobil Long Term product
+                $hasMobilLongTerm = false;
+                if (is_array($opportunity->products)) {
+                    foreach ($opportunity->products as $p) {
+                        if (isset($p['category']) && $p['category'] === 'Mobil Long Term') {
+                            $hasMobilLongTerm = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Database Transaction for Fleet & Driver
                 $targetFleetStatus = $validated['stage'] === 'won' ? 'on_trip' : ($validated['stage'] === 'negotiation' ? 'maintenance' : 'available');
                 $targetDriverStatus = $validated['stage'] === 'won' ? 'Assigned' : ($validated['stage'] === 'negotiation' ? 'Reserved' : 'Available');
 
-                if ($request->has('fleet_ids')) {
-                    $fleetIds = $request->input('fleet_ids') ?: [];
+                $fleetIds = $request->has('fleet_ids') ? ($request->input('fleet_ids') ?: []) : null;
+                $driverIds = $request->has('driver_ids') ? ($request->input('driver_ids') ?: []) : null;
+
+                // Enforce short term restrictions at won stage
+                if ($validated['stage'] === 'won' && !$hasMobilLongTerm) {
+                    $fleetIds = [];
+                    $driverIds = [];
+                }
+
+                if ($fleetIds !== null) {
                     $opportunity->assignedVehicles()->whereNotIn('id', $fleetIds)->update([
                         'assigned_opportunity_id' => null,
                         'status' => 'available'
@@ -292,8 +312,7 @@ class OpportunityController extends Controller
                     $opportunity->assignedVehicles()->update(['assigned_opportunity_id' => null, 'status' => 'available']);
                 }
 
-                if ($request->has('driver_ids')) {
-                    $driverIds = $request->input('driver_ids') ?: [];
+                if ($driverIds !== null) {
                     $opportunity->assignedDrivers()->whereNotIn('id', $driverIds)->update([
                         'assigned_opportunity_id' => null,
                         'status' => 'Available'
@@ -439,9 +458,28 @@ class OpportunityController extends Controller
             $targetFleetStatus = $validated['stage'] === 'won' ? 'on_trip' : ($validated['stage'] === 'negotiation' ? 'maintenance' /* usually reserved/hold */ : 'available');
             $targetDriverStatus = $validated['stage'] === 'won' ? 'Assigned' : ($validated['stage'] === 'negotiation' ? 'Reserved' : 'Available');
 
+            // Check if opportunity has Mobil Long Term product
+            $hasMobilLongTerm = false;
+            if (is_array($opportunity->products)) {
+                foreach ($opportunity->products as $p) {
+                    if (isset($p['category']) && $p['category'] === 'Mobil Long Term') {
+                        $hasMobilLongTerm = true;
+                        break;
+                    }
+                }
+            }
+
+            $fleetIds = isset($validated['fleet_ids']) ? $validated['fleet_ids'] : null;
+            $driverIds = isset($validated['driver_ids']) ? $validated['driver_ids'] : null;
+
+            // Enforce short term restrictions at won stage
+            if ($validated['stage'] === 'won' && !$hasMobilLongTerm) {
+                $fleetIds = [];
+                $driverIds = [];
+            }
+
             // Handle Fleet Assignments
-            if (isset($validated['fleet_ids'])) {
-                $fleetIds = $validated['fleet_ids'];
+            if ($fleetIds !== null) {
                 // Release old fleets
                 $opportunity->assignedVehicles()->whereNotIn('id', $fleetIds)->update([
                     'assigned_opportunity_id' => null,
@@ -472,8 +510,7 @@ class OpportunityController extends Controller
             }
 
             // Handle Driver Assignments
-            if (isset($validated['driver_ids'])) {
-                $driverIds = $validated['driver_ids'];
+            if ($driverIds !== null) {
                 // Release old drivers
                 $opportunity->assignedDrivers()->whereNotIn('id', $driverIds)->update([
                     'assigned_opportunity_id' => null,
@@ -780,11 +817,11 @@ class OpportunityController extends Controller
 
     protected function authorizeView(Opportunity $opportunity): void
     {
-        $this->authorize('view', $opportunity);
+        \Illuminate\Support\Facades\Gate::authorize('view', $opportunity);
     }
 
     protected function authorizeEdit(Opportunity $opportunity): void
     {
-        $this->authorize('update', $opportunity);
+        \Illuminate\Support\Facades\Gate::authorize('update', $opportunity);
     }
 }

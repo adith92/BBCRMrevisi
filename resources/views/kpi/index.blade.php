@@ -77,7 +77,8 @@
             <div class="grid grid-cols-1 gap-6" :class="personalMetrics ? 'xl:grid-cols-2' : ''">
                 {{-- Personal/Team Target Progress --}}
                 <template x-if="personalMetrics">
-                    <div class="rounded-3xl border border-emerald-500/10 bg-emerald-900/10 backdrop-blur-md p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div @click="openBreakdownModal('personal', currentUser.role === 'Sales' ? 'My Individual Trajectory' : 'My Team Trajectory')"
+                         class="rounded-3xl border border-emerald-500/10 bg-emerald-900/10 backdrop-blur-md p-6 relative overflow-hidden flex flex-col justify-between cursor-pointer hover:border-emerald-500/30 hover:shadow-lg transition-all duration-200 group">
                         <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                         
                         <div class="relative z-10">
@@ -111,7 +112,8 @@
                 </template>
 
                 {{-- Global Target Progress --}}
-                <div class="rounded-3xl border border-white/10 glass-card p-6 relative overflow-hidden flex flex-col justify-between">
+                <div @click="openBreakdownModal('global', currentUser.role === 'Sales' ? 'Team Trajectory' : 'Company Trajectory')"
+                     class="rounded-3xl border border-white/10 glass-card p-6 relative overflow-hidden flex flex-col justify-between cursor-pointer hover:border-indigo-500/30 hover:shadow-lg transition-all duration-200 group">
                     <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                     
                     <div class="relative z-10">
@@ -243,6 +245,120 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- Trajectory Breakdown Modal -->
+    <div x-show="showBreakdown" 
+         class="fixed inset-0 z-[100] overflow-y-auto" 
+         x-cloak
+         @keydown.escape.window="showBreakdown = false">
+        <!-- Backdrop -->
+        <div x-show="showBreakdown"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity"
+             @click="showBreakdown = false"></div>
+
+        <!-- Modal Content -->
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div x-show="showBreakdown"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="relative transform overflow-hidden rounded-2xl bg-[var(--cc-surface)] border border-[var(--cc-border)] p-6 shadow-2xl transition-all w-full max-w-3xl max-h-[85vh] flex flex-col">
+                
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-[var(--cc-border)] pb-4 mb-4">
+                    <h3 class="text-lg font-bold text-[var(--cc-text)] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-500">query_stats</span>
+                        <span x-text="breakdownTitle"></span>
+                    </h3>
+                    <button @click="showBreakdown = false" class="text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <!-- Content Area (Scrollable) -->
+                <div class="flex-1 overflow-y-auto space-y-4 min-h-[200px] max-h-[60vh] pr-2 custom-scrollbar">
+                    <template x-if="breakdownData">
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4 bg-black/10 dark:bg-white/5 p-4 rounded-xl mb-4 border border-[var(--cc-border)]">
+                                <div>
+                                    <div class="text-xs text-[var(--cc-text-muted)] font-semibold uppercase tracking-wider">Total Target</div>
+                                    <div class="text-xl font-bold font-mono text-[var(--cc-text)] mt-1" x-text="formatIDR(breakdownData.totalTarget)"></div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-[var(--cc-text-muted)] font-semibold uppercase tracking-wider">Total Realisasi</div>
+                                    <div class="text-xl font-bold font-mono text-emerald-500 mt-1" x-text="formatIDR(breakdownData.totalActual)"></div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <h4 class="font-bold text-sm text-[var(--cc-text-muted)] uppercase tracking-wider">Rincian Per Produk</h4>
+                                <template x-for="cat in productCategories" :key="cat">
+                                    <div class="border border-[var(--cc-border)] rounded-xl bg-black/5 dark:bg-white/5 overflow-hidden">
+                                        <!-- Header Row clickable to expand -->
+                                        <div @click="expandedCategory = (expandedCategory === cat ? null : cat)" 
+                                             class="flex justify-between items-center p-4 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                                            <div class="flex-1 min-w-0 pr-4">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="font-bold text-sm text-[var(--cc-text)]" x-text="cat"></span>
+                                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" 
+                                                          :class="getProductBarColorClass(cat, true)" 
+                                                          x-text="(breakdownData.productMetrics[cat]?.target > 0 ? ((breakdownData.productMetrics[cat]?.actual / breakdownData.productMetrics[cat]?.target) * 100).toFixed(0) : '0') + '%'"></span>
+                                                </div>
+                                                <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
+                                                    <div class="h-full transition-all duration-700" 
+                                                         :class="getProductBarColorClass(cat, false)"
+                                                         :style="`width: ${Math.min(breakdownData.productMetrics[cat]?.target > 0 ? (breakdownData.productMetrics[cat]?.actual / breakdownData.productMetrics[cat]?.target) * 100 : 0, 100)}%`"></div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right shrink-0 flex items-center gap-3">
+                                                <div>
+                                                    <div class="text-sm font-bold font-mono text-[var(--cc-text)]" x-text="formatIDR(breakdownData.productMetrics[cat]?.actual || 0)"></div>
+                                                    <div class="text-[10px] text-[var(--cc-text-muted)] font-semibold" x-text="'Target: ' + formatIDR(breakdownData.productMetrics[cat]?.target || 0)"></div>
+                                                </div>
+                                                <span class="material-symbols-outlined text-[20px] text-[var(--cc-text-muted)] transform transition-transform"
+                                                      :class="expandedCategory === cat ? 'rotate-180' : ''">expand_more</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Deals List dropdown -->
+                                        <div x-show="expandedCategory === cat" 
+                                             class="border-t border-[var(--cc-border)] p-4 bg-black/10 dark:bg-black/20 space-y-2">
+                                            <div class="text-xs font-semibold text-[var(--cc-text-muted)] uppercase mb-2">Daftar Oportunitas Berkontribusi:</div>
+                                            <template x-for="deal in (breakdownData.productMetrics[cat]?.deals || [])" :key="deal.id">
+                                                <div class="flex items-center justify-between p-2 rounded-lg bg-[var(--cc-surface)] border border-[var(--cc-border)] text-xs">
+                                                    <div class="min-w-0 flex-1 pr-3">
+                                                        <a :href="'/pipeline/' + deal.id" class="font-bold text-cc-cyan hover:underline truncate" x-text="deal.title"></a>
+                                                        <p class="text-[10px] text-[var(--cc-text-muted)]" x-text="deal.clientName"></p>
+                                                    </div>
+                                                    <div class="text-right shrink-0">
+                                                        <p class="font-bold text-emerald-500 font-mono" x-text="formatIDR(deal.contribution)"></p>
+                                                        <p class="text-[9px] text-[var(--cc-text-muted)]" x-text="'Deal Total: ' + formatIDR(deal.actualValue) + ' (Qty: ' + deal.quantity + ')'"></p>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <template x-if="!(breakdownData.productMetrics[cat]?.deals || []).length">
+                                                <div class="text-center py-4 text-xs text-[var(--cc-text-muted)]">Belum ada deal WON berkontribusi</div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -255,7 +371,7 @@ function dashboardManager() {
         deals: @json($deals),
         targets: @json($targets),
         
-        productCategories: ['Mobil Long Term', 'E-Voucher', 'Supir'],
+        productCategories: ['Mobil Long Term', 'E-Voucher', 'Supir', 'Mobil Short Term', 'Bis Short Term', 'Bis Long Term'],
         
         metrics: { totalTarget: 0, totalActual: 0, productMetrics: {}, activeDealsCount: 0, activePipelineValue: 0, winRate: 0 },
         personalMetrics: null,
@@ -264,6 +380,18 @@ function dashboardManager() {
         leaderboard: [],
         managerLeaderboard: [],
         selectedManagerId: null,
+
+        showBreakdown: false,
+        breakdownTitle: '',
+        breakdownData: null,
+        expandedCategory: null,
+
+        openBreakdownModal(type, title) {
+            this.breakdownTitle = title;
+            this.breakdownData = type === 'personal' ? this.personalMetrics : this.metrics;
+            this.showBreakdown = true;
+            this.expandedCategory = null;
+        },
 
         initData() {
             const allSalesIds = this.users.filter(u => u.role === 'Sales').map(u => u.id);
@@ -290,7 +418,7 @@ function dashboardManager() {
             let totalActual = 0;
             let productMetrics = {};
             this.productCategories.forEach(cat => {
-                productMetrics[cat] = { target: 0, actual: 0 };
+                productMetrics[cat] = { target: 0, actual: 0, deals: [] };
             });
             
             this.targets.forEach(t => {
@@ -328,7 +456,17 @@ function dashboardManager() {
                         prods.forEach(p => {
                             if (productMetrics[p.category]) {
                                 const prop = (p.estimatedValue * (p.quantity || 1)) / totalEst;
-                                productMetrics[p.category].actual += Math.round(val * prop);
+                                const contribution = Math.round(val * prop);
+                                productMetrics[p.category].actual += contribution;
+                                
+                                productMetrics[p.category].deals.push({
+                                    id: d.id,
+                                    title: d.title || 'Deal #' + d.id,
+                                    clientName: d.clientName || 'General Client',
+                                    actualValue: val,
+                                    contribution: contribution,
+                                    quantity: p.quantity || 1
+                                });
                             }
                         });
                         totalActual += val;

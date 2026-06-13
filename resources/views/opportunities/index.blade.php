@@ -22,9 +22,11 @@
                 <p class="text-xs text-[var(--cc-text-muted)] mt-0.5">Daftar peluang penjualan B2B</p>
             </div>
         </div>
+        @if(!auth()->user()->isGM())
         <a href="{{ route('opportunities.create') }}" class="btn-primary">
             <span class="material-symbols-outlined text-[18px]">add</span> Opportunity Baru
         </a>
+        @endif
     </div>
 
     {{-- Filters --}}
@@ -88,8 +90,24 @@
                                 {{ $op->title ?? $op->product->name ?? 'Opportunity #'.$op->id }}
                             </a>
                         </td>
-                        <td class="px-5 py-3.5 text-cc-muted">{{ $op->client->company_name ?? '—' }}</td>
-                        <td class="px-5 py-3.5 text-cc-muted">{{ $op->sales->name ?? '—' }}</td>
+                        <td class="px-5 py-3.5">
+                            @if($op->client)
+                            <a href="{{ route('clients.show', $op->client->id) }}" class="text-cc-cyan hover:underline">
+                                {{ $op->client->company_name }}
+                            </a>
+                            @else
+                            <span class="text-cc-muted">—</span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-3.5">
+                            @if($op->sales)
+                            <a href="{{ route('sales.performance', $op->sales->id) }}" class="text-cc-cyan hover:underline">
+                                {{ $op->sales->name }}
+                            </a>
+                            @else
+                            <span class="text-cc-muted">—</span>
+                            @endif
+                        </td>
                         <td class="px-5 py-3.5">
                             <span class="inline-flex px-2.5 py-0.5 rounded-lg text-[11px] font-bold {{ $stageColors[$op->stage] ?? 'bg-slate-500/12 text-slate-500 border border-slate-500/20' }}">{{ ucfirst($op->stage) }}</span>
                         </td>

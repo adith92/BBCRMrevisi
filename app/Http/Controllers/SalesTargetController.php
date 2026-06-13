@@ -31,7 +31,7 @@ class SalesTargetController extends Controller
             ];
         });
 
-        $deals = \App\Models\Opportunity::with('product')->get()->map(function($d) {
+        $deals = \App\Models\Opportunity::with(['product', 'client'])->get()->map(function($d) {
             return [
                 'id' => $d->id,
                 'salesId' => $d->sales_id,
@@ -40,6 +40,8 @@ class SalesTargetController extends Controller
                 'estimatedValue' => (float)$d->estimated_value,
                 'productName' => $d->product->name ?? '',
                 'products' => $d->products, // JSON array
+                'title' => $d->title,
+                'clientName' => $d->client->name ?? '',
             ];
         });
 

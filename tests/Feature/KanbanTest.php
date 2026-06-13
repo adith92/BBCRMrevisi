@@ -166,6 +166,8 @@ class KanbanTest extends TestCase
 
         $response = $this->actingAs($sales)->patchJson("/opportunities/{$opp->id}/move-stage", [
             'stage' => 'won', // skip is now allowed
+            'final_value' => 50000000,
+            'contract_duration_months' => 12
         ]);
 
         $response->assertOk()->assertJsonFragment(['ok' => true]);
@@ -198,6 +200,8 @@ class KanbanTest extends TestCase
 
         $this->actingAs($sales)->patchJson("/opportunities/{$opp->id}/move-stage", [
             'stage' => 'won',
+            'final_value' => 50000000,
+            'contract_duration_months' => 12
         ]);
 
         $fresh = $opp->fresh();

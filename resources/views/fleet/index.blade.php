@@ -17,7 +17,7 @@
 
 @section('content')
 @php
-    $canModify = auth()->user()->isOperational() || auth()->user()->isManager() || auth()->user()->isGM();
+    $canModify = auth()->user()->isOperational() || auth()->user()->isManager();
     $statusColors = [
         'available'   => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         'maintenance' => 'bg-amber-500/10 text-amber-400 border-amber-500/20',

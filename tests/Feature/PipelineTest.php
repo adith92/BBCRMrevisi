@@ -120,6 +120,8 @@ class PipelineTest extends TestCase
             ->withSession(['_token' => 'test-token'])
             ->post("/opportunities/{$opportunity->id}/advance-stage", [
                 'stage'  => 'won',
+                'final_value' => 10000000,
+                'contract_duration_months' => 12,
                 '_token' => 'test-token',
             ]);
 
@@ -160,6 +162,8 @@ class PipelineTest extends TestCase
             ->withSession(['_token' => 'test-token'])
             ->post("/opportunities/{$opportunity->id}/advance-stage", [
                 'stage'  => 'won',
+                'final_value' => 10000000,
+                'contract_duration_months' => 12,
                 '_token' => 'test-token',
             ]);
 
@@ -222,6 +226,8 @@ class PipelineTest extends TestCase
             ->withSession(['_token' => 'test-token'])
             ->post("/opportunities/{$opportunity->id}/advance-stage", [
                 'stage'  => 'won',
+                'final_value' => 10000000,
+                'contract_duration_months' => 12,
                 '_token' => 'test-token',
             ]);
 
@@ -273,6 +279,8 @@ class PipelineTest extends TestCase
         $response = $this->actingAs($sales)
             ->patchJson("/opportunities/{$opportunity->id}/move-stage", [
                 'stage' => 'won',
+                'final_value' => 10000000,
+                'contract_duration_months' => 12,
             ]);
 
         $response->assertOk();

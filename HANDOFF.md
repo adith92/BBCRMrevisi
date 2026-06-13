@@ -8,8 +8,13 @@
 ## 📚 Urutan baca dokumen (WAJIB)
 1. `CLAUDE.md` — konteks project.
 2. `UI_UX_LOCK.md` — 🔒 tampilan dashboard depan TERKUNCI. Jangan ubah UI/UX.
-3. `RENCANA_IMPLEMENTASI_Sales_Pipeline.md` — semua keputusan + roadmap Tahap A–E.
-4. `VERIFIKASI_TAHAP_A.md` — apa yang sudah jadi + cara verifikasi.
+3. `MASTERPLAN_v8.0.md` — **dokumen FINAL**: visi, mindmap, RBAC, business workflow, apa yang sudah dibangun.
+4. `MASTERPROMPT_v8.0.md` — **dokumen FINAL**: persona AI, rules bisnis, model DB, rebuild dari 0, deploy.
+5. `LOGIC_MAP.md` — peta hak akses & workflow dari kode aktual.
+6. `RENCANA_IMPLEMENTASI_Sales_Pipeline.md` — keputusan & roadmap Tahap A–E (referensi historis).
+7. `VERIFIKASI_TAHAP_A.md` — cara verifikasi runtime.
+
+> v8.0 adalah sumber kebenaran terbaru. Jika ada konflik dengan dokumen lama (v7.8), ikuti v8.0.
 
 ---
 

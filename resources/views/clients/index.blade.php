@@ -3,7 +3,8 @@
 @section('header_title', 'Clients')
 
 @section('content')
-<x-breadcrumb :items="[
+<div x-data="{ showCreateModal: false }" class="space-y-6">
+    <x-breadcrumb :items="[
     ['url' => route('dashboard'), 'label' => 'Dashboard'],
     ['url' => '#', 'label' => 'Clients'],
 ]" />
@@ -33,10 +34,17 @@
 
 <div class="cc-card rounded-lg shadow p-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <h2 class="text-xl font-semibold text-[var(--cc-text)]">
-            All Clients
-            <span class="text-sm font-normal text-[var(--cc-text-muted)] ml-2">({{ $clients->total() }} total)</span>
-        </h2>
+        <div class="flex items-center justify-between w-full">
+            <h2 class="text-xl font-semibold text-[var(--cc-text)]">
+                All Clients
+                <span class="text-sm font-normal text-[var(--cc-text-muted)] ml-2">({{ $clients->total() }} total)</span>
+            </h2>
+            @if(auth()->user()->isSales() || auth()->user()->isManager())
+            <button @click="showCreateModal = true" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-gray-900 text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm cursor-pointer">
+                <span class="material-symbols-outlined text-[18px]">add</span> Tambah Client
+            </button>
+            @endif
+        </div>
 
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
             {{-- Status Filter --}}
@@ -116,6 +124,87 @@
         </table>
     </div>
 
+    {{-- Create Client Modal --}}
+    <div x-show="showCreateModal"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         x-cloak>
+        <div class="cc-card w-full max-w-lg rounded-2xl shadow-xl overflow-hidden"
+             @click.away="showCreateModal = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+            <div class="px-6 py-4 border-b border-[var(--cc-border)] flex items-center justify-between">
+                <h3 class="font-bold text-lg text-[var(--cc-text)]">Tambah Client Baru</h3>
+                <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <form action="{{ route('clients.store') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Nama Perusahaan <span class="text-rose-500">*</span></label>
+                    <input type="text" name="company_name" required placeholder="PT Contoh Indonesia" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Nama PIC <span class="text-rose-500">*</span></label>
+                        <input type="text" name="pic_name" required placeholder="PIC Name" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">No. Telepon <span class="text-rose-500">*</span></label>
+                        <input type="text" name="phone" required placeholder="08123456789" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Email PIC <span class="text-rose-500">*</span></label>
+                        <input type="email" name="email" required placeholder="pic@company.com" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Industri</label>
+                        <input type="text" name="industry" placeholder="FMCG, Telco, dsb" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Alamat Kantor <span class="text-rose-500">*</span></label>
+                    <input type="text" name="address" required placeholder="Jl. Sudirman No. 12" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" />
+                </div>
+                
+                @if(auth()->user()->isManager())
+                <div>
+                    <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Assign ke Sales</label>
+                    <select name="assigned_sales_id" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500">
+                        <option value="">Assign ke Saya Sendiri (Manager)</option>
+                        @foreach($sales as $s)
+                            <option value="{{ $s->id }}">{{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+
+                <div>
+                    <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Catatan Tambahan</label>
+                    <textarea name="notes" rows="3" placeholder="Catatan mengenai client..." class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-[var(--cc-border)]">
+                    <button type="button" @click="showCreateModal = false" class="px-4 py-2 border border-[var(--cc-border)] rounded-lg text-sm text-[var(--cc-text)] hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-gray-900 text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="mt-4">{{ $clients->links() }}</div>
 </div>
 
@@ -129,4 +218,5 @@ function applyClientFilters() {
     window.location.href = url.toString();
 }
 </script>
+</div>
 @endsection

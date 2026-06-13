@@ -147,7 +147,7 @@ class AnalyticsController extends Controller
 
     public function pipeline()
     {
-        $stages = ['prospecting', 'proposal', 'negotiation', 'won', 'lost'];
+        $stages = ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost'];
 
         try {
             $stageData = Opportunity::select(
@@ -169,7 +169,7 @@ class AnalyticsController extends Controller
         }
 
         $conversionRates = [];
-        $stageList = ['prospecting', 'proposal', 'negotiation'];
+        $stageList = ['call_meeting', 'prospecting', 'proposal', 'negotiation'];
         foreach ($stageList as $i => $stage) {
             $next = $stageList[$i + 1] ?? null;
             if ($next) {

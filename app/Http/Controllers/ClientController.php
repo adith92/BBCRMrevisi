@@ -49,7 +49,12 @@ class ClientController extends Controller
 
         $clients = $query->paginate(20)->withQueryString();
 
-        return view('clients.index', compact('clients'));
+        $sales = [];
+        if ($user->isManager()) {
+            $sales = \App\Models\User::where('manager_id', $user->id)->where('role', 'sales')->orderBy('name')->get();
+        }
+
+        return view('clients.index', compact('clients', 'sales'));
     }
 
     public function show(Client $client)
@@ -94,6 +99,11 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        if (!$user->isSales() && !$user->isManager()) {
+            abort(403, 'Hanya Sales Executive dan Sales Manager yang dapat mendaftarkan Client.');
+        }
+
         $validated = $request->validate([
             'company_name'      => 'required|string|max:255|unique:clients,company_name',
             'pic_name'          => 'required|string|max:255',

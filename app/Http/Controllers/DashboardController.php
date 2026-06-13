@@ -45,8 +45,24 @@ class DashboardController extends Controller
     public function gm()
     {
         $today      = Carbon::today();
-        $monthStart = Carbon::now()->startOfMonth();
-        $monthEnd   = Carbon::now()->endOfMonth();
+        $request    = request();
+        $filterType = $request->get('filter_type', 'month');
+        $year       = (int)$request->get('year', now()->year);
+        $month      = (int)$request->get('month', now()->month);
+        $startDateInput = $request->get('start_date');
+        $endDateInput   = $request->get('end_date');
+
+        if ($filterType === 'range' && $startDateInput && $endDateInput) {
+            $monthStart = Carbon::parse($startDateInput)->startOfDay();
+            $monthEnd   = Carbon::parse($endDateInput)->endOfDay();
+        } elseif ($filterType === 'year') {
+            $monthStart = Carbon::createFromDate($year, 1, 1)->startOfYear();
+            $monthEnd   = Carbon::createFromDate($year, 12, 31)->endOfYear();
+        } else {
+            // Default: month
+            $monthStart = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $monthEnd   = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        }
 
         $availableVehicles  = Vehicle::where('status', 'available')->count();
         $pendingDispatch    = Booking::where('status', 'pending')->count();
@@ -67,7 +83,7 @@ class DashboardController extends Controller
 
         $outstandingInvoices = Invoice::whereIn('status', ['sent', 'draft', 'overdue'])->sum('amount');
 
-        $completedBookings   = Booking::whereMonth('created_at', Carbon::now()->month)
+        $completedBookings   = Booking::whereBetween('created_at', [$monthStart, $monthEnd])
                                   ->where('status', 'completed')->count();
 
         $activeClients = Client::where('status', 'active')->count();
@@ -346,7 +362,7 @@ class DashboardController extends Controller
             ];
         });
 
-        $deals = Opportunity::all()->map(function($d) {
+        $deals = Opportunity::with(['client', 'product'])->get()->map(function($d) {
             return [
                 'id' => $d->id,
                 'salesId' => $d->sales_id,
@@ -354,14 +370,58 @@ class DashboardController extends Controller
                 'actualValue' => (float)$d->final_value,
                 'estimatedValue' => (float)$d->estimated_value,
                 'products' => $d->products,
+                'productName' => $d->product->name ?? '',
+                'title' => $d->title,
+                'clientName' => $d->client->name ?? '',
             ];
         });
 
-        $year  = now()->year;
-        $month = now()->month;
-        $dbTargets = \App\Models\SalesTarget::where('period_year', $year)
-            ->where('period_month', $month)
-            ->get();
+        if ($filterType === 'year') {
+            $dbTargets = \App\Models\SalesTarget::where('period_year', $year)
+                ->get()
+                ->groupBy('user_id')
+                ->map(function($group) {
+                    return (object)[
+                        'user_id' => $group->first()->user_id,
+                        'target_revenue' => $group->sum('target_revenue')
+                    ];
+                });
+        } elseif ($filterType === 'range' && $startDateInput && $endDateInput) {
+            // Get unique months/years in the range
+            $monthsInRange = [];
+            $curr = $monthStart->copy();
+            while ($curr->lte($monthEnd)) {
+                $monthsInRange[] = ['year' => $curr->year, 'month' => $curr->month];
+                $curr->addMonth();
+            }
+            
+            $targetQuery = \App\Models\SalesTarget::query();
+            foreach ($monthsInRange as $idx => $m) {
+                if ($idx === 0) {
+                    $targetQuery->where(function($q) use ($m) {
+                        $q->where('period_year', $m['year'])->where('period_month', $m['month']);
+                    });
+                } else {
+                    $targetQuery->orWhere(function($q) use ($m) {
+                        $q->where('period_year', $m['year'])->where('period_month', $m['month']);
+                    });
+                }
+            }
+            
+            $dbTargets = $targetQuery->get()
+                ->groupBy('user_id')
+                ->map(function($group) {
+                    return (object)[
+                        'user_id' => $group->first()->user_id,
+                        'target_revenue' => $group->sum('target_revenue')
+                    ];
+                });
+        } else {
+            // Month
+            $dbTargets = \App\Models\SalesTarget::where('period_year', $year)
+                ->where('period_month', $month)
+                ->get();
+        }
 
         $targets = $dbTargets->map(function($t) {
             return [

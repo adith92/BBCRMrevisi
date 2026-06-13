@@ -4,21 +4,23 @@
 
 @section('content')
 @php
-$stages     = ['prospecting','proposal','negotiation','won','lost'];
+$stages     = ['call_meeting', 'prospecting','proposal','negotiation','won','lost'];
 $stageIndex = array_search($opportunity->stage, $stages);
 $stageLabels = [
-    'prospecting' => 'Prospekting',
-    'proposal'    => 'Proposal',
-    'negotiation' => 'Negosiasi',
-    'won'         => 'Menang',
-    'lost'        => 'Kalah',
+    'call_meeting' => 'Call Meeting',
+    'prospecting'  => 'Prospekting',
+    'proposal'     => 'Proposal',
+    'negotiation'  => 'Negosiasi',
+    'won'          => 'Menang',
+    'lost'         => 'Kalah',
 ];
 $stageBadge = [
-    'prospecting' => 'bg-blue-100 text-blue-700 border border-blue-200',
-    'proposal'    => 'bg-amber-100 text-amber-700 border border-amber-200',
-    'negotiation' => 'bg-orange-100 text-orange-700 border border-orange-200',
-    'won'         => 'bg-emerald-100 text-emerald-700 border border-emerald-200',
-    'lost'        => 'bg-red-100 text-red-700 border border-red-200',
+    'call_meeting' => 'bg-purple-100 text-purple-700 border border-purple-200',
+    'prospecting'  => 'bg-blue-100 text-blue-700 border border-blue-200',
+    'proposal'     => 'bg-amber-100 text-amber-700 border border-amber-200',
+    'negotiation'  => 'bg-orange-100 text-orange-700 border border-orange-200',
+    'won'          => 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+    'lost'         => 'bg-red-100 text-red-700 border border-red-200',
 ];
 @endphp
 
@@ -119,7 +121,7 @@ $stageBadge = [
         {{-- Stage Progress Bar --}}
         <div class="mt-6">
             <div class="flex items-center">
-                @foreach(['prospecting','proposal','negotiation','won'] as $i => $s)
+                @foreach(['call_meeting', 'prospecting','proposal','negotiation','won'] as $i => $s)
                 @php $idx = array_search($s, $stages); @endphp
                 <div class="flex-1 flex flex-col items-center relative">
                     <div @class([
@@ -140,7 +142,7 @@ $stageBadge = [
                     <span class="mt-1.5 text-xs font-medium {{ $stageIndex === $idx ? 'text-blue-700 dark:text-blue-400' : ($stageIndex > $idx ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500') }}">
                         {{ $stageLabels[$s] }}
                     </span>
-                    @if($i < 3)
+                    @if($i < 4)
                     <div @class([
                         'absolute top-4.5 left-1/2 w-full h-0.5 -z-0',
                         'bg-emerald-400' => $stageIndex > $idx,

@@ -33,7 +33,7 @@ class OpportunityPolicy
     public function update(User $user, Opportunity $opportunity): bool
     {
         if ($user->isGM()) {
-            return true;
+            return false;
         }
 
         if ($user->isManager()) {
@@ -50,6 +50,6 @@ class OpportunityPolicy
 
     public function delete(User $user, Opportunity $opportunity): bool
     {
-        return $user->isGM();
+        return false;
     }
 }
