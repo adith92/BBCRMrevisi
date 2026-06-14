@@ -61,8 +61,11 @@ class ClientController extends Controller
     {
         $user = auth()->user();
 
-        // Sales can only see their own clients
-        if ($user->isSales() && $client->assigned_sales_id !== $user->id) {
+        // Sales can view assigned clients plus clients connected to their own bookings/opportunities.
+        if ($user->isSales()
+            && $client->assigned_sales_id !== $user->id
+            && ! $client->bookings()->where('sales_id', $user->id)->exists()
+            && ! $client->opportunities()->where('sales_id', $user->id)->exists()) {
             abort(403, 'Unauthorized');
         }
 
