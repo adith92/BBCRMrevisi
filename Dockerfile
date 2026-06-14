@@ -63,15 +63,19 @@ RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini \
 EXPOSE 8080
 
 CMD ["/bin/sh", "-c", "\
-    mkdir -p /var/www/html/storage/framework/cache /var/www/html/storage/framework/views /var/www/html/storage/framework/sessions /var/www/html/bootstrap/cache /var/www/html/database && \
-    touch /var/www/html/database/database.sqlite && \
-    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database && \
-    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database && \
-    chmod 664 /var/www/html/database/database.sqlite && \
-    php artisan migrate --force && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache && \
-    (php artisan db:seed --force >> /tmp/seed.log 2>&1 || true) & \
-    (php artisan db:seed --class=MassiveVehicleBookingSeeder --force >> /tmp/seed_massive.log 2>&1 || true) & \
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+ mkdir -p /var/www/html/storage/database \
+ /var/www/html/storage/app/public \
+ /var/www/html/storage/framework/cache/data \
+ /var/www/html/storage/framework/sessions \
+ /var/www/html/storage/framework/views \
+ /var/www/html/storage/logs \
+ /var/www/html/bootstrap/cache && \
+ touch /var/www/html/storage/database/database.sqlite && \
+ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
+ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
+ chmod 664 /var/www/html/storage/database/database.sqlite && \
+ php artisan migrate --force && \
+ php artisan config:cache && \
+ php artisan route:cache && \
+ php artisan view:cache && \
+ exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
