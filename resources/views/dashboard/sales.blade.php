@@ -264,63 +264,72 @@
                                     <th class="px-4 py-3">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-[var(--cc-border)]">
-                                <template x-for="item in items" :key="item.id">
+                            <tbody x-show="breakdownType === 'clients'" class="divide-y divide-[var(--cc-border)]">
+                                <template x-for="item in items" :key="'client-' + item.id">
                                     <tr class="hover:bg-black/5 dark:hover:bg-gray-100/5 transition-colors group">
-                                        <!-- Clients Row -->
-                                        <template x-if="breakdownType === 'clients'">
-                                            <>
-                                                <td class="px-4 py-3 font-semibold text-[var(--cc-text)]"><a :href="'/clients/' + item.id" class="group-hover:text-indigo-500" x-text="item.name"></a></td>
-                                                <td class="px-4 py-3"><span class="px-2 py-1 text-[10px] rounded font-semibold uppercase bg-slate-500/10 text-slate-500" :class="{'bg-emerald-500/10 text-emerald-500': item.status==='active'}" x-text="item.status"></span></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.contact || '-'"></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.phone || '-'"></td>
-                                            </>
-                                        </template>
-
-                                        <!-- Bookings Row -->
-                                        <template x-if="breakdownType === 'bookings'">
-                                            <>
-                                                <td class="px-4 py-3 font-mono font-semibold text-indigo-500"><a :href="'/bookings/' + item.id" class="hover:underline" x-text="item.booking_number"></a></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text)]" x-text="item.client_name"></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.vehicle"></td>
-                                                <td class="px-4 py-3"><span class="px-2 py-1 text-[10px] rounded font-semibold uppercase bg-yellow-500/10 text-yellow-500" x-text="item.status"></span></td>
-                                                <td class="px-4 py-3 text-right font-bold text-[var(--cc-text)]" x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)"></td>
-                                            </>
-                                        </template>
-
-                                        <!-- Fleet Row -->
-                                        <template x-if="breakdownType === 'fleet'">
-                                            <>
-                                                <td class="px-4 py-3 font-mono font-semibold text-[var(--cc-text)]"><a href="/fleet" class="group-hover:text-indigo-500" x-text="item.plate_number"></a></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.type"></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.pool"></td>
-                                                <td class="px-4 py-3">
-                                                    <span class="px-2 py-1 text-[10px] rounded font-semibold uppercase" 
-                                                          :class="{
-                                                              'bg-emerald-500/10 text-emerald-500': item.status==='available',
-                                                              'bg-blue-500/10 text-blue-500': item.status==='on_trip',
-                                                              'bg-red-500/10 text-red-500': item.status==='maintenance'
-                                                          }" x-text="item.status"></span>
-                                                </td>
-                                            </>
-                                        </template>
-
-                                        <!-- Drivers Row -->
-                                        <template x-if="breakdownType === 'drivers'">
-                                            <>
-                                                <td class="px-4 py-3 font-semibold text-[var(--cc-text)]"><a href="/drivers" class="group-hover:text-indigo-500 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center text-[10px] uppercase" x-text="item.name.substring(0,2)"></div> <span x-text="item.name"></span></a></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text-muted)] font-mono" x-text="item.phone"></td>
-                                                <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.pool"></td>
-                                                <td class="px-4 py-3">
-                                                    <span class="px-2 py-1 text-[10px] rounded font-semibold uppercase" 
-                                                          :class="{
-                                                              'bg-emerald-500/10 text-emerald-500': item.status==='available',
-                                                              'bg-blue-500/10 text-blue-500': item.status==='assigned'
-                                                          }" x-text="item.status"></span>
-                                                </td>
-                                            </>
-                                        </template>
-
+                                        <td class="px-4 py-3 font-semibold text-[var(--cc-text)]">
+                                            <a :href="'/clients/' + item.id" class="group-hover:text-indigo-500" x-text="item.name"></a>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-1 text-[10px] rounded font-semibold uppercase bg-slate-500/10 text-slate-500" :class="{'bg-emerald-500/10 text-emerald-500': item.status==='active'}" x-text="item.status"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.contact || '-'"></td>
+                                        <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.phone || '-'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tbody x-show="breakdownType === 'bookings'" class="divide-y divide-[var(--cc-border)]">
+                                <template x-for="item in items" :key="'booking-' + item.id">
+                                    <tr class="hover:bg-black/5 dark:hover:bg-gray-100/5 transition-colors group">
+                                        <td class="px-4 py-3 font-mono font-semibold text-indigo-500">
+                                            <a :href="'/bookings/' + item.id" class="hover:underline" x-text="item.booking_number"></a>
+                                        </td>
+                                        <td class="px-4 py-3 text-[var(--cc-text)]" x-text="item.client_name"></td>
+                                        <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.vehicle"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-1 text-[10px] rounded font-semibold uppercase bg-yellow-500/10 text-yellow-500" x-text="item.status"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-right font-bold text-[var(--cc-text)]" x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tbody x-show="breakdownType === 'fleet'" class="divide-y divide-[var(--cc-border)]">
+                                <template x-for="item in items" :key="'fleet-' + item.id">
+                                    <tr class="hover:bg-black/5 dark:hover:bg-gray-100/5 transition-colors group">
+                                        <td class="px-4 py-3 font-mono font-semibold text-[var(--cc-text)]">
+                                            <a :href="'/fleet/' + item.id" class="group-hover:text-indigo-500" x-text="item.plate_number"></a>
+                                        </td>
+                                        <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.type"></td>
+                                        <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.pool"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-1 text-[10px] rounded font-semibold uppercase"
+                                                  :class="{
+                                                      'bg-emerald-500/10 text-emerald-500': item.status==='available',
+                                                      'bg-blue-500/10 text-blue-500': item.status==='on_trip',
+                                                      'bg-red-500/10 text-red-500': item.status==='maintenance'
+                                                  }" x-text="item.status"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tbody x-show="breakdownType === 'drivers'" class="divide-y divide-[var(--cc-border)]">
+                                <template x-for="item in items" :key="'driver-' + item.id">
+                                    <tr class="hover:bg-black/5 dark:hover:bg-gray-100/5 transition-colors group">
+                                        <td class="px-4 py-3 font-semibold text-[var(--cc-text)]">
+                                            <a :href="'/drivers/' + item.id" class="group-hover:text-indigo-500 flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center text-[10px] uppercase" x-text="item.name.substring(0,2)"></div>
+                                                <span x-text="item.name"></span>
+                                            </a>
+                                        </td>
+                                        <td class="px-4 py-3 text-[var(--cc-text-muted)] font-mono" x-text="item.phone"></td>
+                                        <td class="px-4 py-3 text-[var(--cc-text-muted)]" x-text="item.pool"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-1 text-[10px] rounded font-semibold uppercase"
+                                                  :class="{
+                                                      'bg-emerald-500/10 text-emerald-500': item.status==='available',
+                                                      'bg-blue-500/10 text-blue-500': item.status==='assigned'
+                                                  }" x-text="item.status"></span>
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>

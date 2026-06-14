@@ -37,9 +37,9 @@ class DashboardApiController extends Controller
                     'id' => $c->id,
                     'name' => $c->company_name,
                     'status' => $c->status,
-                    'contact' => $c->primary_contact_name,
-                    'phone' => $c->primary_contact_phone,
-                    'email' => $c->primary_contact_email,
+                    'contact' => $c->pic_name,
+                    'phone' => $c->phone,
+                    'email' => $c->email,
                 ];
             });
 
@@ -68,7 +68,7 @@ class DashboardApiController extends Controller
                     'client_name' => $b->client->company_name ?? 'N/A',
                     'vehicle' => $b->vehicle->plate_number ?? 'N/A',
                     'status' => $b->status,
-                    'start_date' => $b->start_date ? $b->start_date->format('Y-m-d') : null,
+                    'start_date' => optional($b->pickup_datetime)->format('Y-m-d H:i'),
                     'price' => (float)$b->price,
                 ];
             });
@@ -85,7 +85,7 @@ class DashboardApiController extends Controller
                 return [
                     'id' => $v->id,
                     'plate_number' => $v->plate_number,
-                    'type' => $v->type,
+                    'type' => trim(collect([$v->brand, $v->model])->filter()->implode(' ')) ?: '-',
                     'pool' => $v->pool->name ?? 'N/A',
                     'status' => $v->status,
                 ];
