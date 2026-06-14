@@ -74,7 +74,7 @@
                                         {{ $booking->booking_number }}
                                     </a>
                                 </td>
-                                <td class="py-2 text-[var(--cc-text)]">{{ $booking->client->company_name }}</td>
+                                <td class="py-2 text-[var(--cc-text)]"><a href="{{ route('clients.show', $booking->client->id) }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ $booking->client->company_name }}</a></td>
                                 <td class="py-2">
                                     <a href="{{ route('fleet.show', $booking->vehicle_id) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-mono">
                                         {{ $booking->vehicle->plate_number }}
@@ -132,7 +132,13 @@
                                     </a>
                                     <span class="text-xs text-[var(--cc-text-muted)] block font-mono">{{ $opp->opp_number }}</span>
                                 </td>
-                                <td class="py-2.5 text-[var(--cc-text)]">{{ $opp->client->company_name ?? '—' }}</td>
+                                <td class="py-2.5 text-[var(--cc-text)]">
+                                    @if($opp->client)
+                                        <a href="{{ route('clients.show', $opp->client->id) }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ $opp->client->company_name }}</a>
+                                    @else
+                                        —
+                                    @endif
+                                </td>
                                 <td class="py-2.5 text-[var(--cc-text)]">{{ $opp->sales->name ?? '—' }}</td>
                                 <td class="py-2.5">
                                     <span class="inline-flex items-center gap-1 text-xs text-red-400 font-medium">

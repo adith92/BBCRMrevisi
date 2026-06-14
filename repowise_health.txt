@@ -1,0 +1,90 @@
+repowise health — /Users/adith92/Documents/ClaudeCodeBB/golden-bird-crm
+2026-06-14 11:10:37 [info     ] FileTraverser initialised      extra_exclude_patterns=0 include_nested_repos=False max_file_size_kb=500 repo_root=/Users/adith92/Documents/ClaudeCodeBB/golden-bird-crm submodules_skipped=0
+2026-06-14 11:10:37 [debug    ] Skipping oversized file        path=database/database.sqlite size_kb=692
+2026-06-14 11:10:37 [debug    ] Skipping generated file        path=database/factories/OpportunityFactory.php
+2026-06-14 11:10:37 [debug    ] Skipping generated file        path=database/factories/SubscriptionFactory.php
+2026-06-14 11:10:37 [debug    ] Skipping oversized file        path=storage/logs/laravel.log size_kb=2869
+2026-06-14 11:10:38 [info     ] import_resolution_per_language seconds={'markdown': 0.0, 'dockerfile': 0.0, 'php': 0.0, 'json': 0.0, 'yaml': 0.0, 'toml': 0.0, 'javascript': 0.0}
+2026-06-14 11:10:38 [info     ] Heritage edges resolved        total=38
+2026-06-14 11:10:38 [info     ] Call edges resolved            total=397
+2026-06-14 11:10:38 [info     ] Graph built                    edge_types={'defines': 956, 'imports': 464, 'has_method': 487, 'calls': 397, 'extends': 38} edges=2342 file_nodes=245 symbol_nodes=956
+2026-06-14 11:16:57 [debug    ] repo_commit_index_built        commits_parsed=118 files_with_history=194 indexable_files=194
+2026-06-14 11:16:59 [debug    ] co_change_computed             commit_limit=2000 commits=118 files_with_entropy=178 files_with_partners=77 min_count=2 pairs_above_threshold=676 pairs_considered=9328 tracked_files=233
+2026-06-14 11:17:04 [info     ] Git indexing complete          duration=386.0s files=194 hotspots=47 stable=0 tier=full
+2026-06-14 11:17:05 [debug    ] duplication_token_cache        hits=0 misses=208
+Could not persist health to DB: (sqlite3.OperationalError) no such table: 
+repositories
+[SQL: SELECT repositories.id, repositories.name, repositories.url, 
+repositories.local_path, repositories.default_branch, repositories.head_commit, 
+repositories.settings_json, repositories.created_at, repositories.updated_at 
+FROM repositories 
+WHERE repositories.local_path = ?]
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+Hotspot: 6.87/10 · Average: 7.83/10 · Worst: 4.78/10 (app/Models/User.php)
+
+Does the score find the bugs? 17/20 lowest-health files had a bug fix in the 
+last 6 months, 2.16x the 39% baseline (85% vs 39%).
+
+                           Lowest-scoring files (20)                            
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━┳━━━━━━┳━━━━━━┳━━━━━━━┓
+┃ File                                     ┃ Score ┃ CCN ┃ Nest ┃ NLOC ┃ Test? ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━╇━━━━━━╇━━━━━━╇━━━━━━━┩
+│ app/Models/User.php                      │   4.8 │   1 │    0 │  105 │   —   │
+│ app/Models/Opportunity.php               │   5.0 │   1 │    0 │  152 │   —   │
+│ resources/js/app.js                      │   5.1 │  39 │    4 │  862 │   —   │
+│ app/Http/Controllers/DashboardControlle… │   6.2 │   1 │    0 │  560 │   —   │
+│ app/Http/Controllers/OpportunityControl… │   6.2 │   1 │    0 │  695 │   —   │
+│ app/Http/Controllers/SalesTargetControl… │   6.2 │   1 │    0 │  154 │   —   │
+│ database/seeders/DatabaseSeeder.php      │   6.5 │   1 │    0 │  332 │   —   │
+│ database/seeders/DemoMassiveSeeder.php   │   6.5 │   1 │    0 │  544 │   —   │
+│ resources/views/activities/create.blade… │   6.5 │   1 │    0 │  198 │   —   │
+│ resources/views/activities/index.blade.… │   6.5 │   1 │    0 │  244 │   —   │
+│ resources/views/analytics/crosssell.bla… │   6.5 │   1 │    0 │  242 │   —   │
+│ resources/views/analytics/index.blade.p… │   6.5 │   1 │    0 │  212 │   —   │
+│ resources/views/auth/login.blade.php     │   6.5 │   1 │    0 │  419 │   —   │
+│ resources/views/bookings/create.blade.p… │   6.5 │   1 │    0 │  100 │   —   │
+│ resources/views/bookings/index.blade.php │   6.5 │   1 │    0 │   94 │   —   │
+│ resources/views/bookings/show.blade.php  │   6.5 │   1 │    0 │  156 │   —   │
+│ resources/views/clients/index.blade.php  │   6.5 │   1 │    0 │  208 │   —   │
+│ resources/views/clients/show.blade.php   │   6.5 │   1 │    0 │  180 │   —   │
+│ resources/views/components/sidebar.blad… │   6.5 │   1 │    0 │  253 │   —   │
+│ resources/views/dashboard/director.blad… │   6.5 │   1 │    0 │  391 │   —   │
+└──────────────────────────────────────────┴───────┴─────┴──────┴──────┴───────┘
+
+343 biomarker findings:
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┓
+┃ Severity ┃ Biomarker         ┃ File                      ┃ Function ┃ Impact ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━┩
+│ medium   │ dry_violation     │ tailwind.config.js        │ -        │  -0.35 │
+│ low      │ dry_violation     │ app/Http/Controllers/Act… │ -        │  -0.15 │
+│ low      │ prior_defect      │ app/Http/Controllers/Act… │ -        │  -0.30 │
+│ low      │ prior_defect      │ app/Http/Controllers/Ana… │ -        │  -0.30 │
+│ medium   │ hidden_coupling   │ app/Http/Controllers/Cli… │ -        │  -0.70 │
+│ medium   │ change_entropy    │ app/Http/Controllers/Cli… │ -        │  -1.06 │
+│ medium   │ co_change_scatter │ app/Http/Controllers/Cli… │ -        │  -1.26 │
+│ low      │ prior_defect      │ app/Http/Controllers/Cli… │ -        │  -0.30 │
+│ medium   │ prior_defect      │ app/Http/Controllers/Con… │ -        │  -0.70 │
+│ medium   │ dry_violation     │ app/Http/Controllers/Das… │ -        │  -0.35 │
+│ medium   │ hidden_coupling   │ app/Http/Controllers/Das… │ -        │  -0.26 │
+│ medium   │ hidden_coupling   │ app/Http/Controllers/Das… │ -        │  -0.26 │
+│ medium   │ churn_risk        │ app/Http/Controllers/Das… │ -        │  -0.31 │
+│ critical │ change_entropy    │ app/Http/Controllers/Das… │ -        │  -1.12 │
+│ high     │ co_change_scatter │ app/Http/Controllers/Das… │ -        │  -0.80 │
+│ critical │ prior_defect      │ app/Http/Controllers/Das… │ -        │  -0.74 │
+│ medium   │ dry_violation     │ app/Http/Controllers/Dri… │ -        │  -0.35 │
+│ low      │ prior_defect      │ app/Http/Controllers/Dri… │ -        │  -0.30 │
+│ medium   │ dry_violation     │ app/Http/Controllers/Fle… │ -        │  -0.35 │
+│ medium   │ change_entropy    │ app/Http/Controllers/Fle… │ -        │  -1.06 │
+│ low      │ prior_defect      │ app/Http/Controllers/Fle… │ -        │  -0.30 │
+│ low      │ prior_defect      │ app/Http/Controllers/Mai… │ -        │  -0.30 │
+│ medium   │ dry_violation     │ app/Http/Controllers/Opp… │ -        │  -0.35 │
+│ medium   │ hidden_coupling   │ app/Http/Controllers/Opp… │ -        │  -0.26 │
+│ medium   │ hidden_coupling   │ app/Http/Controllers/Opp… │ -        │  -0.26 │
+│ medium   │ churn_risk        │ app/Http/Controllers/Opp… │ -        │  -0.31 │
+│ critical │ change_entropy    │ app/Http/Controllers/Opp… │ -        │  -1.12 │
+│ high     │ co_change_scatter │ app/Http/Controllers/Opp… │ -        │  -0.80 │
+│ critical │ prior_defect      │ app/Http/Controllers/Opp… │ -        │  -0.74 │
+│ low      │ dry_violation     │ app/Http/Controllers/Pip… │ -        │  -0.15 │
+└──────────┴───────────────────┴───────────────────────────┴──────────┴────────┘

@@ -137,7 +137,7 @@
                                 <p class="text-sm font-medium text-[var(--cc-text)] truncate">{{ $activity->subject }}</p>
                                 <p class="text-xs text-[var(--cc-text-muted)]">
                                     {{ optional($activity->sales)->name ?? '-' }}
-                                    @if($activity->client) &bull; {{ optional($activity->client)->company_name }} @endif
+                                    @if($activity->client) &bull; <a href="{{ route('clients.show', $activity->client->id) }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ optional($activity->client)->company_name }}</a> @endif
                                 </p>
                                 <p class="text-xs text-[var(--cc-text-muted)]">{{ \Carbon\Carbon::parse($activity->activity_date)->format('d M Y H:i') }}</p>
                             </div>

@@ -1,0 +1,449 @@
+repowise dead-code — /Users/adith92/Documents/ClaudeCodeBB/golden-bird-crm
+2026-06-14 11:10:37 [info     ] FileTraverser initialised      extra_exclude_patterns=0 include_nested_repos=False max_file_size_kb=500 repo_root=/Users/adith92/Documents/ClaudeCodeBB/golden-bird-crm submodules_skipped=0
+2026-06-14 11:10:37 [debug    ] Skipping oversized file        path=database/database.sqlite size_kb=692
+2026-06-14 11:10:37 [debug    ] Skipping generated file        path=database/factories/OpportunityFactory.php
+2026-06-14 11:10:37 [debug    ] Skipping generated file        path=database/factories/SubscriptionFactory.php
+2026-06-14 11:10:37 [debug    ] Skipping oversized file        path=storage/logs/laravel.log size_kb=2869
+2026-06-14 11:10:38 [info     ] import_resolution_per_language seconds={'markdown': 0.0, 'dockerfile': 0.0, 'php': 0.0, 'json': 0.0, 'yaml': 0.0, 'toml': 0.0, 'javascript': 0.0}
+2026-06-14 11:10:38 [info     ] Heritage edges resolved        total=38
+2026-06-14 11:10:38 [info     ] Call edges resolved            total=397
+2026-06-14 11:10:38 [info     ] Graph built                    edge_types={'defines': 956, 'imports': 464, 'has_method': 487, 'calls': 397, 'extends': 38} edges=2342 file_nodes=245 symbol_nodes=956
+2026-06-14 11:10:38 [info     ] Framework edges added          count=62
+2026-06-14 11:16:57 [debug    ] repo_commit_index_built        commits_parsed=118 files_with_history=194 indexable_files=194
+2026-06-14 11:16:59 [debug    ] co_change_computed             commit_limit=2000 commits=118 files_with_entropy=178 files_with_partners=77 min_count=2 pairs_above_threshold=676 pairs_considered=9328 tracked_files=233
+2026-06-14 11:17:04 [info     ] Git indexing complete          duration=385.5s files=194 hotspots=47 stable=0 tier=full
+                            Dead Code (130 findings)                            
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Kind          ┃ File / Symbol  ┃ Confidence ┃ Ready? ┃ Lines ┃ Reason        ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ unreachable_… │ app/Console/C… │        40% │   ✗    │    40 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ app/Http/Midd… │        40% │   ✗    │    20 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ app/Policies/… │        40% │   ✗    │    60 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ app/Policies/… │        40% │   ✗    │    60 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ app/Policies/… │        40% │   ✗    │    60 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ config/cors.p… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ config/databa… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ config/filesy… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ config/loggin… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ config/mail.p… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ config/queue.… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ config/sessio… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    40 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    60 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    20 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    30 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    40 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    30 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    20 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    60 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ database/fact… │        40% │   ✗    │    30 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ lang/en/ui.php │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ lang/id/ui.php │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/js/… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ resources/vie… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ routes/consol… │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ routes/web.php │        40% │   ✗    │     0 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Pest.php │        40% │   ✗    │    10 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    30 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    60 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │   230 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    80 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    30 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │   130 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    50 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │   150 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    90 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    80 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │   550 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Feature… │        40% │   ✗    │    80 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Unit/Fo… │        40% │   ✗    │    60 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unreachable_… │ tests/Unit/Pi… │        40% │   ✗    │   410 │ File has no   │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ (in_degree=0) │
+│ unused_export │ ProcessSubscr… │        70% │   ✓    │    51 │ Public symbol │
+│               │                │            │        │       │ 'ProcessSubs… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ SetLocale      │        70% │   ✓    │    14 │ Public symbol │
+│               │                │            │        │       │ 'SetLocale'   │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ DriverPolicy   │        70% │   ✓    │    41 │ Public symbol │
+│               │                │            │        │       │ 'DriverPolic… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ OpportunityPo… │        70% │   ✓    │    47 │ Public symbol │
+│               │                │            │        │       │ 'Opportunity… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ VehiclePolicy  │        70% │   ✓    │    41 │ Public symbol │
+│               │                │            │        │       │ 'VehiclePoli… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ AppServicePro… │       100% │   ✓    │    18 │ Public symbol │
+│               │                │            │        │       │ 'AppServiceP… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ ActivityLogFa… │        40% │   ✗    │    33 │ Public symbol │
+│               │                │            │        │       │ 'ActivityLog… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ ApprovalReque… │        40% │   ✗    │    40 │ Public symbol │
+│               │                │            │        │       │ 'ApprovalReq… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ BookingFactory │        40% │   ✗    │    43 │ Public symbol │
+│               │                │            │        │       │ 'BookingFact… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ ClientFactory  │        40% │   ✗    │    19 │ Public symbol │
+│               │                │            │        │       │ 'ClientFacto… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ DriverFactory  │        40% │   ✗    │    14 │ Public symbol │
+│               │                │            │        │       │ 'DriverFacto… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ ProductCatego… │        40% │   ✗    │    21 │ Public symbol │
+│               │                │            │        │       │ 'ProductCate… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ ProductFactory │        40% │   ✗    │    23 │ Public symbol │
+│               │                │            │        │       │ 'ProductFact… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ SalesTargetFa… │        40% │   ✗    │    22 │ Public symbol │
+│               │                │            │        │       │ 'SalesTarget… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ UserFactory    │        40% │   ✗    │    35 │ Public symbol │
+│               │                │            │        │       │ 'UserFactory' │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ VehicleFactory │        40% │   ✗    │    18 │ Public symbol │
+│               │                │            │        │       │ 'VehicleFact… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ something      │        70% │   ✓    │     3 │ Public symbol │
+│               │                │            │        │       │ 'something'   │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ AuthTest       │       100% │   ✓    │    42 │ Public symbol │
+│               │                │            │        │       │ 'AuthTest'    │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ ClickableElem… │        70% │   ✓    │    37 │ Public symbol │
+│               │                │            │        │       │ 'ClickableEl… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ ClientTransac… │        70% │   ✓    │   134 │ Public symbol │
+│               │                │            │        │       │ 'ClientTrans… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ KanbanTest     │        70% │   ✓    │   333 │ Public symbol │
+│               │                │            │        │       │ 'KanbanTest'  │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ KpiTest        │        70% │   ✓    │   132 │ Public symbol │
+│               │                │            │        │       │ 'KpiTest' has │
+│               │                │            │        │       │ no importers  │
+│ unused_export │ LocalizationW… │        70% │   ✓    │    49 │ Public symbol │
+│               │                │            │        │       │ 'Localizatio… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ PipelineTest   │        70% │   ✓    │   298 │ Public symbol │
+│               │                │            │        │       │ 'PipelineTes… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ RevenueBreakd… │        70% │   ✓    │   105 │ Public symbol │
+│               │                │            │        │       │ 'RevenueBrea… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ RoleAccessTest │        70% │   ✓    │   131 │ Public symbol │
+│               │                │            │        │       │ 'RoleAccessT… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ RoleBugFixTest │        70% │   ✓    │   116 │ Public symbol │
+│               │                │            │        │       │ 'RoleBugFixT… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ SeedDemoDataT… │        70% │   ✓    │   105 │ Public symbol │
+│               │                │            │        │       │ 'SeedDemoDat… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ SmokeTest      │        70% │   ✓    │   490 │ Public symbol │
+│               │                │            │        │       │ 'SmokeTest'   │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ SubscriptionT… │        70% │   ✓    │   146 │ Public symbol │
+│               │                │            │        │       │ 'Subscriptio… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ FormatHelperT… │        70% │   ✓    │    65 │ Public symbol │
+│               │                │            │        │       │ 'FormatHelpe… │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│ unused_export │ PipelineServi… │        70% │   ✓    │   365 │ Public symbol │
+│               │                │            │        │       │ 'PipelineSer… │
+│               │                │            │        │       │ has no impo   │
+│ zombie_packa… │ lang           │        50% │   ✗    │     0 │ Package       │
+│               │                │            │        │       │ 'lang' has no │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ from other    │
+│               │                │            │        │       │ packages      │
+│ zombie_packa… │ resources      │        50% │   ✗    │   460 │ Package       │
+│               │                │            │        │       │ 'resources'   │
+│               │                │            │        │       │ has no        │
+│               │                │            │        │       │ importers     │
+│               │                │            │        │       │ from other    │
+│               │                │            │        │       │ packages      │
+│ zombie_packa… │ routes         │        50% │   ✗    │     0 │ Package       │
+│               │                │            │        │       │ 'routes' has  │
+│               │                │            │        │       │ no importers  │
+│               │                │            │        │       │ from other    │
+│               │                │            │        │       │ packages      │
+└───────────────┴────────────────┴────────────┴────────┴───────┴───────────────┘
+
+Cleanup-candidate lines: 2,763 (confidence: {'high': 22, 'medium': 108, 'low': 
+0})
