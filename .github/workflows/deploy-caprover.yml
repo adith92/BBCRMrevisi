@@ -14,15 +14,18 @@ jobs:
 
       - name: Create deployment tarball
         run: |
+          rm -f deploy.tar /tmp/deploy.tar
           tar --exclude='./.git' \
               --exclude='./node_modules' \
               --exclude='./vendor' \
               --exclude='./.env' \
+              --exclude='./deploy.tar' \
               --exclude='./storage/logs/*' \
               --exclude='./storage/framework/cache/*' \
               --exclude='./storage/framework/sessions/*' \
               --exclude='./storage/framework/views/*' \
-              -czf deploy.tar .
+              -czf /tmp/deploy.tar .
+          cp /tmp/deploy.tar ./deploy.tar
 
       - name: Verify deployment tarball
         run: |
