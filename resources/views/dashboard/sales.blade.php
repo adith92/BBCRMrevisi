@@ -441,6 +441,13 @@ document.addEventListener('DOMContentLoaded', function() {
             } 
         },
         colors: funnelColors,
+        legend: {
+            show: true,
+            position: 'bottom',
+            labels: {
+                colors: textColor
+            }
+        },
         dataLabels: { enabled: true, textAnchor: 'start', style: { colors: ['#fff'], fontSize: '13px', fontWeight: 'bold' }, offsetX: 0 },
         xaxis: { categories: funnelLabels, labels: { style: { colors: textColor } } },
         yaxis: { labels: { style: { colors: textColor, fontSize: '13px', fontWeight: 600 } } },

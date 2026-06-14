@@ -225,6 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
         xaxis: { categories: revData.labels, labels: { style: { colors: textColor } } },
         yaxis: { labels: { style: { colors: textColor }, formatter: function (val) { return "Rp " + (val/1000000).toFixed(0) + "M"; } } },
         tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: function (val) { return "Rp " + new Intl.NumberFormat('id-ID').format(val); } } }
+    };
+
     setTimeout(() => {
         new ApexCharts(document.querySelector("#revenueChart"), revenueOptions).render();
     }, 300);

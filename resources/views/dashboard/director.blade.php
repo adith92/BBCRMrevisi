@@ -348,6 +348,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
 
+    var isDark = document.documentElement.classList.contains('dark');
+    var textColor = isDark ? '#94a3b8' : '#64748b';
+
     setTimeout(() => {
         new Chart(ctx.getContext('2d'), {
             type: 'bar',
@@ -399,12 +402,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: {
                     x: {
                         grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-                        ticks: { color: '#475569', font: { size: 11, weight: '600' } }
+                        ticks: { color: textColor, font: { size: 11, weight: '600' } }
                     },
                     y: {
                         grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
                         ticks: {
-                            color: '#475569', font: { size: 11 },
+                            color: textColor, font: { size: 11 },
                             callback: v => `${v} Jt`
                         }
                     }
