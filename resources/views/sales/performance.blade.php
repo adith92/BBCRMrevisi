@@ -62,7 +62,9 @@
             @endforeach
         </div>
     </div>
-    <canvas id="perfChart" height="80"></canvas>
+    <div class="relative h-64 max-h-64">
+        <canvas id="perfChart" class="w-full h-full"></canvas>
+    </div>
 </div>
 
 {{-- Assigned Clients + Recent Bookings --}}
