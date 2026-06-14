@@ -110,9 +110,13 @@
                         {{ $booking->booking_number }}
                     </a>
                     <div class="text-xs text-[var(--cc-text-muted)] mt-0.5">
-                        <a href="{{ route('clients.show', $booking->client_id) }}" class="text-blue-500 hover:underline">
-                            {{ $booking->client->company_name }}
-                        </a>
+                        @if($booking->client)
+                            <a href="{{ route('clients.show', $booking->client) }}" class="text-blue-500 hover:underline">
+                                {{ $booking->client->company_name }}
+                            </a>
+                        @else
+                            <span>Client tidak tersedia</span>
+                        @endif
                         · {{ $booking->pickup_datetime->format('d M') }}
                     </div>
                 </div>
@@ -130,31 +134,52 @@
 
 @push('scripts')
 <script>
-const chartData = @json($chartData);
-const labels = chartData.map(d => d.label);
-const values = chartData.map(d => parseFloat(d.value));
+document.addEventListener('DOMContentLoaded', () => {
+    let chartRetries = 0;
 
-const ctx = document.getElementById('perfChart').getContext('2d');
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels,
-        datasets: [{
-            label: 'Revenue',
-            data: values,
-            backgroundColor: 'rgba(99, 102, 241, 0.7)', // Indigo tint
-            borderColor: '#6366f1',
-            borderWidth: 1,
-            borderRadius: 6,
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            tooltip: { callbacks: { label: c => 'Rp ' + c.parsed.y.toLocaleString('id-ID') } }
-        },
-        scales: { y: { ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } } }
-    }
+    const renderPerformanceChart = () => {
+        if (!window.Chart) {
+            chartRetries += 1;
+            if (chartRetries <= 60) {
+                window.requestAnimationFrame(renderPerformanceChart);
+            }
+            return;
+        }
+
+        const chartData = @json($chartData);
+        const labels = chartData.map(d => d.label);
+        const values = chartData.map(d => Number.parseFloat(d.value) || 0);
+        const canvas = document.getElementById('perfChart');
+
+        if (!canvas) {
+            return;
+        }
+
+        new window.Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: values,
+                    backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                    borderColor: '#6366f1',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: { callbacks: { label: c => 'Rp ' + c.parsed.y.toLocaleString('id-ID') } }
+                },
+                scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } } }
+            }
+        });
+    };
+
+    renderPerformanceChart();
 });
 </script>
 @endpush

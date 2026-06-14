@@ -64,7 +64,7 @@ class SalesController extends Controller
                     $date = Carbon::now()->subDays($i);
                     $data[] = [
                         'label' => $date->format('d M'),
-                        'value' => (clone $query)->whereDate('created_at', $date)->sum('price'),
+                        'value' => (clone $query)->whereDate('pickup_datetime', $date)->sum('price'),
                     ];
                 }
                 return $data;
@@ -76,7 +76,7 @@ class SalesController extends Controller
                     $end   = (clone $start)->endOfWeek();
                     $data[] = [
                         'label' => 'Wk ' . $start->format('d M'),
-                        'value' => (clone $query)->whereBetween('created_at', [$start, $end])->sum('price'),
+                        'value' => (clone $query)->whereBetween('pickup_datetime', [$start, $end])->sum('price'),
                     ];
                 }
                 return $data;
@@ -87,7 +87,7 @@ class SalesController extends Controller
                     $year = Carbon::now()->subYears($i)->year;
                     $data[] = [
                         'label' => (string) $year,
-                        'value' => (clone $query)->whereYear('created_at', $year)->sum('price'),
+                        'value' => (clone $query)->whereYear('pickup_datetime', $year)->sum('price'),
                     ];
                 }
                 return $data;
@@ -98,7 +98,7 @@ class SalesController extends Controller
                     $month = Carbon::now()->subMonths($i);
                     $data[] = [
                         'label' => $month->format('M Y'),
-                        'value' => (clone $query)->whereYear('created_at', $month->year)->whereMonth('created_at', $month->month)->sum('price'),
+                        'value' => (clone $query)->whereYear('pickup_datetime', $month->year)->whereMonth('pickup_datetime', $month->month)->sum('price'),
                     ];
                 }
                 return $data;
