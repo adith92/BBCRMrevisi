@@ -348,68 +348,70 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
 
-    new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Revenue (Jt)',
-                data: [320, 410, 285, 520, 475, 240, 190],
-                backgroundColor: [
-                    'rgba(59,130,246,0.5)',
-                    'rgba(59,130,246,0.5)',
-                    'rgba(59,130,246,0.5)',
-                    'rgba(20,104,168,0.62)',
-                    'rgba(59,130,246,0.5)',
-                    'rgba(59,130,246,0.3)',
-                    'rgba(59,130,246,0.3)',
-                ],
-                borderColor: [
-                    'rgba(59,130,246,0.8)',
-                    'rgba(59,130,246,0.8)',
-                    'rgba(59,130,246,0.8)',
-                    'rgba(20,104,168,0.88)',
-                    'rgba(59,130,246,0.8)',
-                    'rgba(59,130,246,0.5)',
-                    'rgba(59,130,246,0.5)',
-                ],
-                borderWidth: 1,
-                borderRadius: 6,
-                borderSkipped: false,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(15,15,28,0.95)',
-                    borderColor: 'rgba(255,255,255,0.1)',
+    setTimeout(() => {
+        new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue (Jt)',
+                    data: [320, 410, 285, 520, 475, 240, 190],
+                    backgroundColor: [
+                        'rgba(59,130,246,0.5)',
+                        'rgba(59,130,246,0.5)',
+                        'rgba(59,130,246,0.5)',
+                        'rgba(20,104,168,0.62)',
+                        'rgba(59,130,246,0.5)',
+                        'rgba(59,130,246,0.3)',
+                        'rgba(59,130,246,0.3)',
+                    ],
+                    borderColor: [
+                        'rgba(59,130,246,0.8)',
+                        'rgba(59,130,246,0.8)',
+                        'rgba(59,130,246,0.8)',
+                        'rgba(20,104,168,0.88)',
+                        'rgba(59,130,246,0.8)',
+                        'rgba(59,130,246,0.5)',
+                        'rgba(59,130,246,0.5)',
+                    ],
                     borderWidth: 1,
-                    titleColor: '#94a3b8',
-                    bodyColor: '#1468a8',
-                    bodyFont: { weight: 'bold', size: 14 },
-                    callbacks: {
-                        label: ctx => `Rp ${ctx.raw} Jt`
-                    }
-                }
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }]
             },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-                    ticks: { color: '#475569', font: { size: 11, weight: '600' } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15,15,28,0.95)',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        titleColor: '#94a3b8',
+                        bodyColor: '#1468a8',
+                        bodyFont: { weight: 'bold', size: 14 },
+                        callbacks: {
+                            label: ctx => `Rp ${ctx.raw} Jt`
+                        }
+                    }
                 },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-                    ticks: {
-                        color: '#475569', font: { size: 11 },
-                        callback: v => `${v} Jt`
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                        ticks: { color: '#475569', font: { size: 11, weight: '600' } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                        ticks: {
+                            color: '#475569', font: { size: 11 },
+                            callback: v => `${v} Jt`
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }, 300);
 });
 </script>
 @endpush

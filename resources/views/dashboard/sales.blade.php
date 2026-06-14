@@ -399,8 +399,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var isDark = document.documentElement.classList.contains('dark');
     var textColor = isDark ? '#94a3b8' : '#64748b';
 
-    // Get Alpine component reference so we can trigger it from chart click
-    const dashboardComponent = document.querySelector('[x-data="salesDashboard()"]').__x.$data;
+    // Helper to get Alpine component reference safely without crashing during initial load
+    const getDashboardComponent = () => {
+        const el = document.querySelector('[x-data="salesDashboard()"]');
+        if (!el) return null;
+        return window.Alpine ? window.Alpine.$data(el) : el.__x?.$data;
+    };
 
     // High Contrast, Neon/Pastel color palette for Opportunities Funnel
     // Mapping: Call Meeting, Prospecting, Proposal, Negotiation, Won
@@ -421,7 +425,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const stageCode = funnelStages[stageIndex];
                     const stageLabel = funnelLabels[stageIndex];
                     // Trigger breakdown open
-                    dashboardComponent.openBreakdown('opportunities', stageCode, 'Opportunities: ' + stageLabel);
+                    const comp = getDashboardComponent();
+                    if (comp) {
+                        comp.openBreakdown('opportunities', stageCode, 'Opportunities: ' + stageLabel);
+                    }
                 }
             }
         },
@@ -442,8 +449,6 @@ document.addEventListener('DOMContentLoaded', function() {
             hover: { filter: { type: 'lighten', value: 0.15 } }
         }
     };
-    new ApexCharts(document.querySelector("#funnelChart"), funnelOptions).render();
-
     // Revenue Trend
     var revData = {!! json_encode($revenueTrend ?? ['labels'=>[],'data'=>[]]) !!};
     var revenueOptions = {
@@ -457,7 +462,11 @@ document.addEventListener('DOMContentLoaded', function() {
         yaxis: { labels: { style: { colors: textColor }, formatter: function (val) { return "Rp " + (val/1000000).toFixed(0) + "M"; } } },
         tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: function (val) { return "Rp " + new Intl.NumberFormat('id-ID').format(val); } } }
     };
-    new ApexCharts(document.querySelector("#revenueChart"), revenueOptions).render();
+
+    setTimeout(() => {
+        new ApexCharts(document.querySelector("#funnelChart"), funnelOptions).render();
+        new ApexCharts(document.querySelector("#revenueChart"), revenueOptions).render();
+    }, 300);
 });
 </script>
 @endpush
