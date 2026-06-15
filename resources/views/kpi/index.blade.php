@@ -36,7 +36,7 @@
 
     {{-- KPI Highlight Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a href="{{ route('pipeline.index') }}" class="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 rounded-2xl border border-indigo-500/20 p-5 flex items-center justify-between hover:border-indigo-500/40 hover:bg-indigo-500/15 transition duration-150 block group">
+        <div @click="handleMetricClick('pipeline')" class="cursor-pointer bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 rounded-2xl border border-indigo-500/20 p-5 flex items-center justify-between hover:border-indigo-500/40 hover:bg-indigo-500/15 transition duration-150 group">
             <div>
                 <p class="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-widest mb-1 group-hover:text-indigo-500 dark:group-hover:text-indigo-200 transition-colors">Active Pipeline</p>
                 <p class="text-2xl font-mono font-bold text-[var(--cc-text)]" x-text="formatIDR(metrics.activePipelineValue)"></p>
@@ -45,9 +45,9 @@
             <div class="h-12 w-12 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-400">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
             </div>
-        </a>
+        </div>
 
-        <a href="{{ route('opportunities.index', ['stage' => 'won']) }}" class="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 rounded-2xl border border-emerald-500/20 p-5 flex items-center justify-between hover:border-emerald-500/40 hover:bg-emerald-500/15 transition duration-150 block group">
+        <div @click="handleMetricClick('won')" class="cursor-pointer bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 rounded-2xl border border-emerald-500/20 p-5 flex items-center justify-between hover:border-emerald-500/40 hover:bg-emerald-500/15 transition duration-150 group">
             <div>
                 <p class="text-xs font-bold text-emerald-600 dark:text-emerald-300 uppercase tracking-widest mb-1 group-hover:text-emerald-500 dark:group-hover:text-emerald-200 transition-colors">Total Revenue Won</p>
                 <p class="text-2xl font-mono font-bold text-[var(--cc-text)]" x-text="formatIDR(metrics.totalActual)"></p>
@@ -56,7 +56,7 @@
             <div class="h-12 w-12 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
             </div>
-        </a>
+        </div>
 
         <div class="bg-gradient-to-br from-amber-500/10 to-amber-600/5 rounded-2xl border border-amber-500/20 p-5 flex items-center justify-between">
             <div>
@@ -247,6 +247,57 @@
     </div>
     </div>
 
+    <!-- Info Modal -->
+    <div x-show="showInfoModal" 
+         class="fixed inset-0 z-[100] overflow-y-auto" 
+         x-cloak
+         @keydown.escape.window="showInfoModal = false">
+        <div x-show="showInfoModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity"
+             @click="showInfoModal = false"></div>
+
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div x-show="showInfoModal"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="relative transform overflow-hidden rounded-2xl bg-[var(--cc-surface)] border border-[var(--cc-border)] p-6 shadow-2xl transition-all w-full max-w-lg">
+                
+                <div class="flex items-center justify-between border-b border-[var(--cc-border)] pb-4 mb-4">
+                    <h3 class="text-lg font-bold text-[var(--cc-text)] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-indigo-500">info</span>
+                        <span x-text="infoTitle"></span>
+                    </h3>
+                    <button @click="showInfoModal = false" class="text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="mb-6">
+                    <p class="text-[var(--cc-text-muted)] text-sm leading-relaxed" x-text="infoDescription"></p>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" @click="showInfoModal = false" class="px-4 py-2 text-sm font-medium text-[var(--cc-text-muted)] bg-transparent hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors">
+                        Tutup
+                    </button>
+                    <a :href="infoLink" class="px-4 py-2 text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 rounded-xl transition-colors shadow-sm">
+                        <span x-text="infoLinkLabel"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Trajectory Breakdown Modal -->
     <div x-show="showBreakdown" 
          class="fixed inset-0 z-[100] overflow-y-auto" 
@@ -385,6 +436,32 @@ function dashboardManager() {
         breakdownTitle: '',
         breakdownData: null,
         expandedCategory: null,
+
+        showInfoModal: false,
+        infoTitle: '',
+        infoDescription: '',
+        infoLink: '',
+        infoLinkLabel: '',
+
+        handleMetricClick(type) {
+            if (this.currentUser.role === 'Sales') {
+                if (type === 'pipeline') {
+                    this.infoTitle = 'Active Pipeline (Team View)';
+                    this.infoDescription = 'Angka ini menampilkan total opportunity yang sedang aktif untuk keseluruhan tim. Saat menuju daftar pipeline, Anda hanya akan melihat data individual Anda sendiri sesuai dengan hak akses Anda sebagai Sales.';
+                    this.infoLink = '{{ route("pipeline.index") }}';
+                    this.infoLinkLabel = 'Menuju Sales Pipeline';
+                } else if (type === 'won') {
+                    this.infoTitle = 'Total Revenue Won (Team View)';
+                    this.infoDescription = 'Angka ' + this.formatIDR(this.metrics.totalActual) + ' ini adalah total revenue (Won) dari seluruh anggota tim. Saat masuk ke daftar, Anda hanya akan melihat deal milik Anda sendiri.';
+                    this.infoLink = '{{ route("opportunities.index", ["stage" => "won"]) }}';
+                    this.infoLinkLabel = 'Menuju Daftar Opportunities';
+                }
+                this.showInfoModal = true;
+            } else {
+                // If Manager or GM, just go directly
+                window.location.href = type === 'pipeline' ? '{{ route("pipeline.index") }}' : '{{ route("opportunities.index", ["stage" => "won"]) }}';
+            }
+        },
 
         openBreakdownModal(type, title) {
             this.breakdownTitle = title;
