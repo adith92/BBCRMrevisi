@@ -281,8 +281,8 @@ class OpportunityController extends Controller
                 }
 
                 // Database Transaction for Fleet & Driver
-                $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'booked' : 'available');
-                $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'reserved' : 'available');
+                $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'booked' : 'available');
+                $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'reserved' : 'available');
 
                 $fleetIds = $request->has('fleet_ids') ? ($request->input('fleet_ids') ?: []) : null;
                 $driverIds = $request->has('driver_ids') ? ($request->input('driver_ids') ?: []) : null;
@@ -308,7 +308,7 @@ class OpportunityController extends Controller
                             $vehicle->update(['assigned_opportunity_id' => $opportunity->id, 'status' => $targetFleetStatus]);
                         }
                     }
-                } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting', 'proposal'])) {
+                } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting'])) {
                     $opportunity->assignedVehicles()->update(['assigned_opportunity_id' => null, 'status' => 'available']);
                 }
 
@@ -327,7 +327,7 @@ class OpportunityController extends Controller
                             $driver->update(['assigned_opportunity_id' => $opportunity->id, 'status' => $targetDriverStatus]);
                         }
                     }
-                } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting', 'proposal'])) {
+                } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting'])) {
                     $opportunity->assignedDrivers()->update(['assigned_opportunity_id' => null, 'status' => 'available']);
                 }
 
@@ -455,8 +455,8 @@ class OpportunityController extends Controller
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
 
-            $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'booked' : 'available');
-            $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'reserved' : 'available');
+            $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'booked' : 'available');
+            $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'reserved' : 'available');
 
             // Check if opportunity has Mobil Long Term product
             $hasMobilLongTerm = false;
@@ -502,7 +502,7 @@ class OpportunityController extends Controller
                         ]);
                     }
                 }
-            } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting', 'proposal'])) {
+            } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting'])) {
                  $opportunity->assignedVehicles()->update([
                     'assigned_opportunity_id' => null,
                     'status' => 'available'
@@ -533,7 +533,7 @@ class OpportunityController extends Controller
                         ]);
                     }
                 }
-            } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting', 'proposal'])) {
+            } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting'])) {
                  $opportunity->assignedDrivers()->update([
                     'assigned_opportunity_id' => null,
                     'status' => 'available'
