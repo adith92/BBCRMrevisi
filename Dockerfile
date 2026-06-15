@@ -75,6 +75,7 @@ CMD ["/bin/sh", "-c", "\
  chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
  chmod 664 /var/www/html/storage/database/database.sqlite && \
  php artisan migrate --force && \
+ php artisan db:seed --force && \
  php artisan config:cache && \
  php artisan route:cache && \
  php artisan view:cache && \
