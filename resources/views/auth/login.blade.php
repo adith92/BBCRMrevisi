@@ -355,7 +355,7 @@
                 },
                 updateAccount(email) {
                     this.selectedEmail = email;
-                    this.selectedPassword = email.endsWith('@demo.crm') ? 'password' : 'password123';
+                    this.selectedPassword = 'password123';
                 }
             }">
                 <!-- 1-Click Login GM Button -->

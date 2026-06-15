@@ -112,9 +112,9 @@ class DemoMassiveSeeder extends Seeder
         $this->command->info('  → Seeding users...');
 
         // Create 1 GM, 1 Finance, 1 Manager
-        User::firstOrCreate(['email' => 'gm@demo.crm'], ['name' => 'General Manager', 'password' => bcrypt('password'), 'role' => 'gm']);
-        User::firstOrCreate(['email' => 'finance@demo.crm'], ['name' => 'Finance Dept', 'password' => bcrypt('password'), 'role' => 'finance']);
-        $manager = User::firstOrCreate(['email' => 'manager@demo.crm'], ['name' => 'Sales Manager', 'password' => bcrypt('password'), 'role' => 'manager']);
+        User::firstOrCreate(['email' => 'gm@demo.crm'], ['name' => 'General Manager', 'password' => bcrypt('password123'), 'role' => 'gm']);
+        User::firstOrCreate(['email' => 'finance@demo.crm'], ['name' => 'Finance Dept', 'password' => bcrypt('password123'), 'role' => 'finance']);
+        $manager = User::firstOrCreate(['email' => 'manager@demo.crm'], ['name' => 'Sales Manager', 'password' => bcrypt('password123'), 'role' => 'manager']);
 
         $salesNames = [
             'Andi Pratama', 'Sari Dewi', 'Reza Firmansyah', 'Budi Hartono', 'Citra Lestari',
@@ -126,7 +126,7 @@ class DemoMassiveSeeder extends Seeder
                 ['email' => 'sales' . ($i + 1) . '@demo.crm'],
                 [
                     'name'       => $name,
-                    'password'   => bcrypt('password'),
+                    'password'   => bcrypt('password123'),
                     'role'       => 'sales',
                     'manager_id' => ($i < 3) ? $manager->id : null, // Only first 3 sales under this manager
                 ]
