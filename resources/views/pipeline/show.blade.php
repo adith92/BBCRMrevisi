@@ -74,7 +74,7 @@ $stageBadge = [
                         {{ $stageLabels[$opportunity->stage] }}
                     </span>
                 </div>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-gray-900 mt-2">{{ $opportunity->title }}</h1>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white mt-2">{{ $opportunity->title }}</h1>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                     <span class="font-medium text-slate-700 dark:text-slate-300">{{ $opportunity->client->company_name ?? '-' }}</span>
                     @if($opportunity->sales)

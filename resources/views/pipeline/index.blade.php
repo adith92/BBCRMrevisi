@@ -366,6 +366,32 @@
                                             </div>
                                         </div>
                                     </template>
+                                    <template x-if="entry.vehicles && entry.vehicles.length > 0">
+                                        <div class="mt-2.5">
+                                            <h4 class="text-[10px] font-bold text-[var(--cc-text-muted)] uppercase tracking-wider mb-1.5 font-bold">Armada / Kendaraan</h4>
+                                            <div class="space-y-1">
+                                                <template x-for="v in entry.vehicles" :key="v.id">
+                                                    <div class="flex items-center gap-2 text-xs bg-[var(--cc-surface)] px-2 py-1.5 rounded-lg border border-[var(--cc-border)]">
+                                                        <span class="font-mono bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1.5 py-0.5 rounded text-[10px] font-bold" x-text="v.plate_number"></span>
+                                                        <span class="text-[var(--cc-text)]" x-text="v.model"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="entry.drivers && entry.drivers.length > 0">
+                                        <div class="mt-2.5">
+                                            <h4 class="text-[10px] font-bold text-[var(--cc-text-muted)] uppercase tracking-wider mb-1.5 font-bold">Supir / Driver</h4>
+                                            <div class="space-y-1">
+                                                <template x-for="d in entry.drivers" :key="d.id">
+                                                    <div class="flex items-center gap-2 text-xs bg-[var(--cc-surface)] px-2 py-1.5 rounded-lg border border-[var(--cc-border)]">
+                                                        <span class="material-symbols-outlined text-[14px] text-indigo-400">person</span>
+                                                        <span class="text-[var(--cc-text)]" x-text="d.name"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
                                     <template x-if="entry.estimatedValue !== undefined">
                                         <div class="pt-2 border-t border-[var(--cc-border)] flex justify-between items-center">
                                             <span class="text-[10px] font-bold text-[var(--cc-text-muted)] uppercase tracking-wider">Total Est. Value</span>

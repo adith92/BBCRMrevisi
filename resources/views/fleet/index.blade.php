@@ -344,7 +344,6 @@
             @endforeach
         </div>
     @endif
-    @endif
 
     {{-- Create Vehicle Modal --}}
     <div x-show="showCreateModal" style="display: none;" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">

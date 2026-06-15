@@ -347,6 +347,20 @@ class OpportunityController extends Controller
             }
             $validated['stage_changed_at'] = now();
 
+            $historyVehicles = [];
+            if (isset($fleetIds) && is_array($fleetIds) && count($fleetIds) > 0) {
+                $historyVehicles = \App\Models\Vehicle::whereIn('id', $fleetIds)->get(['id', 'plate_number', 'model'])->toArray();
+            } else if (in_array($validated['stage'], ['won', 'negotiation', 'proposal'])) {
+                $historyVehicles = $opportunity->assignedVehicles()->get(['id', 'plate_number', 'model'])->toArray();
+            }
+
+            $historyDrivers = [];
+            if (isset($driverIds) && is_array($driverIds) && count($driverIds) > 0) {
+                $historyDrivers = \App\Models\Driver::whereIn('id', $driverIds)->get(['id', 'name'])->toArray();
+            } else if (in_array($validated['stage'], ['won', 'negotiation', 'proposal'])) {
+                $historyDrivers = $opportunity->assignedDrivers()->get(['id', 'name'])->toArray();
+            }
+
             $history = $opportunity->history_timeline ?? [];
             $history[] = [
                 'id' => 'h' . time() . rand(1000, 9999),
@@ -356,6 +370,8 @@ class OpportunityController extends Controller
                 'note' => $request->notes,
                 'products' => $validated['products'] ?? $opportunity->products,
                 'estimatedValue' => $estimatedValue,
+                'vehicles' => $historyVehicles,
+                'drivers' => $historyDrivers,
             ];
             $validated['history_timeline'] = $history;
         } else {
@@ -551,9 +567,37 @@ class OpportunityController extends Controller
                 'activity_date'  => now(),
             ]);
 
+            $historyVehicles = [];
+            if (isset($fleetIds) && is_array($fleetIds) && count($fleetIds) > 0) {
+                $historyVehicles = \App\Models\Vehicle::whereIn('id', $fleetIds)->get(['id', 'plate_number', 'model'])->toArray();
+            } else if (in_array($validated['stage'], ['won', 'negotiation', 'proposal'])) {
+                $historyVehicles = $opportunity->assignedVehicles()->get(['id', 'plate_number', 'model'])->toArray();
+            }
+
+            $historyDrivers = [];
+            if (isset($driverIds) && is_array($driverIds) && count($driverIds) > 0) {
+                $historyDrivers = \App\Models\Driver::whereIn('id', $driverIds)->get(['id', 'name'])->toArray();
+            } else if (in_array($validated['stage'], ['won', 'negotiation', 'proposal'])) {
+                $historyDrivers = $opportunity->assignedDrivers()->get(['id', 'name'])->toArray();
+            }
+
+            $history = $opportunity->history_timeline ?? [];
+            $history[] = [
+                'id' => 'h' . time() . rand(1000, 9999),
+                'stage' => $validated['stage'],
+                'subType' => $request->input('subType') ?? 'Call',
+                'timestamp' => now()->toIso8601String(),
+                'note' => $validated['notes'] ?? null,
+                'products' => $opportunity->products,
+                'estimatedValue' => $opportunity->estimated_value,
+                'vehicles' => $historyVehicles,
+                'drivers' => $historyDrivers,
+            ];
+
             $updates = [
                 'stage' => $validated['stage'],
                 'stage_changed_at' => now(),
+                'history_timeline' => $history,
             ];
 
             if ($validated['stage'] === 'lost' && !empty($validated['lost_reason'])) {
