@@ -410,14 +410,38 @@
                                         <button type="button" @click="editingDeal.products.splice(idx, 1)" class="absolute top-2 right-2 text-[var(--cc-text-muted)] hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         </button>
-                                        <select x-model="p.category" class="w-[90%] bg-transparent text-sm text-[var(--cc-text)] font-bold outline-none">
-                                            <option class="text-slate-900" value="Mobil Long Term">Mobil Long Term</option>
-                                            <option class="text-slate-900" value="Mobil Short Term">Mobil Short Term</option>
-                                            <option class="text-slate-900" value="Bis Short Term">Bis Short Term</option>
-                                            <option class="text-slate-900" value="Bis Long Term">Bis Long Term</option>
-                                            <option class="text-slate-900" value="E-Voucher">E-Voucher</option>
-                                            <option class="text-slate-900" value="Supir">Supir</option>
-                                        </select>
+                                        <div x-data="{ open: false }" class="relative w-[90%]">
+                                            <div @click="open = !open" 
+                                                 class="cursor-pointer flex items-center justify-between py-2 px-4 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-modal-bg)] hover:bg-[var(--cc-bg)] text-sm text-[var(--cc-text)] font-bold transition shadow-sm">
+                                                <span x-text="p.category || 'Select Category'"></span>
+                                                <span class="grid place-items-center transition-transform duration-300" :class="open ? 'rotate-180' : ''">
+                                                    <svg width="1.2em" height="1.2em" stroke-width="2" viewBox="0 0 24 24" fill="none"
+                                                         xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 stroke-[var(--cc-text)]">
+                                                        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+
+                                            <div x-show="open" 
+                                                 x-transition:enter="transition ease-out duration-200"
+                                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                 x-transition:leave="transition ease-in duration-100"
+                                                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                                                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                                 @click.away="open = false"
+                                                 class="absolute left-0 right-0 mt-2 z-50 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] shadow-2xl overflow-hidden">
+                                                <ul class="flex flex-col gap-1 p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                                    <template x-for="cat in ['Mobil Long Term', 'Mobil Short Term', 'Bis Short Term', 'Bis Long Term', 'E-Voucher', 'Supir']">
+                                                        <li @click="p.category = cat; open = false" 
+                                                            :class="p.category === cat ? 'bg-indigo-600 text-white' : 'hover:bg-[var(--cc-bg)] text-[var(--cc-text)]'"
+                                                            class="py-2 px-4 rounded-lg cursor-pointer text-xs font-bold transition"
+                                                            x-text="cat">
+                                                        </li>
+                                                    </template>
+                                                </ul>
+                                            </div>
+                                        </div>
                                         <div class="flex gap-2">
                                             <div class="w-20">
                                                 <label class="text-[10px] text-[var(--cc-text-muted)] uppercase font-bold tracking-widest pl-1">Qty</label>
