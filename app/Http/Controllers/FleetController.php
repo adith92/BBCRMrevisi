@@ -135,4 +135,40 @@ class FleetController extends Controller
 
         return response()->json($query->get());
     }
+
+    public function store(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user->isOperational() && !$user->isManager()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'police_number' => 'required|string|max:50',
+            'brand_model' => 'required|string|max:255',
+            'year' => 'nullable|integer',
+            'stnk_expiry' => 'nullable|date',
+            'pajak_expiry' => 'nullable|date',
+            'insurance_expiry' => 'nullable|date',
+            'pool_id' => 'nullable|exists:pools,id',
+            'status' => 'required|in:available,maintenance,inactive',
+        ]);
+
+        $vehicleData = [
+            'plate_number' => $validated['police_number'],
+            'model' => $validated['brand_model'],
+            'brand' => 'goldenbird', // Long term fleet
+            'year' => $validated['year'] ?? null,
+            'stnk_expiry' => $validated['stnk_expiry'] ?? null,
+            'pajak_expiry' => $validated['pajak_expiry'] ?? null,
+            'insurance_expiry' => $validated['insurance_expiry'] ?? null,
+            'pool_id' => $validated['pool_id'] ?? null,
+            'status' => $validated['status'],
+        ];
+
+        Vehicle::create($vehicleData);
+
+        return redirect()->route('fleet.index')->with('success', 'Vehicle registered successfully.');
+    }
 }

@@ -135,16 +135,7 @@
                     <span>Booking</span>
                 </a>
                 @endif
-                @if(in_array($role, ['gm','operational','pool']))
-                <a href="{{ route('fleet.create') }}" class="nav-item text-[12px] flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[14px]">directions_bus</span>
-                    <span>Armada</span>
-                </a>
-                <a href="{{ route('maintenance.create') }}" class="nav-item text-[12px] flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[14px]">build</span>
-                    <span>Maintenance</span>
-                </a>
-                @endif
+
             </div>
         </div>
         @endif

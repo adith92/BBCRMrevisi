@@ -25,7 +25,7 @@
     ];
 @endphp
 
-<div class="space-y-6 pb-20">
+<div class="space-y-6 pb-20" x-data="{ showCreateModal: false }">
     
     {{-- Header Panel --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -41,7 +41,7 @@
         
         @if($canModify)
         <div class="flex items-center gap-3">
-            <button class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
+            <button @click="showCreateModal = true" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
                 <span class="material-symbols-outlined text-[16px]">add</span>
                 Register Driver
             </button>
@@ -201,5 +201,81 @@
             @endforeach
         </div>
     @endif
+
+    {{-- Create Driver Modal --}}
+    <div x-show="showCreateModal" style="display: none;" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div x-show="showCreateModal"
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div x-show="showCreateModal"
+                     @click.away="showCreateModal = false"
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="relative transform overflow-hidden rounded-2xl bg-[var(--cc-surface)] border border-[var(--cc-border)] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    
+                    <form action="{{ route('drivers.store') }}" method="POST">
+                        @csrf
+                        <div class="px-6 py-5 border-b border-[var(--cc-border)] flex items-center justify-between">
+                            <h3 class="text-xl font-bold text-[var(--cc-text)]" id="modal-title">Register Driver</h3>
+                            <button type="button" @click="showCreateModal = false" class="text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div class="px-6 py-5 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Driver Name <span class="text-rose-500">*</span></label>
+                                <input type="text" name="name" required
+                                    class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Phone Number <span class="text-rose-500">*</span></label>
+                                <input type="text" name="phone" required
+                                    class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Pool (Optional)</label>
+                                <select name="pool_id" class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                    <option value="">-- No Pool Assignment --</option>
+                                    @php
+                                        $pools = \App\Models\Pool::orderBy('name')->get();
+                                    @endphp
+                                    @foreach($pools as $pool)
+                                        <option value="{{ $pool->id }}">{{ $pool->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Initial Status</label>
+                                <select name="status" class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                    <option value="available">Available (Ready for assignment)</option>
+                                    <option value="inactive">Leave (Not available)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 bg-[var(--cc-bg-muted)] border-t border-[var(--cc-border)] flex items-center justify-end gap-3 rounded-b-2xl">
+                            <button type="button" @click="showCreateModal = false" class="px-4 py-2 text-sm font-medium text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-gray-900 text-sm font-semibold rounded-xl shadow transition">
+                                Register Driver
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

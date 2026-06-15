@@ -29,7 +29,7 @@
     ];
 @endphp
 
-<div class="space-y-6 pb-20" x-data="{ showMaintenanceDetails: false }">
+<div class="space-y-6 pb-20" x-data="{ showMaintenanceDetails: false, showCreateModal: false }">
     
     {{-- Header Panel --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -45,7 +45,7 @@
         
         @if($canModify)
         <div class="flex items-center gap-3">
-            <button class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
+            <button @click="showCreateModal = true" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
                 <span class="material-symbols-outlined text-[16px]">add</span>
                 Register Vehicle
             </button>
@@ -344,5 +344,125 @@
             @endforeach
         </div>
     @endif
+    @endif
+
+    {{-- Create Vehicle Modal --}}
+    <div x-show="showCreateModal" style="display: none;" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div x-show="showCreateModal"
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div x-show="showCreateModal"
+                     @click.away="showCreateModal = false"
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="relative transform overflow-hidden rounded-2xl bg-[var(--cc-surface)] border border-[var(--cc-border)] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl">
+                    
+                    <form action="{{ route('fleet.store') }}" method="POST">
+                        @csrf
+                        <div class="px-6 py-5 border-b border-[var(--cc-border)] flex items-center justify-between">
+                            <h3 class="text-xl font-bold text-[var(--cc-text)]" id="modal-title">Register Vehicle (Mobil Long Term)</h3>
+                            <button type="button" @click="showCreateModal = false" class="text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div class="px-6 py-5 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Police Number <span class="text-rose-500">*</span></label>
+                                    <input type="text" name="police_number" required placeholder="B 1234 XYZ"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Brand/Model <span class="text-rose-500">*</span></label>
+                                    <input type="text" name="brand_model" required placeholder="Toyota Avanza"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Vehicle Type</label>
+                                    <input type="text" name="vehicle_type" placeholder="MPV"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Year</label>
+                                    <input type="number" name="year" placeholder="2022"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                            </div>
+                            
+                            <hr class="border-[var(--cc-border)] my-2">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">STNK Expiry Date</label>
+                                    <input type="date" name="stnk_expiry"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Tax (Pajak) Expiry Date</label>
+                                    <input type="date" name="pajak_expiry"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">KIR Expiry Date</label>
+                                    <input type="date" name="kir_expiry"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Insurance Expiry Date</label>
+                                    <input type="date" name="insurance_expiry"
+                                        class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                </div>
+                            </div>
+
+                            <hr class="border-[var(--cc-border)] my-2">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Pool Assignment (Optional)</label>
+                                    <select name="pool_id" class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                        <option value="">-- No Pool Assignment --</option>
+                                        @php
+                                            $pools = \App\Models\Pool::orderBy('name')->get();
+                                        @endphp
+                                        @foreach($pools as $pool)
+                                            <option value="{{ $pool->id }}">{{ $pool->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--cc-text-muted)] mb-1">Initial Status</label>
+                                    <select name="status" class="w-full rounded-xl bg-[var(--cc-bg)] border-[var(--cc-border)] text-[var(--cc-text)] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 px-4 py-2.5">
+                                        <option value="available">Available</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 bg-[var(--cc-bg-muted)] border-t border-[var(--cc-border)] flex items-center justify-end gap-3 rounded-b-2xl">
+                            <button type="button" @click="showCreateModal = false" class="px-4 py-2 text-sm font-medium text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-gray-900 text-sm font-semibold rounded-xl shadow transition">
+                                Register Vehicle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

@@ -77,4 +77,24 @@ class DriverController extends Controller
         // We can add bookings related to driver later if needed.
         return view('drivers.show', compact('driver'));
     }
+
+    public function store(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user->isOperational() && !$user->isManager()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:50',
+            'pool_id' => 'nullable|exists:pools,id',
+            'status' => 'required|in:available,inactive',
+        ]);
+
+        Driver::create($validated);
+
+        return redirect()->route('drivers.index')->with('success', 'Driver registered successfully.');
+    }
 }

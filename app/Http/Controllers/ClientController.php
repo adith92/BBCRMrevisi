@@ -78,9 +78,11 @@ class ClientController extends Controller
             'assignedSales',
             'invoices.payments',
             'meetingLogs',
-            'opportunities' => function ($query) use ($user) {
+            'opportunities' => function ($query) use ($user, $client) {
                 if ($user->isSales()) {
-                    $query->where('sales_id', $user->id);
+                    if ($client->assigned_sales_id !== $user->id) {
+                        $query->where('sales_id', $user->id);
+                    }
                 } elseif ($user->isManager()) {
                     $teamIds = \App\Models\User::where('manager_id', $user->id)->where('role', 'sales')->pluck('id');
                     $query->whereIn('sales_id', $teamIds);
