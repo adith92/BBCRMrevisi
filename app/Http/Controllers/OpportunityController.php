@@ -281,7 +281,7 @@ class OpportunityController extends Controller
                 }
 
                 // Database Transaction for Fleet & Driver
-                $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'booked' : 'available');
+                $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'reserved' : 'available');
                 $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'reserved' : 'available');
 
                 $fleetIds = $request->has('fleet_ids') ? ($request->input('fleet_ids') ?: []) : null;
@@ -397,7 +397,13 @@ class OpportunityController extends Controller
         \Illuminate\Support\Facades\DB::commit();
 
         if ($request->wantsJson()) {
-            return response()->json(['ok' => true, 'opportunity' => $opportunity->fresh()]);
+            $opportunity->refresh()->load([
+                'client:id,company_name',
+                'sales:id,name',
+                'assignedDrivers:id,assigned_opportunity_id,name',
+                'assignedVehicles:id,assigned_opportunity_id,plate_number,model'
+            ]);
+            return response()->json(['ok' => true, 'opportunity' => $opportunity]);
         }
 
         return back()->with('success', 'Opportunity berhasil diperbarui.');
@@ -471,7 +477,7 @@ class OpportunityController extends Controller
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
 
-            $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'booked' : 'available');
+            $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'reserved' : 'available');
             $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : (in_array($validated['stage'], ['proposal', 'negotiation']) ? 'reserved' : 'available');
 
             // Check if opportunity has Mobil Long Term product
