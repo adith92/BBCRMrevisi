@@ -82,9 +82,7 @@ class PipelineController extends Controller
         });
 
         // Fetch clients scoped by user role
-        $clients = \App\Models\Client::when($user->isSales(), fn($q) => $q->where('assigned_sales_id', $user->id))
-            ->orderBy('company_name')
-            ->get();
+        $clients = \App\Models\Client::orderBy('company_name')->get();
 
         // Sales users for filter dropdown
         $salesUsers = collect();

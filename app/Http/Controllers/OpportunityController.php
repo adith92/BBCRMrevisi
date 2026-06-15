@@ -281,8 +281,8 @@ class OpportunityController extends Controller
                 }
 
                 // Database Transaction for Fleet & Driver
-                $targetFleetStatus = $validated['stage'] === 'won' ? 'on_trip' : ($validated['stage'] === 'negotiation' ? 'maintenance' : 'available');
-                $targetDriverStatus = $validated['stage'] === 'won' ? 'Assigned' : ($validated['stage'] === 'negotiation' ? 'Reserved' : 'Available');
+                $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'booked' : 'available');
+                $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'reserved' : 'available');
 
                 $fleetIds = $request->has('fleet_ids') ? ($request->input('fleet_ids') ?: []) : null;
                 $driverIds = $request->has('driver_ids') ? ($request->input('driver_ids') ?: []) : null;
@@ -315,20 +315,20 @@ class OpportunityController extends Controller
                 if ($driverIds !== null) {
                     $opportunity->assignedDrivers()->whereNotIn('id', $driverIds)->update([
                         'assigned_opportunity_id' => null,
-                        'status' => 'Available'
+                        'status' => 'available'
                     ]);
 
                     if (count($driverIds) > 0) {
                         $driversToAssign = \App\Models\Driver::whereIn('id', $driverIds)->lockForUpdate()->get();
                         foreach ($driversToAssign as $driver) {
-                            if ($driver->assigned_opportunity_id !== $opportunity->id && $driver->status !== 'Available') {
+                            if ($driver->assigned_opportunity_id !== $opportunity->id && $driver->status !== 'available') {
                                 throw new \Exception("Supir {$driver->name} sudah dibooking oleh Sales lain.");
                             }
                             $driver->update(['assigned_opportunity_id' => $opportunity->id, 'status' => $targetDriverStatus]);
                         }
                     }
                 } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting', 'proposal'])) {
-                    $opportunity->assignedDrivers()->update(['assigned_opportunity_id' => null, 'status' => 'Available']);
+                    $opportunity->assignedDrivers()->update(['assigned_opportunity_id' => null, 'status' => 'available']);
                 }
 
             // Log stage transition as activity
@@ -455,8 +455,8 @@ class OpportunityController extends Controller
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
 
-            $targetFleetStatus = $validated['stage'] === 'won' ? 'on_trip' : ($validated['stage'] === 'negotiation' ? 'maintenance' /* usually reserved/hold */ : 'available');
-            $targetDriverStatus = $validated['stage'] === 'won' ? 'Assigned' : ($validated['stage'] === 'negotiation' ? 'Reserved' : 'Available');
+            $targetFleetStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'booked' : 'available');
+            $targetDriverStatus = $validated['stage'] === 'won' ? 'assigned' : ($validated['stage'] === 'negotiation' ? 'reserved' : 'available');
 
             // Check if opportunity has Mobil Long Term product
             $hasMobilLongTerm = false;
@@ -514,7 +514,7 @@ class OpportunityController extends Controller
                 // Release old drivers
                 $opportunity->assignedDrivers()->whereNotIn('id', $driverIds)->update([
                     'assigned_opportunity_id' => null,
-                    'status' => 'Available'
+                    'status' => 'available'
                 ]);
 
                 // Assign new drivers
@@ -524,7 +524,7 @@ class OpportunityController extends Controller
                         ->get();
                     
                     foreach ($driversToAssign as $driver) {
-                        if ($driver->assigned_opportunity_id !== $opportunity->id && $driver->status !== 'Available') {
+                        if ($driver->assigned_opportunity_id !== $opportunity->id && $driver->status !== 'available') {
                             throw new \Exception("Supir {$driver->name} sudah dibooking oleh Sales lain.");
                         }
                         $driver->update([
@@ -536,7 +536,7 @@ class OpportunityController extends Controller
             } else if (in_array($validated['stage'], ['lost', 'call_meeting', 'prospecting', 'proposal'])) {
                  $opportunity->assignedDrivers()->update([
                     'assigned_opportunity_id' => null,
-                    'status' => 'Available'
+                    'status' => 'available'
                 ]);
             }
 
