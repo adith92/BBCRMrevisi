@@ -503,8 +503,11 @@
                                                     <div class="col-span-2 text-xs text-[var(--cc-text-muted)]">Tidak ada unit tersedia.</div>
                                                 </template>
                                                 <template x-for="fleet in availableFleets" :key="fleet.id">
-                                                    <label class="flex items-center gap-2 p-2 rounded-lg border border-[var(--cc-border)] hover:border-indigo-500 cursor-pointer transition">
-                                                        <input type="checkbox" :value="fleet.id" x-model="selectedFleets" class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
+                                                    <label class="flex items-center gap-2 p-2 rounded-lg border border-[var(--cc-border)] hover:border-indigo-500 cursor-pointer transition"
+                                                           :class="selectedFleets.length >= getFleetQty() && !selectedFleets.map(String).includes(String(fleet.id)) ? 'opacity-50 cursor-not-allowed' : ''">
+                                                        <input type="checkbox" :value="fleet.id" x-model="selectedFleets"
+                                                               :disabled="selectedFleets.length >= getFleetQty() && !selectedFleets.map(String).includes(String(fleet.id))"
+                                                               class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
                                                         <div class="text-xs">
                                                             <span class="font-bold text-[var(--cc-text)]" x-text="fleet.plate_number"></span>
                                                             <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="fleet.brand + ' - ' + fleet.model"></div>
@@ -524,9 +527,9 @@
                                                 </template>
                                                 <template x-for="driver in availableDrivers" :key="driver.id">
                                                     <label class="flex items-center gap-2 p-2 rounded-lg border border-[var(--cc-border)] hover:border-indigo-500 cursor-pointer transition"
-                                                           :class="selectedDrivers.length >= getSupirQty() && !selectedDrivers.includes(driver.id) ? 'opacity-50 cursor-not-allowed' : ''">
+                                                           :class="selectedDrivers.length >= getSupirQty() && !selectedDrivers.map(String).includes(String(driver.id)) ? 'opacity-50 cursor-not-allowed' : ''">
                                                         <input type="checkbox" :value="driver.id" x-model="selectedDrivers"
-                                                               :disabled="selectedDrivers.length >= getSupirQty() && !selectedDrivers.includes(driver.id)"
+                                                               :disabled="selectedDrivers.length >= getSupirQty() && !selectedDrivers.map(String).includes(String(driver.id))"
                                                                class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
                                                         <div class="text-xs">
                                                             <span class="font-bold text-[var(--cc-text)]" x-text="driver.name"></span>
@@ -775,6 +778,13 @@ function pipelineManager() {
             if (!this.editingDeal || !this.editingDeal.products) return 0;
             return this.editingDeal.products
                 .filter(p => p.category === 'Supir')
+                .reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0);
+        },
+
+        getFleetQty() {
+            if (!this.editingDeal || !this.editingDeal.products) return 0;
+            return this.editingDeal.products
+                .filter(p => p.category === 'Mobil Long Term')
                 .reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0);
         },
 

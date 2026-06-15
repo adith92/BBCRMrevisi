@@ -227,16 +227,16 @@ class OpportunityController extends Controller
         $oldStage = $opportunity->stage;
         $isStageChanged = $validated['stage'] !== $oldStage;
 
-        // Enforce that assignments are only allowed if the Opportunity stage is 'won' (case-insensitive)
+        // Enforce that assignments are only allowed if the Opportunity stage is 'won', 'negotiation', or 'proposal'
         $targetStage = strtolower($validated['stage'] ?? $opportunity->stage);
         $hasFleet = !empty($request->input('fleet_ids'));
         $hasDrivers = !empty($request->input('driver_ids'));
-        if ($targetStage !== 'won' && ($hasFleet || $hasDrivers)) {
+        if (!in_array($targetStage, ['proposal', 'negotiation', 'won']) && ($hasFleet || $hasDrivers)) {
             if ($request->wantsJson()) {
-                return response()->json(['ok' => false, 'message' => 'Assignments are only allowed if the Opportunity stage is won.'], 422);
+                return response()->json(['ok' => false, 'message' => 'Assignments are only allowed if the Opportunity stage is Proposal, Negotiation, or Won.'], 422);
             }
             return back()->withErrors([
-                'stage' => 'Unit kendaraan dan supir hanya dapat diassign jika status oportunitas adalah WON.',
+                'stage' => 'Unit kendaraan dan supir hanya dapat diassign jika status oportunitas adalah Proposal, Negotiation, atau WON.',
             ]);
         }
 
@@ -442,13 +442,13 @@ class OpportunityController extends Controller
             ]);
         }
 
-        // Enforce that assignments are only allowed if the Opportunity stage is 'won' (case-insensitive)
+        // Enforce that assignments are only allowed if the Opportunity stage is 'won', 'negotiation', or 'proposal'
         $targetStage = strtolower($validated['stage'] ?? $opportunity->stage);
         $hasFleet = !empty($request->input('fleet_ids'));
         $hasDrivers = !empty($request->input('driver_ids'));
-        if ($targetStage !== 'won' && ($hasFleet || $hasDrivers)) {
+        if (!in_array($targetStage, ['proposal', 'negotiation', 'won']) && ($hasFleet || $hasDrivers)) {
             return back()->withErrors([
-                'stage' => 'Unit kendaraan dan supir hanya dapat diassign jika status oportunitas adalah WON.',
+                'stage' => 'Unit kendaraan dan supir hanya dapat diassign jika status oportunitas adalah Proposal, Negotiation, atau WON.',
             ]);
         }
 
