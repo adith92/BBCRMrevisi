@@ -62,7 +62,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Pipeline / Opportunities
     Route::get('/pipeline', [PipelineController::class, 'index'])->name('pipeline.index')->middleware('role:gm,manager,sales');
-    Route::resource('opportunities', OpportunityController::class)->middleware('role:gm,manager,sales');
+    Route::resource('opportunities', OpportunityController::class)->only(['index', 'show'])->middleware('role:gm,manager,sales,operational,pool');
+    Route::resource('opportunities', OpportunityController::class)->except(['index', 'show'])->middleware('role:gm,manager,sales');
     Route::post('/opportunities/{opportunity}/advance-stage', [OpportunityController::class, 'advanceStage'])->name('opportunities.advance-stage')->middleware('role:gm,manager,sales');
     Route::post('/opportunities/{opportunity}/discount', [OpportunityController::class, 'storeDiscount'])->name('opportunities.discount')->middleware('role:sales,manager,gm');
     // Kanban-specific endpoints
@@ -76,7 +77,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     // Activity Logs
-    Route::resource('activities', ActivityLogController::class)->except(['edit', 'update'])->middleware('role:gm,manager,sales');
+    Route::resource('activities', ActivityLogController::class)->except(['edit', 'update'])->middleware('role:gm,manager,sales,operational,pool');
 
     // KPI / Sales Targets
     Route::get('/kpi', [SalesTargetController::class, 'index'])->name('kpi.index')->middleware('role:gm,manager,sales');
@@ -128,8 +129,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/activities/upcoming', [ActivityLogController::class, 'apiUpcoming'])->middleware('role:gm,manager,sales');
         Route::get('/opportunities/by-client/{client}', [OpportunityController::class, 'byClient'])->middleware('role:gm,manager,sales');
         Route::get('/opportunities/{opportunity}/history', [OpportunityController::class, 'getHistory'])->middleware('role:gm,manager,sales');
-        Route::get('/vehicles/available', [FleetController::class, 'apiAvailable'])->middleware('role:gm,manager,sales');
-        Route::get('/drivers/available', [FleetController::class, 'apiDriversAvailable'])->middleware('role:gm,manager,sales');
+        Route::get('/vehicles/available', [FleetController::class, 'apiAvailable'])->middleware('role:gm,manager,sales,operational,pool');
+        Route::post('/vehicles/assign-to-opportunity/{opportunity}', [FleetController::class, 'assignToOpportunity'])->middleware('role:gm,manager,operational,pool');
+        Route::get('/drivers/available', [FleetController::class, 'apiDriversAvailable'])->middleware('role:gm,manager,sales,operational,pool');
     });
 
     Route::post('/system/seed-demo', [SystemController::class, 'seedDemo'])

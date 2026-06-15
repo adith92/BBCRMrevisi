@@ -593,14 +593,37 @@ class DashboardController extends Controller
         $activeBookings   = Booking::whereIn('status', ['confirmed', 'on_trip'])->count();
         $activeBookingList= Booking::whereIn('status', ['confirmed', 'on_trip'])->latest()->take(10)->get();
 
-        $unassignedOpportunities = Opportunity::where('stage', 'won')
-            ->where(function ($q) {
-                $q->whereDoesntHave('assignedVehicles')
-                  ->orWhereDoesntHave('assignedDrivers');
-            })
-            ->with(['client', 'sales', 'product'])
-            ->latest()
-            ->get();
+        $unassignedOpportunities = Opportunity::with(['client', 'sales', 'assignedVehicles', 'assignedDrivers'])
+            ->whereIn('stage', ['proposal', 'negotiation', 'won'])
+            ->get()
+            ->filter(function ($opp) {
+                $requiredFleets = 0;
+                
+                if ($opp->product_id) {
+                    $opp->loadMissing('product');
+                    if ($opp->product && ($opp->product->name === 'Mobil Long Term' || $opp->product->product_category_id == 2)) {
+                        if (preg_match('/—\s*(\d+)\s*unit/i', $opp->title, $matches)) {
+                            $requiredFleets = (int)$matches[1];
+                        } else {
+                            $requiredFleets = 1;
+                        }
+                    }
+                }
+                
+                if (!empty($opp->products) && is_array($opp->products)) {
+                    $requiredFleets += collect($opp->products)
+                        ->filter(fn($p) => isset($p['category']) && ($p['category'] === 'Mobil Long Term' || $p['category'] === 'Long Term'))
+                        ->sum(fn($p) => (int)($p['quantity'] ?? 0));
+                }
+                
+                if ($requiredFleets == 0) return false;
+                
+                $opp->required_fleets = $requiredFleets;
+                $opp->missing_fleets = max(0, $requiredFleets - $opp->assignedVehicles->count());
+                $opp->missing_drivers = max(0, $requiredFleets - $opp->assignedDrivers->count());
+                
+                return $opp->missing_fleets > 0 || $opp->missing_drivers > 0;
+            })->values();
 
         return view('dashboard.operational', compact(
             'availableFleet', 'onTripFleet', 'maintenanceFleet',

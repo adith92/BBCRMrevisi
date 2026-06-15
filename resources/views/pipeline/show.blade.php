@@ -267,6 +267,40 @@ $stageBadge = [
                         <dd class="text-sm text-slate-800">{{ $opportunity->actual_close_date->format('d M Y') }}</dd>
                     </div>
                     @endif
+
+                    @if($opportunity->assignedVehicles->isNotEmpty())
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <dt class="text-xs text-slate-400 font-semibold mb-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px] text-indigo-400">directions_car</span>
+                            Kendaraan Terpilih
+                        </dt>
+                        <dd class="space-y-1.5">
+                            @foreach($opportunity->assignedVehicles as $v)
+                            <div class="flex items-center gap-2 text-xs bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <span class="font-mono bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded text-[10px] font-bold">{{ $v->plate_number }}</span>
+                                <span class="text-slate-700 dark:text-slate-300 font-medium">{{ $v->brand }} {{ $v->model }}</span>
+                            </div>
+                            @endforeach
+                        </dd>
+                    </div>
+                    @endif
+
+                    @if($opportunity->assignedDrivers->isNotEmpty())
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <dt class="text-xs text-slate-400 font-semibold mb-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px] text-indigo-400">person</span>
+                            Supir Terpilih
+                        </dt>
+                        <dd class="space-y-1.5">
+                            @foreach($opportunity->assignedDrivers as $d)
+                            <div class="flex items-center gap-2 text-xs bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <span class="material-symbols-outlined text-[14px] text-indigo-500">person</span>
+                                <span class="text-slate-700 dark:text-slate-300 font-medium">{{ $d->name }}</span>
+                            </div>
+                            @endforeach
+                        </dd>
+                    </div>
+                    @endif
                 </dl>
 
                 {{-- Discount Form Toggle --}}

@@ -9,12 +9,12 @@ class OpportunityPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isGM() || $user->isManager() || $user->isSales();
+        return $user->isGM() || $user->isManager() || $user->isSales() || $user->isOperational() || $user->isPool();
     }
 
     public function view(User $user, Opportunity $opportunity): bool
     {
-        if ($user->isGM() || $user->isManager()) {
+        if ($user->isGM() || $user->isManager() || $user->isOperational() || $user->isPool()) {
             return true;
         }
 

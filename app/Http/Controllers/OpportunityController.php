@@ -16,7 +16,8 @@ class OpportunityController extends Controller
         protected PipelineService $pipelineService,
     ) {
         $this->middleware('auth');
-        $this->middleware('role:gm,manager,sales');
+        $this->middleware('role:gm,manager,sales')->except(['index', 'show']);
+        $this->middleware('role:gm,manager,sales,operational,pool')->only(['index', 'show']);
     }
 
     // ------------------------------------------------------------------
@@ -161,6 +162,8 @@ class OpportunityController extends Controller
             'approver',
             'booking',
             'subscription',
+            'assignedVehicles',
+            'assignedDrivers',
         ]);
 
         $activityLogs = $opportunity->activityLogs()

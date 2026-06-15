@@ -124,4 +124,83 @@ class RoleBugFixTest extends TestCase
         $response->assertSee(route('drivers.show', $driver->id));
         $response->assertSee($driver->name);
     }
+
+    /** @test */
+    public function operational_user_can_view_opportunity_detail(): void
+    {
+        $operational = $this->user('operational');
+        $opportunity = \App\Models\Opportunity::factory()->create();
+
+        $response = $this->actingAs($operational)
+            ->get(route('opportunities.show', $opportunity->id));
+
+        $response->assertOk();
+    }
+
+    /** @test */
+    public function operational_user_can_access_create_activity_page(): void
+    {
+        $operational = $this->user('operational');
+        $opportunity = \App\Models\Opportunity::factory()->create();
+
+        $response = $this->actingAs($operational)
+            ->get(route('activities.create', ['opportunity_id' => $opportunity->id]));
+
+        $response->assertOk();
+    }
+
+    /** @test */
+    public function operational_user_can_store_activity(): void
+    {
+        $operational = $this->user('operational');
+        $opportunity = \App\Models\Opportunity::factory()->create();
+
+        $response = $this->actingAs($operational)
+            ->post(route('activities.store'), [
+                'type' => 'meeting',
+                'subject' => 'Meeting with client by Ops',
+                'activity_date' => now()->format('Y-m-d H:i:s'),
+                'opportunity_id' => $opportunity->id,
+                'client_id' => $opportunity->client_id,
+            ]);
+
+        $response->assertRedirect(route('opportunities.show', $opportunity->id));
+
+        $this->assertDatabaseHas('activity_logs', [
+            'subject' => 'Meeting with client by Ops',
+            'opportunity_id' => $opportunity->id,
+            'sales_id' => $operational->id
+        ]);
+    }
+
+    /** @test */
+    public function opportunity_with_long_term_product_id_is_included_in_pending_assignments(): void
+    {
+        $operational = $this->user('operational');
+        
+        // Ensure Long Term category and product exist
+        $category = \App\Models\ProductCategory::factory()->create([
+            'id' => 2,
+            'name' => 'Long Term',
+            'type' => 'long_term',
+        ]);
+        $product = \App\Models\Product::factory()->create([
+            'id' => 4,
+            'product_category_id' => 2,
+            'name' => 'Mobil Long Term',
+        ]);
+        
+        $opp = \App\Models\Opportunity::factory()->create([
+            'product_id' => $product->id,
+            'title' => 'Ensured Sales Revenue Deal — 3 unit',
+            'stage' => 'won',
+            'products' => null,
+        ]);
+        
+        $response = $this->actingAs($operational)
+            ->get(route('fleet.index', ['status' => 'approval_pending']));
+            
+        $response->assertOk();
+        $response->assertSee($opp->title);
+    }
 }

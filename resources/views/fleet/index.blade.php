@@ -29,7 +29,79 @@
     ];
 @endphp
 
-<div class="space-y-6 pb-20" x-data="{ showMaintenanceDetails: false, showCreateModal: false }">
+<div class="space-y-6 pb-20" x-data="{ 
+    showMaintenanceDetails: false, 
+    showCreateModal: false,
+    showAssignModal: false,
+    assigningOpp: null,
+    availableFleets: [],
+    selectedFleets: [],
+    availableDrivers: [],
+    selectedDrivers: [],
+    isAssigning: false,
+    
+    init() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const assignOppId = urlParams.get('assign_opp');
+        if (assignOppId) {
+            const pendingOpps = @json(isset($pendingAssignments) ? $pendingAssignments : []);
+            const targetOpp = pendingOpps.find(o => String(o.id) === String(assignOppId));
+            if (targetOpp) {
+                this.openAssignModal(targetOpp);
+            }
+        }
+    },
+    
+    async openAssignModal(opp) {
+        this.assigningOpp = opp;
+        this.selectedFleets = [];
+        this.selectedDrivers = [];
+        this.showAssignModal = true;
+        try {
+            const res = await fetch(`/api/vehicles/available?opportunity_id=${opp.id}`);
+            this.availableFleets = await res.json();
+        } catch(e) {
+            console.error('Failed to load vehicles', e);
+        }
+        try {
+            const res = await fetch(`/api/drivers/available?opportunity_id=${opp.id}`);
+            this.availableDrivers = await res.json();
+        } catch(e) {
+            console.error('Failed to load drivers', e);
+        }
+    },
+    
+    async saveAssignment() {
+        if (this.selectedFleets.length === 0 && this.selectedDrivers.length === 0) {
+            alert('Silakan pilih minimal 1 kendaraan atau supir.');
+            return;
+        }
+        this.isAssigning = true;
+        try {
+            const res = await fetch(`/api/vehicles/assign-to-opportunity/${this.assigningOpp.id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content
+                },
+                body: JSON.stringify({ 
+                    vehicle_ids: this.selectedFleets,
+                    driver_ids: this.selectedDrivers
+                })
+            });
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert('Gagal menyimpan alokasi.');
+            }
+        } catch(e) {
+            console.error(e);
+        } finally {
+            this.isAssigning = false;
+        }
+    }
+}">
     
     {{-- Header Panel --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -53,16 +125,54 @@
         @endif
     </div>
 
+    {{-- Pending Assignments --}}
+    @if(isset($pendingAssignments) && $pendingAssignments->count() > 0 && $canModify)
+    <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6">
+        <h2 class="text-amber-500 font-bold mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined">warning</span>
+            Pending Vehicle Assignments ({{ $pendingAssignments->count() }} Opportunities)
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($pendingAssignments as $opp)
+            <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-xl p-4 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="font-bold text-[var(--cc-text)] text-sm mb-1">{{ $opp->title }}</div>
+                    <div class="text-xs text-[var(--cc-text-muted)] mb-3 flex justify-between">
+                        <span>{{ $opp->client->company_name ?? 'No Client' }}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 uppercase">{{ $opp->stage }}</span>
+                    </div>
+                    <div class="text-sm bg-amber-500/5 p-2 rounded border border-amber-500/10 mb-4">
+                        <div class="flex justify-between mb-1"><span>Required:</span> <strong>{{ $opp->required_fleets }}</strong></div>
+                        <div class="flex justify-between mb-1"><span>Assigned:</span> <strong>{{ $opp->assignedVehicles->count() }}</strong></div>
+                        <div class="flex justify-between text-amber-500 font-bold"><span>Missing:</span> <span>{{ $opp->missing_fleets }} Unit(s)</span></div>
+                    </div>
+                </div>
+                <button @click="openAssignModal({{ json_encode($opp) }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
+                    Assign Remaining
+                </button>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Fleet Stats Grid --}}
     @php
         $currentStatus = request('status', 'All');
     @endphp
-    <div class="grid gap-4" :class="showMaintenanceDetails ? 'grid-cols-2 lg:grid-cols-8' : 'grid-cols-2 lg:grid-cols-6'">
+    <div class="grid gap-4" :class="showMaintenanceDetails ? 'grid-cols-2 lg:grid-cols-9' : 'grid-cols-2 lg:grid-cols-7'">
         <a href="{{ request()->fullUrlWithQuery(['status' => 'All']) }}" 
            class="block rounded-2xl border bg-[var(--cc-surface)] p-4 backdrop-blur-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg {{ $currentStatus === 'All' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-[var(--cc-border)] hover:border-indigo-500/40' }}">
             <div class="text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-wider">Total Fleet</div>
             <div class="text-3xl font-mono font-bold text-[var(--cc-text)] mt-1">{{ $stats['total'] }}</div>
             <div class="text-[10px] text-[var(--cc-text-muted)] mt-1">Mobil Long Term units</div>
+        </a>
+
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'approval_pending']) }}" 
+           class="block rounded-2xl border bg-indigo-500/10 p-4 backdrop-blur-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg {{ $currentStatus === 'approval_pending' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-indigo-500/20 hover:border-indigo-500/50' }}">
+            <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Approval Pending</div>
+            <div class="text-3xl font-mono font-bold text-indigo-400 mt-1">{{ $pendingAssignments->count() }}</div>
+            <div class="text-[10px] text-indigo-500 mt-1">Pending Assignments</div>
         </a>
         
         <a href="{{ request()->fullUrlWithQuery(['status' => 'available']) }}" 
@@ -127,8 +237,113 @@
         </template>
     </div>
 
-    {{-- Control Filters Panel --}}
-    <form id="filter-form" method="GET" action="{{ route('fleet.index') }}" class="flex flex-col md:flex-row gap-4 bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-2xl p-4 backdrop-blur-md">
+    @if($currentStatus === 'approval_pending')
+        {{-- Approval Pending List and sorting --}}
+        <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-3xl p-6 shadow-sm space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-[var(--cc-text)] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-indigo-400">assignment_late</span>
+                        Opportunities Awaiting Assignment
+                    </h2>
+                    <p class="text-sm text-[var(--cc-text-muted)] mt-1">
+                        Daftar kontrak "Mobil Long Term" yang sudah dimenangkan (Won) atau tahap proposal/negosiasi namun armadanya belum dialokasikan secara penuh.
+                    </p>
+                </div>
+                
+                {{-- Sorting Controls --}}
+                <div class="flex items-center gap-2 text-xs bg-[var(--cc-bg-muted)] border border-[var(--cc-border)] p-1.5 rounded-xl">
+                    <span class="text-[var(--cc-text-muted)] font-medium px-2">Sort By:</span>
+                    @php
+                        $sortPending = request('sort_pending', 'date');
+                        $direction = request('direction', 'asc');
+                    @endphp
+                    <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'name', 'direction' => ($sortPending === 'name' && $direction === 'asc') ? 'desc' : 'asc', 'status' => 'approval_pending']) }}" class="px-3 py-1.5 rounded-lg font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition flex items-center gap-1 {{ $sortPending === 'name' ? 'bg-[var(--cc-surface)] text-indigo-400 shadow-sm border border-[var(--cc-border)] font-bold' : 'text-[var(--cc-text-muted)]' }}">
+                        Nama
+                        @if($sortPending === 'name')
+                            <span class="material-symbols-outlined text-[14px]">{{ $direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'date', 'direction' => ($sortPending === 'date' && $direction === 'asc') ? 'desc' : 'asc', 'status' => 'approval_pending']) }}" class="px-3 py-1.5 rounded-lg font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition flex items-center gap-1 {{ $sortPending === 'date' ? 'bg-[var(--cc-surface)] text-indigo-400 shadow-sm border border-[var(--cc-border)] font-bold' : 'text-[var(--cc-text-muted)]' }}">
+                        Tanggal
+                        @if($sortPending === 'date')
+                            <span class="material-symbols-outlined text-[14px]">{{ $direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'client', 'direction' => ($sortPending === 'client' && $direction === 'asc') ? 'desc' : 'asc', 'status' => 'approval_pending']) }}" class="px-3 py-1.5 rounded-lg font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition flex items-center gap-1 {{ $sortPending === 'client' ? 'bg-[var(--cc-surface)] text-indigo-400 shadow-sm border border-[var(--cc-border)] font-bold' : 'text-[var(--cc-text-muted)]' }}">
+                        Client
+                        @if($sortPending === 'client')
+                            <span class="material-symbols-outlined text-[14px]">{{ $direction === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+                        @endif
+                    </a>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-[var(--cc-border)]">
+                <table class="w-full text-sm">
+                    <thead class="bg-[var(--cc-bg-muted)] border-b border-[var(--cc-border)]">
+                        <tr class="text-[var(--cc-text-muted)] text-left">
+                            <th class="px-6 py-4 font-semibold">Nama Opportunity</th>
+                            <th class="px-6 py-4 font-semibold">Client / Perusahaan</th>
+                            <th class="px-6 py-4 font-semibold">Tanggal</th>
+                            <th class="px-6 py-4 font-semibold">Kebutuhan Alokasi</th>
+                            <th class="px-6 py-4 font-semibold text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[var(--cc-border)]">
+                        @forelse($pendingAssignments as $opp)
+                        <tr class="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                            <td class="px-6 py-4">
+                                <span class="font-bold text-[var(--cc-text)] block">{{ $opp->title }}</span>
+                                <span class="text-xs font-mono text-[var(--cc-text-muted)]">{{ $opp->opp_number }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-[var(--cc-text)]">
+                                {{ $opp->client->company_name ?? '—' }}
+                            </td>
+                            <td class="px-6 py-4 text-[var(--cc-text-muted)]">
+                                @if($opp->actual_close_date)
+                                    {{ $opp->actual_close_date->format('d M Y') }}
+                                @elseif($opp->expected_close_date)
+                                    {{ $opp->expected_close_date->format('d M Y') }}
+                                @else
+                                    {{ $opp->created_at->format('d M Y') }}
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-1.5 text-xs text-[var(--cc-text-muted)]">
+                                        <span>Total Butuh:</span> <strong class="text-[var(--cc-text)]">{{ $opp->required_fleets }} unit</strong>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-xs text-[var(--cc-text-muted)]">
+                                        <span>Kendaraan:</span> <span class="{{ $opp->missing_fleets > 0 ? 'text-amber-500 font-semibold' : 'text-emerald-500 font-semibold' }}">{{ $opp->assignedVehicles->count() }} / {{ $opp->required_fleets }} Assigned (Kurang {{ $opp->missing_fleets }})</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-xs text-[var(--cc-text-muted)]">
+                                        <span>Supir:</span> <span class="{{ $opp->missing_drivers > 0 ? 'text-amber-500 font-semibold' : 'text-emerald-500 font-semibold' }}">{{ $opp->assignedDrivers->count() }} / {{ $opp->required_fleets }} Assigned (Kurang {{ $opp->missing_drivers }})</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button @click="openAssignModal({{ json_encode($opp) }})" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-gray-900 shadow-md hover:bg-indigo-500 transition cursor-pointer">
+                                    <span class="material-symbols-outlined text-[16px]">link</span> Assign Now
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-[var(--cc-text-muted)]">
+                                <span class="material-symbols-outlined text-[48px] text-slate-500 mb-2">check_circle</span>
+                                <p class="font-bold text-base text-[var(--cc-text)]">Semua Alokasi Selesai</p>
+                                <p class="text-sm">Tidak ada opportunity yang menunggu alokasi kendaraan/supir.</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @else
+        {{-- Control Filters Panel --}}
+        <form id="filter-form" method="GET" action="{{ route('fleet.index') }}" class="flex flex-col md:flex-row gap-4 bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-2xl p-4 backdrop-blur-md">
         <div class="flex-1 relative">
             <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--cc-text-muted)]" style="font-size: 16px;">search</span>
             <input
@@ -461,7 +676,95 @@
                     </form>
                 </div>
             </div>
-        </div>
     </div>
+    @endif
+
+    {{-- Assign Vehicle Modal --}}
+    <template x-if="showAssignModal">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+             x-transition.opacity>
+            <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+                 @click.outside="showAssignModal = false">
+                
+                <div class="p-6 border-b border-[var(--cc-border)] flex items-center justify-between bg-[var(--cc-bg-muted)]">
+                    <h3 class="text-lg font-bold text-[var(--cc-text)]">Alokasi Kendaraan & Supir</h3>
+                    <button @click="showAssignModal = false" class="text-[var(--cc-text-muted)] hover:text-rose-500 transition">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+                    <!-- Vehicles Allocation -->
+                    <template x-if="assigningOpp?.missing_fleets > 0">
+                        <div>
+                            <div class="mb-2.5 text-sm font-semibold text-[var(--cc-text)] flex justify-between">
+                                <span>Pilih Kendaraan</span>
+                                <span class="text-xs text-[var(--cc-text-muted)]">Butuh <strong class="text-amber-500" x-text="assigningOpp?.missing_fleets"></strong> unit</span>
+                            </div>
+                            <div class="space-y-2 max-h-[200px] overflow-y-auto border border-[var(--cc-border)] p-3 rounded-2xl bg-[var(--cc-bg-muted)]/55 custom-scrollbar">
+                                <template x-if="availableFleets.length === 0">
+                                    <div class="text-center py-4 text-[var(--cc-text-muted)] text-xs">
+                                        Tidak ada kendaraan yang tersedia.
+                                    </div>
+                                </template>
+                                <template x-for="fleet in availableFleets" :key="fleet.id">
+                                    <label class="flex items-center gap-3 p-2.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:border-indigo-500 cursor-pointer transition text-xs"
+                                           :class="selectedFleets.length >= assigningOpp?.missing_fleets && !selectedFleets.includes(fleet.id) ? 'opacity-50 cursor-not-allowed' : ''">
+                                        <input type="checkbox" :value="fleet.id" x-model="selectedFleets"
+                                               :disabled="selectedFleets.length >= assigningOpp?.missing_fleets && !selectedFleets.includes(fleet.id)"
+                                               class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
+                                        <div>
+                                            <div class="font-bold text-[var(--cc-text)]" x-text="fleet.plate_number"></div>
+                                            <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="fleet.model + ' (' + fleet.year + ')'"></div>
+                                        </div>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Drivers Allocation -->
+                    <template x-if="assigningOpp?.missing_drivers > 0">
+                        <div>
+                            <div class="mb-2.5 text-sm font-semibold text-[var(--cc-text)] flex justify-between">
+                                <span>Pilih Supir / Driver</span>
+                                <span class="text-xs text-[var(--cc-text-muted)]">Butuh <strong class="text-amber-500" x-text="assigningOpp?.missing_drivers"></strong> orang</span>
+                            </div>
+                            <div class="space-y-2 max-h-[200px] overflow-y-auto border border-[var(--cc-border)] p-3 rounded-2xl bg-[var(--cc-bg-muted)]/55 custom-scrollbar">
+                                <template x-if="availableDrivers.length === 0">
+                                    <div class="text-center py-4 text-[var(--cc-text-muted)] text-xs">
+                                        Tidak ada supir yang tersedia.
+                                    </div>
+                                </template>
+                                <template x-for="driver in availableDrivers" :key="driver.id">
+                                    <label class="flex items-center gap-3 p-2.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:border-indigo-500 cursor-pointer transition text-xs"
+                                           :class="selectedDrivers.length >= assigningOpp?.missing_drivers && !selectedDrivers.includes(driver.id) ? 'opacity-50 cursor-not-allowed' : ''">
+                                        <input type="checkbox" :value="driver.id" x-model="selectedDrivers"
+                                               :disabled="selectedDrivers.length >= assigningOpp?.missing_drivers && !selectedDrivers.includes(driver.id)"
+                                               class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
+                                        <div>
+                                            <div class="font-bold text-[var(--cc-text)]" x-text="driver.name"></div>
+                                            <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="driver.pool ? driver.pool.name : ''"></div>
+                                        </div>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="p-6 border-t border-[var(--cc-border)] bg-[var(--cc-bg-muted)] flex justify-end gap-3">
+                    <button @click="showAssignModal = false" class="px-5 py-2.5 rounded-xl border border-[var(--cc-border)] text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] hover:bg-[var(--cc-bg)] text-sm font-semibold transition">
+                        Batal
+                    </button>
+                    <button @click="saveAssignment()" :disabled="isAssigning || (selectedFleets.length === 0 && selectedDrivers.length === 0)" 
+                            class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 text-sm font-semibold transition disabled:opacity-50 flex items-center gap-2">
+                        <span x-show="isAssigning" class="material-symbols-outlined animate-spin" style="font-size: 18px">progress_activity</span>
+                        <span x-text="isAssigning ? 'Menyimpan...' : 'Simpan Alokasi'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
 @endsection

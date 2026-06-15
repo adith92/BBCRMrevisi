@@ -74,7 +74,61 @@ class FleetController extends Controller
             'inQueue'     => (clone $statsQuery)->where('status', 'maintenance')->where('notes', 'not like', '%Servicing%')->count(),
         ];
 
-        return view('fleet.index', compact('vehicles', 'stats'));
+        // Ops Pending Assignments Logic
+        $pendingAssignments = \App\Models\Opportunity::with(['client', 'sales', 'assignedVehicles', 'assignedDrivers'])
+            ->whereIn('stage', ['proposal', 'negotiation', 'won'])
+            ->get()
+            ->filter(function ($opp) {
+                $requiredFleets = 0;
+                
+                if ($opp->product_id) {
+                    $opp->loadMissing('product');
+                    if ($opp->product && ($opp->product->name === 'Mobil Long Term' || $opp->product->product_category_id == 2)) {
+                        if (preg_match('/—\s*(\d+)\s*unit/i', $opp->title, $matches)) {
+                            $requiredFleets = (int)$matches[1];
+                        } else {
+                            $requiredFleets = 1;
+                        }
+                    }
+                }
+                
+                if (!empty($opp->products) && is_array($opp->products)) {
+                    $requiredFleets += collect($opp->products)
+                        ->filter(fn($p) => isset($p['category']) && ($p['category'] === 'Mobil Long Term' || $p['category'] === 'Long Term'))
+                        ->sum(fn($p) => (int)($p['quantity'] ?? 0));
+                }
+                
+                if ($requiredFleets == 0) return false;
+                
+                $opp->required_fleets = $requiredFleets;
+                $opp->missing_fleets = max(0, $requiredFleets - $opp->assignedVehicles->count());
+                $opp->missing_drivers = max(0, $requiredFleets - $opp->assignedDrivers->count());
+                
+                return $opp->missing_fleets > 0 || $opp->missing_drivers > 0;
+            });
+
+        // Sorting Logic
+        $sortPending = request('sort_pending', 'date');
+        $direction = request('direction', 'asc');
+
+        if ($sortPending === 'name') {
+            $pendingAssignments = $direction === 'desc' 
+                ? $pendingAssignments->sortByDesc('title') 
+                : $pendingAssignments->sortBy('title');
+        } elseif ($sortPending === 'client') {
+            $pendingAssignments = $direction === 'desc' 
+                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->client->company_name ?? '') 
+                : $pendingAssignments->sortBy(fn($opp) => $opp->client->company_name ?? '');
+        } else {
+            // default: date (actual_close_date -> expected_close_date -> created_at)
+            $pendingAssignments = $direction === 'desc' 
+                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at) 
+                : $pendingAssignments->sortBy(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at);
+        }
+
+        $pendingAssignments = $pendingAssignments->values();
+
+        return view('fleet.index', compact('vehicles', 'stats', 'pendingAssignments'));
     }
 
     public function show(Vehicle $vehicle)
@@ -184,5 +238,57 @@ class FleetController extends Controller
         Vehicle::create($vehicleData);
 
         return redirect()->route('fleet.index')->with('success', 'Vehicle registered successfully.');
+    }
+
+    public function assignToOpportunity(\Illuminate\Http\Request $request, \App\Models\Opportunity $opportunity)
+    {
+        $user = auth()->user();
+        if (!$user->isOperational() && !$user->isPool() && !$user->isManager() && !$user->isGM()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $request->validate([
+            'vehicle_ids' => 'nullable|array',
+            'vehicle_ids.*' => 'exists:vehicles,id',
+            'driver_ids' => 'nullable|array',
+            'driver_ids.*' => 'exists:drivers,id'
+        ]);
+
+        $status = $opportunity->stage === 'won' ? 'assigned' : 'reserved';
+        $logNotes = [];
+
+        if ($request->has('vehicle_ids') && !empty($request->vehicle_ids)) {
+            Vehicle::whereIn('id', $request->vehicle_ids)->update([
+                'assigned_opportunity_id' => $opportunity->id,
+                'status' => $status
+            ]);
+            $vehicles = Vehicle::whereIn('id', $request->vehicle_ids)->get();
+            $plateNumbers = $vehicles->pluck('plate_number')->join(', ');
+            $logNotes[] = 'Kendaraan dialokasikan: ' . $plateNumbers;
+        }
+
+        if ($request->has('driver_ids') && !empty($request->driver_ids)) {
+            \App\Models\Driver::whereIn('id', $request->driver_ids)->update([
+                'assigned_opportunity_id' => $opportunity->id,
+                'status' => $status
+            ]);
+            $drivers = \App\Models\Driver::whereIn('id', $request->driver_ids)->get();
+            $driverNames = $drivers->pluck('name')->join(', ');
+            $logNotes[] = 'Supir dialokasikan: ' . $driverNames;
+        }
+
+        if (!empty($logNotes)) {
+            \App\Models\ActivityLog::create([
+                'sales_id'       => auth()->id() ?? $opportunity->sales_id,
+                'client_id'      => $opportunity->client_id,
+                'opportunity_id' => $opportunity->id,
+                'type'           => 'follow_up',
+                'subject'        => 'Armada & Supir Dialokasikan oleh OPS',
+                'activity_date'  => now(),
+                'notes'          => implode('; ', $logNotes),
+            ]);
+        }
+
+        return response()->json(['message' => 'Alokasi berhasil disimpan']);
     }
 }

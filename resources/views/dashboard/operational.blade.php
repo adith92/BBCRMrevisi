@@ -119,11 +119,9 @@
                         <tbody>
                             @forelse($unassignedOpportunities as $opp)
                             @php
-                                $hasVehicles = $opp->assignedVehicles()->exists();
-                                $hasDrivers = $opp->assignedDrivers()->exists();
                                 $missing = [];
-                                if (!$hasVehicles) $missing[] = 'Kendaraan';
-                                if (!$hasDrivers) $missing[] = 'Supir';
+                                if ($opp->missing_fleets > 0) $missing[] = 'Kendaraan (' . $opp->missing_fleets . ' unit)';
+                                if ($opp->missing_drivers > 0) $missing[] = 'Supir (' . $opp->missing_drivers . ' orang)';
                             @endphp
                             <tr class="border-b hover:bg-black/5 dark:hover:bg-gray-100/5 transition-colors" style="border-color:var(--cc-border)">
                                 <td class="py-2.5">
@@ -146,7 +144,7 @@
                                     </span>
                                 </td>
                                 <td class="py-2.5">
-                                    <a href="{{ route('opportunities.show', $opp->id) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 px-3 py-1.5 text-xs font-semibold transition-all">
+                                    <a href="{{ route('fleet.index') }}?assign_opp={{ $opp->id }}" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 px-3 py-1.5 text-xs font-semibold transition-all">
                                         <span class="material-symbols-outlined text-[14px]">link</span> Assign Now
                                     </a>
                                 </td>

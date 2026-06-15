@@ -6,7 +6,7 @@
 <div x-data="{
     selectedType: '{{ old('type', $opportunity ? 'meeting' : '') }}',
     selectedClientId: '{{ old('client_id', $client?->id ?? $opportunity?->client_id ?? '') }}',
-    opportunities: @json($opportunities->map(fn($o) => ['id' => $o->id, 'title' => $o->title, 'opp_number' => $o->opp_number, 'client_id' => $o->client_id])),
+    opportunities: <?php echo json_encode($opportunities->map(fn($o) => ['id' => $o->id, 'title' => $o->title, 'opp_number' => $o->opp_number, 'client_id' => $o->client_id])); ?>,
     get filteredOpportunities() {
         if (!this.selectedClientId) return this.opportunities;
         return this.opportunities.filter(o => String(o.client_id) === String(this.selectedClientId));
