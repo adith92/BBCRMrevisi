@@ -482,18 +482,22 @@
                             <textarea x-model="note" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500 min-h-[80px]" placeholder="Add details..."></textarea>
                         </div>
 
-                        <!-- OPERATIONAL ALLOCATION FOR NON-SALES, OR LINK DRIVER(S) FOR SALES -->
-                        <template x-if="targetStage === 'won' && (hasVehicleProduct() || getSupirQty() > 0)">
+                        <!-- OPERATIONAL ALLOCATION (OPTIONAL) FOR PROPOSAL, NEGOTIATION, WON -->
+                        <template x-if="['proposal', 'negotiation', 'won'].includes(targetStage) && (hasVehicleProduct() || getSupirQty() > 0)">
                             <div class="mt-4 p-4 border border-[var(--cc-border)] bg-[var(--cc-surface)] rounded-xl space-y-4">
                                 <div class="flex items-center justify-between">
-                                    <h3 class="text-sm font-bold text-[var(--cc-text)]">Alokasi Operasional</h3>
+                                    <h3 class="text-sm font-bold text-[var(--cc-text)]">Alokasi Operasional / Link Driver (Optional)</h3>
                                     <button type="button" @click="fetchAvailableOperational()" class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-bold">Refresh Ketersediaan</button>
+                                </div>
+                                <div class="text-xs text-[var(--cc-text-muted)]">
+                                    <span x-show="getSupirQty() > 0" x-text="'Anda dapat memilih hingga ' + getSupirQty() + ' supir.'"></span>
+                                    Pilihan bersifat opsional di tahap ini. Jika tidak dipilih, maka akan dilimpahkan ke OPS saat status menjadi Won.
                                 </div>
                                 
                                 <div class="space-y-3">
                                     <template x-if="hasVehicleProduct()">
                                         <div>
-                                            <label class="block text-[10px] font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Pilih Unit Kendaraan (Fleet)</label>
+                                            <label class="block text-[10px] font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Pilih Unit Kendaraan Long Term (Fleet)</label>
                                             <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar">
                                                 <template x-if="availableFleets.length === 0">
                                                     <div class="col-span-2 text-xs text-[var(--cc-text-muted)]">Tidak ada unit tersedia.</div>
@@ -519,8 +523,11 @@
                                                     <div class="col-span-2 text-xs text-[var(--cc-text-muted)]">Tidak ada supir tersedia.</div>
                                                 </template>
                                                 <template x-for="driver in availableDrivers" :key="driver.id">
-                                                    <label class="flex items-center gap-2 p-2 rounded-lg border border-[var(--cc-border)] hover:border-indigo-500 cursor-pointer transition">
-                                                        <input type="checkbox" :value="driver.id" x-model="selectedDrivers" class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
+                                                    <label class="flex items-center gap-2 p-2 rounded-lg border border-[var(--cc-border)] hover:border-indigo-500 cursor-pointer transition"
+                                                           :class="selectedDrivers.length >= getSupirQty() && !selectedDrivers.includes(driver.id) ? 'opacity-50 cursor-not-allowed' : ''">
+                                                        <input type="checkbox" :value="driver.id" x-model="selectedDrivers"
+                                                               :disabled="selectedDrivers.length >= getSupirQty() && !selectedDrivers.includes(driver.id)"
+                                                               class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
                                                         <div class="text-xs">
                                                             <span class="font-bold text-[var(--cc-text)]" x-text="driver.name"></span>
                                                             <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="driver.pool ? driver.pool.name : ''"></div>
@@ -530,36 +537,6 @@
                                             </div>
                                         </div>
                                     </template>
-                                </div>
-                            </div>
-                        </template>
-
-                        <!-- LINK DRIVER(S) (OPTIONAL) FOR SALES -->
-                        <template x-if="currentUserRole === 'sales' && targetStage === 'won' && getSupirQty() > 0">
-                            <div class="mt-4 p-4 border border-[var(--cc-border)] bg-[var(--cc-surface)] rounded-xl space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-sm font-bold text-[var(--cc-text)]">LINK DRIVER(S) (OPTIONAL)</h3>
-                                    <button type="button" @click="fetchAvailableOperational()" class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-bold">Refresh Ketersediaan</button>
-                                </div>
-                                <div class="text-xs text-[var(--cc-text-muted)]" x-text="'Anda dapat memilih hingga ' + getSupirQty() + ' supir.'"></div>
-                                <div>
-                                    <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar">
-                                        <template x-if="availableDrivers.length === 0">
-                                            <div class="col-span-2 text-xs text-[var(--cc-text-muted)]">Tidak ada supir tersedia.</div>
-                                        </template>
-                                        <template x-for="driver in availableDrivers" :key="driver.id">
-                                            <label class="flex items-center gap-2 p-2 rounded-lg border border-[var(--cc-border)] hover:border-indigo-500 cursor-pointer transition"
-                                                   :class="selectedDrivers.length >= getSupirQty() && !selectedDrivers.includes(driver.id) ? 'opacity-50 cursor-not-allowed' : ''">
-                                                <input type="checkbox" :value="driver.id" x-model="selectedDrivers" 
-                                                       :disabled="selectedDrivers.length >= getSupirQty() && !selectedDrivers.includes(driver.id)"
-                                                       class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
-                                                <div class="text-xs">
-                                                    <span class="font-bold text-[var(--cc-text)]" x-text="driver.name"></span>
-                                                    <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="driver.pool ? driver.pool.name : ''"></div>
-                                                </div>
-                                            </label>
-                                        </template>
-                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -803,7 +780,7 @@ function pipelineManager() {
 
         hasVehicleProduct() {
             if (!this.editingDeal || !this.editingDeal.products) return false;
-            return this.editingDeal.products.some(p => ['Mobil Long Term', 'Mobil Short Term', 'Bis Long Term', 'Bis Short Term'].includes(p.category));
+            return this.editingDeal.products.some(p => ['Mobil Long Term'].includes(p.category));
         },
 
         addProduct() {
@@ -895,7 +872,7 @@ function pipelineManager() {
             this.selectedFleets = [];
             this.selectedDrivers = [];
             
-            if (newStage === 'negotiation' || newStage === 'won') {
+            if (newStage === 'proposal' || newStage === 'negotiation' || newStage === 'won') {
                 this.fetchAvailableOperational();
             }
 
