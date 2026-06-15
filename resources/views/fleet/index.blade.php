@@ -29,79 +29,7 @@
     ];
 @endphp
 
-<div class="space-y-6 pb-20" x-data="{ 
-    showMaintenanceDetails: false, 
-    showCreateModal: false,
-    showAssignModal: false,
-    assigningOpp: null,
-    availableFleets: [],
-    selectedFleets: [],
-    availableDrivers: [],
-    selectedDrivers: [],
-    isAssigning: false,
-    
-    init() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const assignOppId = urlParams.get('assign_opp');
-        if (assignOppId) {
-            const pendingOpps = @json(isset($pendingAssignments) ? $pendingAssignments : []);
-            const targetOpp = pendingOpps.find(o => String(o.id) === String(assignOppId));
-            if (targetOpp) {
-                this.openAssignModal(targetOpp);
-            }
-        }
-    },
-    
-    async openAssignModal(opp) {
-        this.assigningOpp = opp;
-        this.selectedFleets = [];
-        this.selectedDrivers = [];
-        this.showAssignModal = true;
-        try {
-            const res = await fetch(`/api/vehicles/available?opportunity_id=${opp.id}`);
-            this.availableFleets = await res.json();
-        } catch(e) {
-            console.error('Failed to load vehicles', e);
-        }
-        try {
-            const res = await fetch(`/api/drivers/available?opportunity_id=${opp.id}`);
-            this.availableDrivers = await res.json();
-        } catch(e) {
-            console.error('Failed to load drivers', e);
-        }
-    },
-    
-    async saveAssignment() {
-        if (this.selectedFleets.length === 0 && this.selectedDrivers.length === 0) {
-            alert('Silakan pilih minimal 1 kendaraan atau supir.');
-            return;
-        }
-        this.isAssigning = true;
-        try {
-            const res = await fetch(`/api/vehicles/assign-to-opportunity/${this.assigningOpp.id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content
-                },
-                body: JSON.stringify({ 
-                    vehicle_ids: this.selectedFleets,
-                    driver_ids: this.selectedDrivers
-                })
-            });
-            if (res.ok) {
-                window.location.reload();
-            } else {
-                alert('Gagal menyimpan alokasi.');
-            }
-        } catch(e) {
-            console.error(e);
-        } finally {
-            this.isAssigning = false;
-        }
-    }
-}">
+<div class="space-y-6 pb-20" x-data="fleetPage()">
     
     {{-- Header Panel --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -147,7 +75,7 @@
                         <div class="flex justify-between text-amber-500 font-bold"><span>Missing:</span> <span>{{ $opp->missing_fleets }} Unit(s)</span></div>
                     </div>
                 </div>
-                <button @click="openAssignModal({{ json_encode($opp) }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
+                <button @click="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
                     Assign Remaining
                 </button>
             </div>
@@ -323,7 +251,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button @click="openAssignModal({{ json_encode($opp) }})" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-gray-900 shadow-md hover:bg-indigo-500 transition cursor-pointer">
+                                <button @click="openAssignModal({{ $opp->id }})" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-gray-900 shadow-md hover:bg-indigo-500 transition cursor-pointer">
                                     <span class="material-symbols-outlined text-[16px]">link</span> Assign Now
                                 </button>
                             </td>
@@ -767,4 +695,94 @@
         </div>
     </template>
 </div>
+
+<script type="application/json" id="pending-assignments-data">
+    @json(isset($pendingAssignments) ? $pendingAssignments : [])
+</script>
+
+@push('scripts')
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('fleetPage', () => ({
+            showMaintenanceDetails: false,
+            showCreateModal: false,
+            showAssignModal: false,
+            assigningOpp: null,
+            availableFleets: [],
+            selectedFleets: [],
+            availableDrivers: [],
+            selectedDrivers: [],
+            isAssigning: false,
+            pendingOpps: [],
+
+            init() {
+                const pendingOppsElement = document.getElementById('pending-assignments-data');
+                this.pendingOpps = pendingOppsElement ? JSON.parse(pendingOppsElement.textContent) : [];
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const assignOppId = urlParams.get('assign_opp');
+                if (assignOppId) {
+                    this.openAssignModal(assignOppId);
+                }
+            },
+
+            async openAssignModal(oppId) {
+                const opp = this.pendingOpps.find(o => String(o.id) === String(oppId));
+                if (!opp) {
+                    console.error('Opportunity not found:', oppId);
+                    return;
+                }
+                this.assigningOpp = opp;
+                this.selectedFleets = [];
+                this.selectedDrivers = [];
+                this.showAssignModal = true;
+                try {
+                    const res = await fetch(`/api/vehicles/available?opportunity_id=${opp.id}`);
+                    this.availableFleets = await res.json();
+                } catch(e) {
+                    console.error('Failed to load vehicles', e);
+                }
+                try {
+                    const res = await fetch(`/api/drivers/available?opportunity_id=${opp.id}`);
+                    this.availableDrivers = await res.json();
+                } catch(e) {
+                    console.error('Failed to load drivers', e);
+                }
+            },
+
+            async saveAssignment() {
+                if (this.selectedFleets.length === 0 && this.selectedDrivers.length === 0) {
+                    alert('Silakan pilih minimal 1 kendaraan atau supir.');
+                    return;
+                }
+                this.isAssigning = true;
+                try {
+                    const res = await fetch(`/api/vehicles/assign-to-opportunity/${this.assigningOpp.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            vehicle_ids: this.selectedFleets,
+                            driver_ids: this.selectedDrivers
+                        })
+                    });
+                    if (res.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Gagal menyimpan alokasi.');
+                    }
+                } catch(e) {
+                    console.error(e);
+                } finally {
+                    this.isAssigning = false;
+                }
+            }
+        }));
+    });
+</script>
+@endpush
 @endsection
+
