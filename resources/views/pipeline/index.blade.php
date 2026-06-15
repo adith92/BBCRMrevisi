@@ -541,9 +541,25 @@
                         </template>
 
                         <template x-if="targetStage === 'won' && modalMode !== 'history'">
-                            <div class="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-4 rounded-2xl text-sm border border-emerald-500/20">
-                                <p class="font-bold">Deal Won!</p>
-                                <p class="mt-1">100% of the Estimated Value (<span x-text="formatIDR(calculateTotalEst())"></span>) will be recognized as Actual Revenue.</p>
+                            <div class="space-y-4">
+                                <div class="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-4 rounded-2xl text-sm border border-emerald-500/20">
+                                    <p class="font-bold">Deal Won!</p>
+                                    <p class="mt-1">100% of the Estimated Value (<span x-text="formatIDR(calculateTotalEst())"></span>) will be recognized as Actual Revenue.</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Final Value (Rp) <span class="text-rose-500">*</span></label>
+                                        <div class="relative">
+                                            <span class="absolute left-4 top-2.5 text-sm font-bold text-[var(--cc-text-muted)]">Rp</span>
+                                            <input type="text" x-model="editingDeal.formattedFinalValue" @input="handleFinalValueInput($event)" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] pl-10 pr-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" required />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-widest mb-1.5">Contract (Months) <span class="text-rose-500">*</span></label>
+                                        <input type="number" min="1" x-model.number="editingDeal.contract_duration_months" class="w-full rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-4 py-2.5 text-sm text-[var(--cc-text)] outline-none focus:border-indigo-500" required />
+                                    </div>
+                                </div>
                             </div>
                         </template>
 
@@ -602,7 +618,10 @@ function pipelineManager() {
             title: '',
             client_id: '',
             products: [],
-            lost_reason: ''
+            lost_reason: '',
+            final_value: 0,
+            formattedFinalValue: '',
+            contract_duration_months: 12
         },
 
         initData() {
@@ -759,6 +778,12 @@ function pipelineManager() {
             p.formattedPrice = val > 0 ? val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
         },
 
+        handleFinalValueInput(event) {
+            let val = parseInt(event.target.value.replace(/[^0-9]/g, '')) || 0;
+            this.editingDeal.final_value = val;
+            this.editingDeal.formattedFinalValue = val > 0 ? val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+        },
+
         async openHistoryModal(deal) {
             this.editingDeal = JSON.parse(JSON.stringify(deal));
             this.modalMode = 'history';
@@ -785,7 +810,10 @@ function pipelineManager() {
                 title: '',
                 client_id: '',
                 products: [],
-                lost_reason: ''
+                lost_reason: '',
+                final_value: 0,
+                formattedFinalValue: '',
+                contract_duration_months: 12
             };
             this.addProduct();
             this.targetStage = 'call_meeting';
@@ -824,6 +852,13 @@ function pipelineManager() {
             if (newStage === 'negotiation' || newStage === 'won') {
                 this.fetchAvailableOperational();
             }
+
+            if (newStage === 'won') {
+                let initialFinalValue = this.editingDeal.final_value || this.calculateTotalEst();
+                this.editingDeal.final_value = initialFinalValue;
+                this.editingDeal.formattedFinalValue = initialFinalValue > 0 ? initialFinalValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+                this.editingDeal.contract_duration_months = this.editingDeal.contract_duration_months || 12;
+            }
             
             this.modalMode = 'edit-stage';
             this.modalTitle = 'Move to ' + this.stageLabel(newStage);
@@ -846,7 +881,9 @@ function pipelineManager() {
                     notes: this.note,
                     lost_reason: this.editingDeal.lost_reason,
                     fleet_ids: this.selectedFleets,
-                    driver_ids: this.selectedDrivers
+                    driver_ids: this.selectedDrivers,
+                    final_value: this.editingDeal.final_value,
+                    contract_duration_months: this.editingDeal.contract_duration_months
                 };
 
                 let url = '{{ route("opportunities.store") }}';
