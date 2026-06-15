@@ -57,7 +57,7 @@ class Opportunity extends Model
             if (empty($opportunity->opp_number)) {
                 $yearMonth = now()->format('Ym');
                 $prefix = 'OPP-' . $yearMonth . '-';
-                $lastOpp = static::where('opp_number', 'like', $prefix . '%')
+                $lastOpp = static::where('opp_number', 'like', $prefix . '____')
                     ->orderByDesc('opp_number')
                     ->first();
 
