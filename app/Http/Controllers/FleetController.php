@@ -110,7 +110,12 @@ class FleetController extends Controller
     {
         $user = auth()->user();
         $query = Vehicle::with('pool')
-            ->where('status', 'available');
+            ->where(function ($q) {
+                $q->where('status', 'available');
+                if (request()->has('opportunity_id')) {
+                    $q->orWhere('assigned_opportunity_id', request('opportunity_id'));
+                }
+            });
             
         if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
             $query->where('pool_id', $user->pool_id);
@@ -125,7 +130,12 @@ class FleetController extends Controller
     {
         $user = auth()->user();
         $query = \App\Models\Driver::with('pool')
-            ->where('status', 'available');
+            ->where(function ($q) {
+                $q->where('status', 'available');
+                if (request()->has('opportunity_id')) {
+                    $q->orWhere('assigned_opportunity_id', request('opportunity_id'));
+                }
+            });
 
         if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
             $query->where('pool_id', $user->pool_id);

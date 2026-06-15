@@ -456,7 +456,7 @@
                                             </div>
                                         </div>
                                         <div>
-                                            <input type="text" placeholder="Details / Note (Optional)" x-model="p.details" class="w-full rounded-lg border border-transparent bg-[var(--cc-modal-bg)]/50 px-3 py-1.5 text-xs text-[var(--cc-text)] outline-none focus:border-[var(--cc-border)] placeholder:text-slate-400 dark:placeholder:text-slate-600" />
+                                            <input type="text" placeholder="Details / Note (Optional)" x-model="p.details" class="w-full rounded-lg border border-[var(--cc-border)] bg-[var(--cc-modal-bg)] px-3 py-1.5 text-xs text-[var(--cc-text)] outline-none focus:border-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-600" />
                                         </div>
                                     </div>
                                 </template>
@@ -857,11 +857,17 @@ function pipelineManager() {
             this.isModalOpen = true;
         },
 
-        async fetchAvailableOperational() {
+        async fetchAvailableOperational(opportunityId = null) {
             try {
+                let fleetUrl = '/api/vehicles/available';
+                let driverUrl = '/api/drivers/available';
+                if (opportunityId) {
+                    fleetUrl += '?opportunity_id=' + opportunityId;
+                    driverUrl += '?opportunity_id=' + opportunityId;
+                }
                 let [resFleet, resDriver] = await Promise.all([
-                    fetch('/api/vehicles/available').then(res => res.json()),
-                    fetch('/api/drivers/available').then(res => res.json())
+                    fetch(fleetUrl).then(res => res.json()),
+                    fetch(driverUrl).then(res => res.json())
                 ]);
                 this.availableFleets = resFleet || [];
                 this.availableDrivers = resDriver || [];
@@ -879,11 +885,11 @@ function pipelineManager() {
             this.targetStage = newStage;
             this.subType = 'Call';
             this.note = '';
-            this.selectedFleets = [];
-            this.selectedDrivers = [];
+            this.selectedFleets = this.editingDeal.assigned_vehicles ? this.editingDeal.assigned_vehicles.map(v => v.id) : [];
+            this.selectedDrivers = this.editingDeal.assigned_drivers ? this.editingDeal.assigned_drivers.map(d => d.id) : [];
             
             if (newStage === 'proposal' || newStage === 'negotiation' || newStage === 'won') {
-                this.fetchAvailableOperational();
+                this.fetchAvailableOperational(this.editingDeal.id);
             }
 
             if (newStage === 'won') {

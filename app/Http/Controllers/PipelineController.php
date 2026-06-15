@@ -21,7 +21,7 @@ class PipelineController extends Controller
         $stages = ['call_meeting', 'prospecting', 'proposal', 'negotiation', 'won', 'lost'];
 
         // Build base query scoped by role
-        $baseQuery = Opportunity::with(['client:id,company_name', 'sales:id,name'])
+        $baseQuery = Opportunity::with(['client:id,company_name', 'sales:id,name', 'assignedDrivers:id', 'assignedVehicles:id'])
             ->when($user->isSales(), fn ($q) => $q->where('sales_id', $user->id))
             ->when($user->isManager(), function ($q) use ($user) {
                 $teamIds = User::where('manager_id', $user->id)->where('role', 'sales')->pluck('id');
