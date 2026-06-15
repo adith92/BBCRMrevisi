@@ -94,6 +94,12 @@
             left: 0 !important;
         }
     }
+    /* Tablet: 2-column layout */
+    @media (min-width: 768px) and (max-width: 1023px) {
+        .grid-stack > .grid-stack-item {
+            min-width: 50% !important;
+        }
+    }
 </style>
 @endpush
 
@@ -103,13 +109,14 @@ function dashboardGrid() {
     return {
         grid: null,
         editing: false,
+        saveTimer: null,
         savedLayout: @json($savedLayout),
 
         init() {
             this.$nextTick(() => {
                 this.grid = GridStack.init({
                     column: 12,
-                    cellHeight: 80,
+                    cellHeight: 70,
                     margin: 6,
                     float: false,
                     animate: true,
@@ -117,10 +124,19 @@ function dashboardGrid() {
                     removable: false,
                     columnOpts: {
                         breakpoints: [
-                            { w: 768, c: 1 }
+                            { w: 768, c: 1 },   // Mobile: 1 kolom
+                            { w: 1024, c: 6 },  // Tablet: 6 kolom
+                            { w: 1200, c: 12 }  // Desktop: 12 kolom
                         ]
                     }
                 }, '#dashboard-grid');
+
+                // Auto-save on drag/resize (only when editing)
+                this.grid.on('change', () => {
+                    if (this.editing) {
+                        this.debouncedSave();
+                    }
+                });
 
                 // Restore saved layout if available
                 if (this.savedLayout && Array.isArray(this.savedLayout)) {
@@ -141,6 +157,13 @@ function dashboardGrid() {
                 el.closest('.relative').classList.remove('gs-editing');
                 this.saveLayout();
             }
+        },
+
+        debouncedSave() {
+            if (this.saveTimer) clearTimeout(this.saveTimer);
+            this.saveTimer = setTimeout(() => {
+                this.saveLayout();
+            }, 1500);
         },
 
         saveLayout() {
@@ -169,7 +192,7 @@ function dashboardGrid() {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    CRM_Toast.show('✅ Layout tersimpan!', 'success', 2000);
+                    CRM_Toast.show('✅ Layout tersimpan!', 'success', 1200);
                 }
             })
             .catch(() => {
@@ -183,6 +206,8 @@ function dashboardGrid() {
                 const el = document.querySelector(`[gs-id="${item.id}"]`) || document.getElementById(item.id);
                 if (el) {
                     this.grid.update(el, { x: item.x, y: item.y, w: item.w, h: item.h });
+                } else {
+                    console.warn(`[GridStack] Widget "${item.id}" tidak ditemukan, skip.`);
                 }
             });
         },
