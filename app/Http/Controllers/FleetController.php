@@ -47,6 +47,10 @@ class FleetController extends Controller
         if (request('status') && request('status') !== 'All') {
             if (request('status') === 'Being Serviced' || request('status') === 'In Queue') {
                 $query->where('status', 'Maintenance');
+            } elseif (request('status') === 'rent_out') {
+                $query->whereIn('status', ['rent_out', 'assigned']);
+            } elseif (request('status') === 'booked') {
+                $query->whereIn('status', ['booked', 'reserved']);
             } else {
                 $query->where('status', request('status'));
             }
@@ -63,7 +67,7 @@ class FleetController extends Controller
             'total'       => (clone $statsQuery)->count(),
             'available'   => (clone $statsQuery)->where('status', 'available')->count(),
             'rented'      => (clone $statsQuery)->where(function($q) { $q->where('status', 'rent_out')->orWhere('status', 'assigned'); })->count(),
-            'booked'      => (clone $statsQuery)->where('status', 'booked')->count(),
+            'booked'      => (clone $statsQuery)->whereIn('status', ['booked', 'reserved'])->count(),
             'hold'        => (clone $statsQuery)->where('status', 'hold')->count(),
             'maintenance' => (clone $statsQuery)->where('status', 'maintenance')->count(),
             'beingServiced'=> (clone $statsQuery)->where('status', 'maintenance')->where('notes', 'like', '%Servicing%')->count(),
