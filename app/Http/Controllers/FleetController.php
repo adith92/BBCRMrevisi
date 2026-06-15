@@ -110,8 +110,7 @@ class FleetController extends Controller
     {
         $user = auth()->user();
         $query = Vehicle::with('pool')
-            ->where('status', 'available')
-            ->whereIn('brand', ['goldenbird', 'executive']);
+            ->where('status', 'available');
             
         if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
             $query->where('pool_id', $user->pool_id);
