@@ -25,8 +25,6 @@
 
         #sidebar {
             flex-shrink: 0;
-            width: 224px;
-            min-width: 224px;
             height: 100vh;
             overflow-y: auto;
             overflow-x: hidden;
@@ -69,6 +67,8 @@
                 transform: translateX(-100%);
                 transition: transform 0.2s ease;
                 z-index: 50;
+                width: 224px !important;
+                min-width: 224px !important;
             }
             #sidebar.open { transform: translateX(0); }
             #sidebar.collapsed { transform: translateX(-100%) !important; width: 224px !important; min-width: 224px !important; }
@@ -80,7 +80,7 @@
 </head>
 <body>
 
-<div class="app-shell relative">
+<div x-data="{ sidebarOpen: localStorage.getItem('sidebar-open') !== 'false' }" class="app-shell relative">
 
     {{-- Ambient glowing background --}}
     <div class="absolute inset-0 z-0 pointer-events-none theme-orbs overflow-hidden">

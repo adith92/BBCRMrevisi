@@ -599,30 +599,29 @@
             <div class="p-5 bg-[var(--cc-bg)] rounded-b-3xl flex justify-end gap-3 border-t border-[var(--cc-border)] mt-auto">
                 <button
                   @click="closeModal()"
-                  class="bg-[var(--cc-surface)] border border-[var(--cc-border)] text-center w-48 rounded-2xl h-14 relative text-[var(--cc-text)] text-sm font-bold group transition"
+                  class="group relative overflow-hidden bg-[var(--cc-surface)] border border-[var(--cc-border)] hover:border-[var(--cc-border-h)] text-[var(--cc-text)] rounded-xl h-11 w-32 flex items-center justify-center font-bold text-sm transition-all"
                   type="button"
                 >
-                  <div
-                    class="bg-emerald-400 rounded-xl h-11 w-1/4 flex items-center justify-center absolute left-1 top-[5px] group-hover:w-[180px] z-10 duration-500"
-                  >
+                  <span class="pl-6 transition-opacity duration-500 group-hover:opacity-0" x-text="modalMode === 'history' ? 'Close' : 'Back'">
+                  </span>
+                  <i class="absolute inset-y-0 left-0 z-10 grid w-1/4 place-items-center bg-indigo-500/10 dark:bg-indigo-400/10 text-indigo-600 dark:text-indigo-400 transition-all duration-500 group-hover:w-full">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 1024 1024"
-                      height="20px"
-                      width="20px"
-                      class="text-black"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="opacity-80"
+                      aria-hidden="true"
                     >
-                      <path
-                        d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
-                        fill="currentColor"
-                      ></path>
-                      <path
-                        d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
-                        fill="currentColor"
-                      ></path>
+                      <line x1="19" y1="12" x2="5" y2="12"></line>
+                      <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
-                  </div>
-                  <p class="translate-x-4 group-hover:text-slate-900 transition-colors duration-300 relative z-20" x-text="modalMode === 'history' ? 'Close' : 'Go Back'"></p>
+                  </i>
                 </button>
                 <template x-if="modalMode !== 'history'">
                     <button @click="saveDeal()" 
