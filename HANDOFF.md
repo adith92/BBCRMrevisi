@@ -18,33 +18,34 @@
 
 ---
 
-## ✅ Status sekarang: Sesi terakhir — 14 Juni 2026
+## ✅ Status sekarang: Sesi terakhir — 16 Juni 2026
 
 ### Commit terakhir (sudah di-push ke `main`)
 ```
-220540c Tambah tautan detail klien pada tampilan dasbor
-b8281e6 Fix: Menyesuaikan warna teks legenda dan sumbu grafik untuk mendukung dark mode
-5792b1e Fix: Menunda render grafik di dashboard setelah inisialisasi GridStack
-8b5dfc3 feat: implementasi rincian KPI, filter dashboard GM, diagram interaktif, dan perbaikan otorisasi controller
-2040a35 fix: beresin 6 temuan audit (bug routes, relasi mati, scoping, docs)
-0641aaa fix: global search query error and restore short term / bus products with conditional WON assignment
-172d69a feat: implement optional driver linking, pool role, and fleet long-term restriction
-b1fd077 fix: adjust plate number text color contrast on fleet cards
-ebc688e feat: implement logic synchronization and RBAC boundaries from BLUECRM
-01d5dd7 Revert UI changes causing login break
+e16ccbe fix: alpine js reactivity bug for assign modal
+2c50188 feat: implement pool role fleet & driver assignment and fulfillment logic for won opportunities
+563cc13 Fix Alpine.js reactivity and event bubbling for Assign Modal
+c000671 Fix Alpine.js reactivity issue where async openAssignModal swallowed DOM updates
+6c6f751 Fix Alpine initialization race condition and script tag placement causing Assign Remaining button to fail
+8cc1b45 Fix Alpine.js rendering and allocation functionality on Fleet index page
+0a39a3e Fix 403 authorization for operational role, add Approval Pending tab with sorting, auto activity logs, and display assignments on Opportunity detail page
+3b2b4c5 fix: sync fleet ops filters with status calculations
+1956079 fix: ensure relations are returned on update and sync operational target status to reserved
+395c3b8 fix: resolve fleet index syntax error, fix eager loading keys, add vehicle/driver details to history, and fix title contrast in dark mode
 ```
 
-### Yang dikerjakan sesi ini (commit `220540c`):
-**Menambahkan tautan detail klien (link ke `clients.show`) pada 2 tampilan dashboard:**
+### Yang dikerjakan sesi ini:
+**Perbaikan Bug & Implementasi Workflow Alokasi Pool:**
 
-| File | Perubahan |
+| Modul | Perubahan |
 |------|-----------|
-| `resources/views/dashboard/operational.blade.php` | Baris 77: Nama klien di tabel booking aktif dibungkus `<a href="{{ route('clients.show', $booking->client->id) }}" ...>`. Baris 131-139: Nama klien di tabel unassigned won opportunities dibungkus dengan link serupa (termasuk penanganan null). |
-| `resources/views/dashboard/manager.blade.php` | Baris 140: Nama klien di sidebar aktivitas terbaru dibungkus link ke `clients.show`. |
-| `resources/views/dashboard/finance.blade.php` | Sudah memiliki link ke `clients.show` (tidak diubah, hanya diverifikasi konsistensinya). |
+| **Fleet / Assign Vehicle** | Memperbaiki tuntas bug reaktivitas Alpine.js (`showAssignModal`) pada halaman Fleet yang menyebabkan tombol Assign / Fulfill tidak memunculkan modal alokasi. Diatasi dengan deep cloning proksi objek reaktif dan `Alpine.nextTick`. |
+| **Pool Logic (RBAC)** | Menerapkan `pool_id` pada role Pool. User pool (misal: Pool Jakarta / Pool Surabaya) sekarang **hanya dapat memilih kendaraan dan supir** yang berasal dari pool mereka sendiri saat melakukan alokasi pada tabel *Pending Assignments*. |
+| **Operational & Long Term** | Menyempurnakan alur opportunity yang `WON` khusus untuk produk **Mobil Long Term** dan integrasi supirnya. Menambahkan tab *Approval Pending* pada module operational serta fitur sinkronisasi dengan status *reserved*. |
 
-### Konfigurasi git yang diubah:
-- `http.postBuffer` diset ke `524288000` (500 MB) untuk mengatasi masalah timeout saat push.
+### Konfigurasi tambahan:
+- Struktur otorisasi pada Controller (terutama Operational & Fleet) telah dirapihkan sehingga tidak memunculkan Error 403.
+- Telah dibuatkan dokumen `LOGIC_MAP.md` untuk memetakan alur hak akses dan workflow dari bisnis saat ini.
 
 ---
 
