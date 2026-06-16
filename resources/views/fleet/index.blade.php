@@ -33,7 +33,7 @@
     @json(isset($pendingAssignments) ? $pendingAssignments : [])
 </script>
 
-<div class="space-y-6 pb-20" x-data="fleetPage()">
+<div class="space-y-6 pb-20" x-data="fleetPage">
     
     {{-- Header Panel --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -79,7 +79,7 @@
                         <div class="flex justify-between text-amber-500 font-bold"><span>Missing:</span> <span>{{ $opp->missing_fleets }} Unit(s)</span></div>
                     </div>
                 </div>
-                <button @click="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
+                <button type="button" @click.prevent="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
                     Assign Remaining
                 </button>
             </div>
@@ -255,7 +255,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button @click="openAssignModal({{ $opp->id }})" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-gray-900 shadow-md hover:bg-indigo-500 transition cursor-pointer">
+                                <button type="button" @click.prevent="openAssignModal({{ $opp->id }})" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-gray-900 shadow-md hover:bg-indigo-500 transition cursor-pointer">
                                     <span class="material-symbols-outlined text-[16px]">link</span> Assign Now
                                 </button>
                             </td>
@@ -701,8 +701,8 @@
 </div>
 @push('scripts')
 <script>
-    window.fleetPage = function() {
-        return {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('fleetPage', () => ({
             showMaintenanceDetails: false,
             showCreateModal: false,
             showAssignModal: false,
@@ -784,8 +784,8 @@
                     this.isAssigning = false;
                 }
             }
-        };
-    };
+        }));
+    });
 </script>
 @endpush
 @endsection
