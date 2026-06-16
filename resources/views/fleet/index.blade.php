@@ -750,10 +750,15 @@
                     console.error('Opportunity not found:', oppId);
                     return;
                 }
-                this.assigningOpp = opp;
-                this.selectedFleets = (opp.assigned_vehicles || opp.assignedVehicles || []).map(v => v.id);
-                this.selectedDrivers = (opp.assigned_drivers || opp.assignedDrivers || []).map(d => d.id);
-                this.showAssignModal = true;
+                // Deep clone to avoid proxy reactivity suppression bugs in Alpine
+                this.assigningOpp = JSON.parse(JSON.stringify(opp));
+                this.selectedFleets = (this.assigningOpp.assigned_vehicles || this.assigningOpp.assignedVehicles || []).map(v => v.id);
+                this.selectedDrivers = (this.assigningOpp.assigned_drivers || this.assigningOpp.assignedDrivers || []).map(d => d.id);
+                
+                // Show modal after data starts loading (force alpine nextTick)
+                Alpine.nextTick(() => {
+                    this.showAssignModal = true;
+                });
                 
                 this.loadAvailableData(opp.id);
             },
