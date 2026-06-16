@@ -799,7 +799,12 @@
                         })
                     });
                     if (res.ok) {
-                        window.location.reload();
+                        this.showAssignModal = false;
+                        this.assigningOpp = null;
+
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('assign_opp');
+                        window.location.href = url.toString();
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Gagal menyimpan alokasi.');

@@ -236,4 +236,50 @@ class RoleBugFixTest extends TestCase
         $response->assertOk();
         $response->assertSee($opp->title);
     }
+
+    /** @test */
+    public function fleet_index_displays_required_driver_count_for_pending_assignments(): void
+    {
+        $operational = $this->user('operational');
+
+        $opp = \App\Models\Opportunity::factory()->create([
+            'title' => 'Weekend Leisure Fleet — 4 unit',
+            'stage' => 'won',
+            'products' => [
+                [
+                    'name' => 'Mobil Long Term',
+                    'category' => 'Long Term',
+                    'quantity' => 4,
+                    'price' => 1000000,
+                ],
+                [
+                    'name' => 'Supir',
+                    'category' => 'Service',
+                    'quantity' => 2,
+                    'price' => 250000,
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($operational)
+            ->get(route('fleet.index'));
+
+        $response->assertOk();
+        $response->assertSee('Supir Required:');
+        $response->assertSee('>2</strong>', false);
+        $response->assertSee('"required_drivers":2', false);
+    }
+
+    /** @test */
+    public function fleet_assign_script_clears_assign_opp_query_param_after_save(): void
+    {
+        $gm = $this->user('gm');
+
+        $response = $this->actingAs($gm)
+            ->get(route('fleet.index', ['assign_opp' => 99]));
+
+        $response->assertOk();
+        $response->assertSee("url.searchParams.delete('assign_opp');", false);
+        $response->assertSee('window.location.href = url.toString();', false);
+    }
 }

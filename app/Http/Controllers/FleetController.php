@@ -86,6 +86,7 @@ class FleetController extends Controller
                 $assignedDrivers = $opp->assignedDrivers->count();
                 
                 $opp->required_fleets = $requiredFleets;
+                $opp->required_drivers = $requiredDrivers;
                 $opp->missing_fleets = max(0, $requiredFleets - $assignedFleets);
                 $opp->missing_drivers = max(0, $requiredDrivers - $assignedDrivers);
                 
