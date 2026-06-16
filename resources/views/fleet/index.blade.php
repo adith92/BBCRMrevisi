@@ -29,6 +29,10 @@
     ];
 @endphp
 
+<script type="application/json" id="pending-assignments-data">
+    @json(isset($pendingAssignments) ? $pendingAssignments : [])
+</script>
+
 <div class="space-y-6 pb-20" x-data="fleetPage()">
     
     {{-- Header Panel --}}
@@ -695,15 +699,10 @@
         </div>
     </template>
 </div>
-
-<script type="application/json" id="pending-assignments-data">
-    @json(isset($pendingAssignments) ? $pendingAssignments : [])
-</script>
-
 @push('scripts')
 <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('fleetPage', () => ({
+    window.fleetPage = function() {
+        return {
             showMaintenanceDetails: false,
             showCreateModal: false,
             showAssignModal: false,
@@ -780,8 +779,8 @@
                     this.isAssigning = false;
                 }
             }
-        }));
-    });
+        };
+    };
 </script>
 @endpush
 @endsection
