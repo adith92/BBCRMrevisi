@@ -15,13 +15,18 @@ use App\Models\MaintenanceLog;
 use App\Models\MeetingLog;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
+    private const DEMO_FLEET_TARGET = 1000;
+    private const DEMO_DRIVER_TARGET = 1000;
+
     public function run(): void
     {
         if (User::where('email', 'gm@goldenbird.co.id')->exists()) {
             $this->command?->info('Base demo data already exists, skipping core seed.');
+            $this->ensureFleetAndDriverDemoData();
             $this->call(DemoMassiveSeeder::class);
             return;
         }
@@ -127,92 +132,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // ==================== 20 VEHICLES ====================
-        $brands = [
-            ['goldenbird', 'Premium Sedan', 6],
-            ['goldenbird', 'Executive Sedan', 6],
-            ['goldenbird', 'Luxury Sedan', 4],
-            ['goldenbird', 'VIP Sedan', 4],
-            ['goldenbird', 'Business Sedan', 6],
-            ['executive', 'SUV Premium', 8],
-            ['executive', 'Executive SUV', 8],
-            ['executive', 'Luxury SUV', 6],
-            ['executive', 'Business SUV', 8],
-            ['executive', 'VIP SUV', 6],
-        ];
-
-        $pool_ids = [1, 2, 3];
-        $colors = ['Hitam', 'Putih', 'Silver', 'Abu-Abu', 'Biru Navy'];
-        $transmissions = ['automatic', 'manual'];
-        $bbm_types = ['bensin', 'solar'];
-        $vehicle_logs = [
-            'Layanan pemeliharaan rutin selesai, rotasi ban.',
-            'Unit dalam kondisi prima, siap untuk kontrak jangka panjang.',
-            'Pembersihan interior menyeluruh dan AC diservis.',
-            'Oli mesin diganti, kampas rem depan baru.',
-            'Inspeksi keselamatan lolos, dokumen pajak diperbarui.'
-        ];
-
-        foreach ($brands as $idx => $brand) {
-            // Tentukan status awal (nanti akan dikaitkan lebih detail di akhir seeder)
-            $status = 'available';
-            if ($idx === 4 || $idx === 9) $status = 'maintenance';
-            elseif ($idx >= 10 && $idx <= 13) $status = 'rent_out';
-            elseif ($idx === 14 || $idx === 15) $status = 'booked';
-            elseif ($idx === 16 || $idx === 17) $status = 'hold';
-
-            $log = $vehicle_logs[$idx % count($vehicle_logs)];
-            if ($status === 'maintenance') {
-                $log = ($idx === 4) ? 'Servicing - Overhaul mesin rutin' : 'In Queue - Ganti oli & filter';
-            }
-
-            Vehicle::create([
-                'plate_number' => 'BB ' . str_pad($idx + 1, 4, '0', STR_PAD_LEFT) . ' XX',
-                'brand' => $brand[0],
-                'model' => $brand[1],
-                'capacity' => $brand[2],
-                'year' => 2024 - ($idx % 3),
-                'status' => $status,
-                'pool_id' => $pool_ids[$idx % 3],
-                'notes' => $log,
-                'color' => $colors[$idx % count($colors)],
-                'transmission' => $transmissions[$idx % count($transmissions)],
-                'bbm_type' => $bbm_types[$idx % count($bbm_types)],
-                'current_km' => random_int(12000, 245000),
-                'year_manufactured' => 2024 - ($idx % 5),
-                'stnk_expiry' => Carbon::now()->addDays(random_int(180, 1200)),
-                'pajak_expiry' => Carbon::now()->addDays(random_int(30, 365)),
-            ]);
-        }
-
-        // ==================== 15 DRIVERS ====================
-        $driver_names = ['Ahmad Suryanto', 'Budi Hartono', 'Citra Wijaya', 'Dedi Kusuma', 'Eka Putri', 
-                        'Farah Nabila', 'Gunawan Setiawan', 'Haris Gunawan', 'Iwan Pratama', 'Joko Susanto',
-                        'Karina Sehati', 'Laris Gunardi', 'Maryanto Wijaya', 'Nuri Azizah', 'Ongki Wijaya'];
-
-        $driver_notes = [
-            'Sertifikasi mengemudi defensif aktif. Record bersih.',
-            'Sangat berpengalaman untuk rute jarak jauh Jawa-Bali.',
-            'Lolos sertifikasi supir VIP, ramah dan disiplin.',
-            'Menguasai rute logistik perkotaan dan bandara.',
-            'Supir cadangan operasional pool.'
-        ];
-
-        foreach ($driver_names as $idx => $name) {
-            $status = 'available';
-            if ($idx >= 8 && $idx <= 11) $status = 'assigned';
-            elseif ($idx === 12 || $idx === 13) $status = 'reserved';
-            elseif ($idx === 14) $status = 'inactive';
-
-            Driver::create([
-                'name' => $name,
-                'phone' => '082' . random_int(1000000000, 9999999999),
-                'license_number' => 'SIM' . str_pad($idx + 1, 8, '0', STR_PAD_LEFT),
-                'status' => $status,
-                'notes' => $driver_notes[$idx % count($driver_notes)],
-                'pool_id' => $pool_ids[$idx % 3], // Isi pool_id agar tidak "Pool: —"
-            ]);
-        }
+        $this->ensureFleetAndDriverDemoData();
 
         // ==================== 60 BOOKINGS ====================
         $statuses = ['completed', 'completed', 'completed', 'completed', 'confirmed', 'on_trip', 'cancelled'];
@@ -365,5 +285,161 @@ class DatabaseSeeder extends Seeder
 
         // ==================== MASSIVE VEHICLE + BOOKING + VOUCHER + KPI ====================
         // $this->call(MassiveVehicleBookingSeeder::class);
+    }
+
+    private function ensureFleetAndDriverDemoData(): void
+    {
+        $poolIds = Pool::query()->pluck('id')->all();
+        if (empty($poolIds)) {
+            return;
+        }
+
+        $this->seedFleetDemo($poolIds, self::DEMO_FLEET_TARGET);
+        $this->seedDriverDemo($poolIds, self::DEMO_DRIVER_TARGET);
+    }
+
+    private function seedFleetDemo(array $poolIds, int $target): void
+    {
+        $existing = Vehicle::count();
+        $toCreate = max(0, $target - $existing);
+
+        if ($toCreate === 0) {
+            $this->command?->info("Fleet demo already at target ({$target}), skipping.");
+            return;
+        }
+
+        $this->command?->info("Seeding {$toCreate} demo fleet records...");
+
+        $models = [
+            ['goldenbird', 'Premium Sedan', 4],
+            ['goldenbird', 'Executive Sedan', 4],
+            ['goldenbird', 'Luxury Sedan', 4],
+            ['goldenbird', 'Business Sedan', 4],
+            ['goldenbird', 'Premium MPV', 6],
+            ['executive', 'Executive SUV', 6],
+            ['executive', 'Luxury SUV', 6],
+            ['executive', 'Business SUV', 6],
+            ['executive', 'Corporate Van', 10],
+            ['executive', 'VIP Shuttle', 12],
+        ];
+        $colors = ['Hitam', 'Putih', 'Silver', 'Abu-Abu', 'Biru Navy'];
+        $transmissions = ['automatic', 'manual'];
+        $bbmTypes = ['bensin', 'solar'];
+        $fuelIndicators = ['full', '75%', '50%', '25%'];
+        $notes = [
+            'Unit demo siap untuk kontrak corporate.',
+            'Lolos inspeksi operasional dan siap digunakan.',
+            'Kabinnya bersih, AC dingin, dan jadwal servis terpantau.',
+            'Diprioritaskan untuk kebutuhan long term pool.',
+            'Dokumen kendaraan aktif dan lengkap.',
+        ];
+        $statusDistribution = array_merge(
+            array_fill(0, 650, 'available'),
+            array_fill(0, 120, 'rent_out'),
+            array_fill(0, 90, 'booked'),
+            array_fill(0, 70, 'maintenance'),
+            array_fill(0, 40, 'hold'),
+            array_fill(0, 30, 'inactive')
+        );
+
+        $rows = [];
+        $now = now();
+        for ($i = 0; $i < $toCreate; $i++) {
+            $sequence = $existing + $i + 1;
+            $modelSpec = $models[$i % count($models)];
+            $status = $statusDistribution[$i % count($statusDistribution)];
+            $note = $notes[$i % count($notes)];
+
+            if ($status === 'maintenance') {
+                $note = $i % 2 === 0 ? 'Servicing - perawatan berkala armada.' : 'In Queue - menunggu pergantian komponen.';
+            }
+
+            $rows[] = [
+                'plate_number' => sprintf('BB %04d %s', $sequence, Str::upper(fake()->lexify('??'))),
+                'brand' => $modelSpec[0],
+                'model' => $modelSpec[1],
+                'capacity' => $modelSpec[2],
+                'year' => 2021 + ($sequence % 5),
+                'status' => $status,
+                'pool_id' => $poolIds[$i % count($poolIds)],
+                'notes' => $note,
+                'color' => $colors[$i % count($colors)],
+                'transmission' => $transmissions[$i % count($transmissions)],
+                'bbm_type' => $bbmTypes[$i % count($bbmTypes)],
+                'current_km' => random_int(8000, 280000),
+                'year_manufactured' => 2020 + ($sequence % 6),
+                'fuel_indicator' => $fuelIndicators[$i % count($fuelIndicators)],
+                'stnk_expiry' => $now->copy()->addDays(random_int(120, 1080)),
+                'pajak_expiry' => $now->copy()->addDays(random_int(30, 365)),
+                'insurance_expiry' => $now->copy()->addDays(random_int(90, 720)),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            if (count($rows) === 250) {
+                Vehicle::insert($rows);
+                $rows = [];
+            }
+        }
+
+        if (!empty($rows)) {
+            Vehicle::insert($rows);
+        }
+    }
+
+    private function seedDriverDemo(array $poolIds, int $target): void
+    {
+        $existing = Driver::count();
+        $toCreate = max(0, $target - $existing);
+
+        if ($toCreate === 0) {
+            $this->command?->info("Driver demo already at target ({$target}), skipping.");
+            return;
+        }
+
+        $this->command?->info("Seeding {$toCreate} demo driver records...");
+
+        $firstNames = ['Ahmad', 'Budi', 'Citra', 'Dedi', 'Eko', 'Fajar', 'Gilang', 'Hendra', 'Irfan', 'Joko', 'Kevin', 'Lukman', 'Maman', 'Nanda', 'Oki', 'Putra', 'Qori', 'Rizal', 'Slamet', 'Taufik', 'Ujang', 'Vino', 'Wawan', 'Yoga', 'Zaki'];
+        $lastNames = ['Pratama', 'Wijaya', 'Saputra', 'Santoso', 'Nugroho', 'Firmansyah', 'Setiawan', 'Hidayat', 'Kusuma', 'Suryanto', 'Gunawan', 'Ramadhan', 'Permana', 'Herlambang', 'Mahendra'];
+        $notes = [
+            'Sertifikasi defensive driving aktif.',
+            'Berpengalaman menangani klien corporate dan airport transfer.',
+            'Cocok untuk armada VIP dan perjalanan luar kota.',
+            'Pengemudi cadangan untuk kebutuhan long term.',
+            'Riwayat disiplin baik dan responsif terhadap dispatch.',
+        ];
+        $statusDistribution = array_merge(
+            array_fill(0, 720, 'available'),
+            array_fill(0, 140, 'assigned'),
+            array_fill(0, 90, 'reserved'),
+            array_fill(0, 50, 'inactive')
+        );
+
+        $rows = [];
+        $now = now();
+        for ($i = 0; $i < $toCreate; $i++) {
+            $sequence = $existing + $i + 1;
+            $fullName = $firstNames[$i % count($firstNames)] . ' ' . $lastNames[$sequence % count($lastNames)];
+
+            $rows[] = [
+                'name' => $fullName,
+                'phone' => '082' . str_pad((string) random_int(100000000, 999999999), 9, '0', STR_PAD_LEFT),
+                'license_number' => 'SIM' . str_pad((string) $sequence, 8, '0', STR_PAD_LEFT),
+                'status' => $statusDistribution[$i % count($statusDistribution)],
+                'notes' => $notes[$i % count($notes)],
+                'pool_id' => $poolIds[$i % count($poolIds)],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            if (count($rows) === 250) {
+                Driver::insert($rows);
+                $rows = [];
+            }
+        }
+
+        if (!empty($rows)) {
+            Driver::insert($rows);
+        }
     }
 }
