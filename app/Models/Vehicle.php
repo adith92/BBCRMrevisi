@@ -43,7 +43,7 @@ class Vehicle extends Model
         static::addGlobalScope('pool', function ($query) {
             if (auth()->check()) {
                 $user = auth()->user();
-                if ($user->isOperational() && $user->pool_id !== null) {
+                if (($user->isOperational() || $user->isPool()) && $user->pool_id !== null) {
                     $query->where('vehicles.pool_id', $user->pool_id);
                 }
             }

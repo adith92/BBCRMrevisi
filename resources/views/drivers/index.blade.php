@@ -16,7 +16,10 @@
 
 @section('content')
 @php
-    $canModify = auth()->user()->isOperational() || auth()->user()->isManager();
+    $canModify = auth()->user()->isOperational()
+        || auth()->user()->isPool()
+        || auth()->user()->isManager()
+        || auth()->user()->isGM();
     $statusColors = [
         'available' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         'assigned'  => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -105,6 +108,7 @@
         </div>
         
         <div class="flex flex-wrap gap-3">
+            @if(!auth()->user()->isPool())
             <select
                 name="location"
                 onchange="this.form.submit()"
@@ -114,6 +118,7 @@
                 <option value="Jakarta" {{ request('location') === 'Jakarta' ? 'selected' : '' }}>Jakarta Pool</option>
                 <option value="Surabaya" {{ request('location') === 'Surabaya' ? 'selected' : '' }}>Surabaya Pool</option>
             </select>
+            @endif
 
             <select
                 name="status"

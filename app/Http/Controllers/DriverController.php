@@ -82,7 +82,7 @@ class DriverController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->isOperational() && !$user->isManager()) {
+        if (!$user->isOperational() && !$user->isPool() && !$user->isManager() && !$user->isGM()) {
             abort(403, 'Unauthorized');
         }
 
@@ -92,6 +92,13 @@ class DriverController extends Controller
             'pool_id' => 'nullable|exists:pools,id',
             'status' => 'required|in:available,inactive',
         ]);
+
+        if ($user->isPool()) {
+            if ($user->pool_id === null) {
+                abort(403, 'Pengguna pool wajib memiliki pool_id.');
+            }
+            $validated['pool_id'] = $user->pool_id;
+        }
 
         Driver::create($validated);
 

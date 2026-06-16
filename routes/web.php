@@ -88,10 +88,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/subscriptions/{subscription}/terminate', [SubscriptionController::class, 'terminate'])->name('subscriptions.terminate')->middleware('role:gm,finance');
 
     // Fleet (Operational)
-    Route::resource('fleet', FleetController::class)->parameters(['fleet' => 'vehicle'])->middleware('role:gm,manager,operational,sales');
+    Route::resource('fleet', FleetController::class)->parameters(['fleet' => 'vehicle'])->middleware('role:gm,manager,operational,sales,pool');
     
     // Drivers (Operational)
-    Route::resource('drivers', DriverController::class)->middleware('role:gm,manager,operational,sales');
+    Route::resource('drivers', DriverController::class)->middleware('role:gm,manager,operational,sales,pool');
 
     // Finance
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index')->middleware('role:gm,manager,finance');

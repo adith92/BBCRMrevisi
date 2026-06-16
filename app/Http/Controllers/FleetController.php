@@ -76,35 +76,35 @@ class FleetController extends Controller
 
         // Ops Pending Assignments Logic
         $pendingAssignments = \App\Models\Opportunity::with(['client', 'sales', 'assignedVehicles', 'assignedDrivers'])
-            ->whereIn('stage', ['proposal', 'negotiation', 'won'])
+            ->where('stage', 'won')
             ->get()
-            ->filter(function ($opp) {
-                $requiredFleets = 0;
+            ->filter(function ($opp) use ($user) {
+                $requiredFleets = $opp->requiredFleetQty();
+                $requiredDrivers = $opp->requiredDriverQty();
                 
-                if ($opp->product_id) {
-                    $opp->loadMissing('product');
-                    if ($opp->product && ($opp->product->name === 'Mobil Long Term' || $opp->product->product_category_id == 2)) {
-                        if (preg_match('/—\s*(\d+)\s*unit/i', $opp->title, $matches)) {
-                            $requiredFleets = (int)$matches[1];
-                        } else {
-                            $requiredFleets = 1;
-                        }
-                    }
-                }
-                
-                if (!empty($opp->products) && is_array($opp->products)) {
-                    $requiredFleets += collect($opp->products)
-                        ->filter(fn($p) => isset($p['category']) && ($p['category'] === 'Mobil Long Term' || $p['category'] === 'Long Term'))
-                        ->sum(fn($p) => (int)($p['quantity'] ?? 0));
-                }
-                
-                if ($requiredFleets == 0) return false;
+                $assignedFleets = $opp->assignedVehicles->count();
+                $assignedDrivers = $opp->assignedDrivers->count();
                 
                 $opp->required_fleets = $requiredFleets;
-                $opp->missing_fleets = max(0, $requiredFleets - $opp->assignedVehicles->count());
-                $opp->missing_drivers = max(0, $requiredFleets - $opp->assignedDrivers->count());
+                $opp->missing_fleets = max(0, $requiredFleets - $assignedFleets);
+                $opp->missing_drivers = max(0, $requiredDrivers - $assignedDrivers);
                 
-                return $opp->missing_fleets > 0 || $opp->missing_drivers > 0;
+                $isPending = $opp->missing_fleets > 0 || $opp->missing_drivers > 0;
+                if (!$isPending) {
+                    return false;
+                }
+
+                // Filter for pool role
+                if ($user->isPool() && $user->pool_id !== null) {
+                    $userPoolId = $user->pool_id;
+                    $hasOtherPoolVehicles = $opp->assignedVehicles->contains(fn($v) => $v->pool_id !== $userPoolId);
+                    $hasOtherPoolDrivers = $opp->assignedDrivers->contains(fn($d) => $d->pool_id !== $userPoolId);
+                    if ($hasOtherPoolVehicles || $hasOtherPoolDrivers) {
+                        return false;
+                    }
+                }
+
+                return true;
             });
 
         // Sorting Logic
@@ -208,7 +208,7 @@ class FleetController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->isOperational() && !$user->isManager()) {
+        if (!$user->isOperational() && !$user->isPool() && !$user->isManager() && !$user->isGM()) {
             abort(403, 'Unauthorized');
         }
 
@@ -222,6 +222,13 @@ class FleetController extends Controller
             'pool_id' => 'nullable|exists:pools,id',
             'status' => 'required|in:available,maintenance,inactive',
         ]);
+
+        if ($user->isPool()) {
+            if ($user->pool_id === null) {
+                abort(403, 'Pengguna pool wajib memiliki pool_id.');
+            }
+            $validated['pool_id'] = $user->pool_id;
+        }
 
         $vehicleData = [
             'plate_number' => $validated['police_number'],
@@ -247,6 +254,10 @@ class FleetController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        if ($user->isPool() && $user->pool_id === null) {
+            abort(403, 'Pengguna pool wajib memiliki pool_id.');
+        }
+
         $request->validate([
             'vehicle_ids' => 'nullable|array',
             'vehicle_ids.*' => 'exists:vehicles,id',
@@ -254,28 +265,111 @@ class FleetController extends Controller
             'driver_ids.*' => 'exists:drivers,id'
         ]);
 
-        $status = $opportunity->stage === 'won' ? 'assigned' : 'reserved';
+        $stage = strtolower($opportunity->stage);
+        if (!in_array($stage, ['negotiation', 'won'])) {
+            return response()->json(['message' => 'Tahapan Opportunity harus negotiation atau won.'], 422);
+        }
+
+        $vehicleIdsInput = $request->input('vehicle_ids', []);
+        $driverIdsInput = $request->input('driver_ids', []);
+
+        $requiredFleets = $opportunity->requiredFleetQty();
+        $requiredDrivers = $opportunity->requiredDriverQty();
+
+        $userPoolId = $user->isPool() ? $user->pool_id : null;
+        
+        $otherPoolVehiclesCount = 0;
+        $otherPoolDriversCount = 0;
+        
+        if ($userPoolId !== null) {
+            $otherPoolVehiclesCount = $opportunity->assignedVehicles()->withoutGlobalScope('pool')->where('pool_id', '!=', $userPoolId)->count();
+            $otherPoolDriversCount = $opportunity->assignedDrivers()->withoutGlobalScope('pool')->where('pool_id', '!=', $userPoolId)->count();
+        }
+
+        $totalVehiclesToAssign = count($vehicleIdsInput) + $otherPoolVehiclesCount;
+        $totalDriversToAssign = count($driverIdsInput) + $otherPoolDriversCount;
+
+        if ($requiredFleets > 0 && $totalVehiclesToAssign > $requiredFleets) {
+            return response()->json(['message' => "Jumlah kendaraan melebihi kebutuhan ({$requiredFleets} unit)."], 422);
+        }
+        if ($requiredDrivers > 0 && $totalDriversToAssign > $requiredDrivers) {
+            return response()->json(['message' => "Jumlah supir melebihi kebutuhan ({$requiredDrivers} orang)."], 422);
+        }
+
+        if ($userPoolId !== null) {
+            $invalidVehicles = Vehicle::withoutGlobalScope('pool')->whereIn('id', $vehicleIdsInput)->where('pool_id', '!=', $userPoolId)->exists();
+            if ($invalidVehicles) {
+                abort(403, 'Anda hanya dapat memilih kendaraan dari pool Anda sendiri.');
+            }
+            $invalidDrivers = \App\Models\Driver::withoutGlobalScope('pool')->whereIn('id', $driverIdsInput)->where('pool_id', '!=', $userPoolId)->exists();
+            if ($invalidDrivers) {
+                abort(403, 'Anda hanya dapat memilih supir dari pool Anda sendiri.');
+            }
+        }
+
+        $status = $stage === 'won' ? 'assigned' : 'reserved';
         $logNotes = [];
 
-        if ($request->has('vehicle_ids') && !empty($request->vehicle_ids)) {
-            Vehicle::whereIn('id', $request->vehicle_ids)->update([
-                'assigned_opportunity_id' => $opportunity->id,
-                'status' => $status
-            ]);
-            $vehicles = Vehicle::whereIn('id', $request->vehicle_ids)->get();
-            $plateNumbers = $vehicles->pluck('plate_number')->join(', ');
-            $logNotes[] = 'Kendaraan dialokasikan: ' . $plateNumbers;
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () use (
+            $opportunity, $userPoolId, $vehicleIdsInput, $driverIdsInput, $status, &$logNotes
+        ) {
+            // VEHICLES
+            $vehiclesToReleaseQuery = $opportunity->assignedVehicles();
+            if ($userPoolId !== null) {
+                $vehiclesToReleaseQuery->where('pool_id', $userPoolId);
+            }
+            $vehiclesToRelease = $vehiclesToReleaseQuery->whereNotIn('id', $vehicleIdsInput)->get();
+            if ($vehiclesToRelease->isNotEmpty()) {
+                Vehicle::whereIn('id', $vehiclesToRelease->pluck('id'))->update([
+                    'assigned_opportunity_id' => null,
+                    'status' => 'available'
+                ]);
+                $releasedPlates = $vehiclesToRelease->pluck('plate_number')->join(', ');
+                $logNotes[] = 'Kendaraan dilepas: ' . $releasedPlates;
+            }
 
-        if ($request->has('driver_ids') && !empty($request->driver_ids)) {
-            \App\Models\Driver::whereIn('id', $request->driver_ids)->update([
-                'assigned_opportunity_id' => $opportunity->id,
-                'status' => $status
-            ]);
-            $drivers = \App\Models\Driver::whereIn('id', $request->driver_ids)->get();
-            $driverNames = $drivers->pluck('name')->join(', ');
-            $logNotes[] = 'Supir dialokasikan: ' . $driverNames;
-        }
+            if (!empty($vehicleIdsInput)) {
+                Vehicle::whereIn('id', $vehicleIdsInput)->update([
+                    'assigned_opportunity_id' => $opportunity->id,
+                    'status' => $status
+                ]);
+                $assignedVehicles = Vehicle::whereIn('id', $vehicleIdsInput)->get();
+                $assignedPlates = $assignedVehicles->pluck('plate_number')->join(', ');
+                $logNotes[] = 'Kendaraan dialokasikan: ' . $assignedPlates;
+            }
+
+            // DRIVERS
+            $driversToReleaseQuery = $opportunity->assignedDrivers();
+            if ($userPoolId !== null) {
+                $driversToReleaseQuery->where('pool_id', $userPoolId);
+            }
+            $driversToRelease = $driversToReleaseQuery->whereNotIn('id', $driverIdsInput)->get();
+            if ($driversToRelease->isNotEmpty()) {
+                \App\Models\Driver::whereIn('id', $driversToRelease->pluck('id'))->update([
+                    'assigned_opportunity_id' => null,
+                    'status' => 'available'
+                ]);
+                $releasedNames = $driversToRelease->pluck('name')->join(', ');
+                $logNotes[] = 'Supir dilepas: ' . $releasedNames;
+            }
+
+            if (!empty($driverIdsInput)) {
+                \App\Models\Driver::whereIn('id', $driverIdsInput)->update([
+                    'assigned_opportunity_id' => $opportunity->id,
+                    'status' => $status
+                ]);
+                $assignedDrivers = \App\Models\Driver::whereIn('id', $driverIdsInput)->get();
+                $assignedNames = $assignedDrivers->pluck('name')->join(', ');
+                $logNotes[] = 'Supir dialokasikan: ' . $assignedNames;
+            }
+        });
+
+        $opportunity->load(['assignedVehicles', 'assignedDrivers']);
+        $assignedFleets = $opportunity->assignedVehicles->count();
+        $assignedDrivers = $opportunity->assignedDrivers->count();
+        
+        $missingFleets = max(0, $requiredFleets - $assignedFleets);
+        $missingDrivers = max(0, $requiredDrivers - $assignedDrivers);
 
         if (!empty($logNotes)) {
             \App\Models\ActivityLog::create([
@@ -283,12 +377,18 @@ class FleetController extends Controller
                 'client_id'      => $opportunity->client_id,
                 'opportunity_id' => $opportunity->id,
                 'type'           => 'follow_up',
-                'subject'        => 'Armada & Supir Dialokasikan oleh OPS',
+                'subject'        => 'Armada & Supir Dialokasikan oleh Pool',
                 'activity_date'  => now(),
                 'notes'          => implode('; ', $logNotes),
             ]);
         }
 
-        return response()->json(['message' => 'Alokasi berhasil disimpan']);
+        return response()->json([
+            'message' => 'Alokasi berhasil disimpan',
+            'missing_fleets' => $missingFleets,
+            'missing_drivers' => $missingDrivers,
+            'assigned_vehicles' => $opportunity->assignedVehicles,
+            'assigned_drivers' => $opportunity->assignedDrivers,
+        ]);
     }
 }

@@ -17,7 +17,10 @@
 
 @section('content')
 @php
-    $canModify = auth()->user()->isOperational() || auth()->user()->isManager();
+    $canModify = auth()->user()->isOperational()
+        || auth()->user()->isPool()
+        || auth()->user()->isManager()
+        || auth()->user()->isGM();
     $statusColors = [
         'available'   => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         'maintenance' => 'bg-amber-500/10 text-amber-400 border-amber-500/20',
@@ -62,7 +65,7 @@
     <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6">
         <h2 class="text-amber-500 font-bold mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined">warning</span>
-            Pending Vehicle Assignments ({{ $pendingAssignments->count() }} Opportunities)
+            Action Required: Fulfill Mobil Long Term Units & Supir ({{ $pendingAssignments->count() }} Opportunities)
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($pendingAssignments as $opp)
@@ -73,14 +76,17 @@
                         <span>{{ $opp->client->company_name ?? 'No Client' }}</span>
                         <span class="px-2 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 uppercase">{{ $opp->stage }}</span>
                     </div>
-                    <div class="text-sm bg-amber-500/5 p-2 rounded border border-amber-500/10 mb-4">
-                        <div class="flex justify-between mb-1"><span>Required:</span> <strong>{{ $opp->required_fleets }}</strong></div>
-                        <div class="flex justify-between mb-1"><span>Assigned:</span> <strong>{{ $opp->assignedVehicles->count() }}</strong></div>
-                        <div class="flex justify-between text-amber-500 font-bold"><span>Missing:</span> <span>{{ $opp->missing_fleets }} Unit(s)</span></div>
+                    <div class="text-sm bg-amber-500/5 p-2 rounded border border-amber-500/10 mb-4 space-y-1">
+                        <div class="flex justify-between"><span>Mobil Required:</span> <strong>{{ $opp->required_fleets }}</strong></div>
+                        <div class="flex justify-between"><span>Mobil Assigned:</span> <strong>{{ $opp->assignedVehicles->count() }}</strong></div>
+                        <div class="flex justify-between text-amber-500 font-bold border-b border-amber-500/10 pb-1"><span>Mobil Missing:</span> <span>{{ $opp->missing_fleets }} Unit(s)</span></div>
+                        <div class="flex justify-between"><span>Supir Required:</span> <strong>{{ $opp->required_drivers }}</strong></div>
+                        <div class="flex justify-between"><span>Supir Assigned:</span> <strong>{{ $opp->assignedDrivers->count() }}</strong></div>
+                        <div class="flex justify-between text-amber-500 font-bold"><span>Supir Missing:</span> <span>{{ $opp->missing_drivers }} Person(s)</span></div>
                     </div>
                 </div>
                 <button type="button" @click.prevent="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
-                    Assign Remaining
+                    Assign / Fulfill
                 </button>
             </div>
             @endforeach
@@ -290,6 +296,7 @@
         </div>
         
         <div class="flex flex-wrap gap-3">
+            @if(!auth()->user()->isPool())
             <select
                 name="location"
                 onchange="this.form.submit()"
@@ -299,6 +306,7 @@
                 <option value="Jakarta" {{ request('location') === 'Jakarta' ? 'selected' : '' }}>Jakarta Pool</option>
                 <option value="Surabaya" {{ request('location') === 'Surabaya' ? 'selected' : '' }}>Surabaya Pool</option>
             </select>
+            @endif
 
             <select
                 name="status"
@@ -626,12 +634,21 @@
                 </div>
 
                 <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+                    @if(auth()->user()->isPool())
+                    <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl text-xs flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[16px]">info</span>
+                        <span>You are assigning from your pool only.</span>
+                    </div>
+                    @endif
+
                     <!-- Vehicles Allocation -->
-                    <template x-if="assigningOpp?.missing_fleets > 0">
+                    <template x-if="assigningOpp?.required_fleets > 0">
                         <div>
                             <div class="mb-2.5 text-sm font-semibold text-[var(--cc-text)] flex justify-between">
                                 <span>Pilih Kendaraan</span>
-                                <span class="text-xs text-[var(--cc-text-muted)]">Butuh <strong class="text-amber-500" x-text="assigningOpp?.missing_fleets"></strong> unit</span>
+                                <span class="text-xs text-[var(--cc-text-muted)]">
+                                    Pilihan: <strong class="text-indigo-400" x-text="selectedFleets.length"></strong> / <strong x-text="assigningOpp?.required_fleets"></strong> unit
+                                </span>
                             </div>
                             <div class="space-y-2 max-h-[200px] overflow-y-auto border border-[var(--cc-border)] p-3 rounded-2xl bg-[var(--cc-bg-muted)]/55 custom-scrollbar">
                                 <template x-if="availableFleets.length === 0">
@@ -641,13 +658,13 @@
                                 </template>
                                 <template x-for="fleet in availableFleets" :key="fleet.id">
                                     <label class="flex items-center gap-3 p-2.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:border-indigo-500 cursor-pointer transition text-xs"
-                                           :class="selectedFleets.length >= assigningOpp?.missing_fleets && !selectedFleets.includes(fleet.id) ? 'opacity-50 cursor-not-allowed' : ''">
+                                           :class="selectedFleets.length >= assigningOpp?.required_fleets && !selectedFleets.includes(fleet.id) ? 'opacity-50 cursor-not-allowed' : ''">
                                         <input type="checkbox" :value="fleet.id" x-model="selectedFleets"
-                                               :disabled="selectedFleets.length >= assigningOpp?.missing_fleets && !selectedFleets.includes(fleet.id)"
+                                               :disabled="selectedFleets.length >= assigningOpp?.required_fleets && !selectedFleets.includes(fleet.id)"
                                                class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
                                         <div>
                                             <div class="font-bold text-[var(--cc-text)]" x-text="fleet.plate_number"></div>
-                                            <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="fleet.model + ' (' + fleet.year + ')'"></div>
+                                            <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="fleet.model + ' (' + fleet.year + ') - ' + (fleet.pool ? fleet.pool.name : 'No Pool')"></div>
                                         </div>
                                     </label>
                                 </template>
@@ -656,11 +673,13 @@
                     </template>
 
                     <!-- Drivers Allocation -->
-                    <template x-if="assigningOpp?.missing_drivers > 0">
+                    <template x-if="assigningOpp?.required_drivers > 0">
                         <div>
                             <div class="mb-2.5 text-sm font-semibold text-[var(--cc-text)] flex justify-between">
                                 <span>Pilih Supir / Driver</span>
-                                <span class="text-xs text-[var(--cc-text-muted)]">Butuh <strong class="text-amber-500" x-text="assigningOpp?.missing_drivers"></strong> orang</span>
+                                <span class="text-xs text-[var(--cc-text-muted)]">
+                                    Pilihan: <strong class="text-indigo-400" x-text="selectedDrivers.length"></strong> / <strong x-text="assigningOpp?.required_drivers"></strong> orang
+                                </span>
                             </div>
                             <div class="space-y-2 max-h-[200px] overflow-y-auto border border-[var(--cc-border)] p-3 rounded-2xl bg-[var(--cc-bg-muted)]/55 custom-scrollbar">
                                 <template x-if="availableDrivers.length === 0">
@@ -670,9 +689,9 @@
                                 </template>
                                 <template x-for="driver in availableDrivers" :key="driver.id">
                                     <label class="flex items-center gap-3 p-2.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:border-indigo-500 cursor-pointer transition text-xs"
-                                           :class="selectedDrivers.length >= assigningOpp?.missing_drivers && !selectedDrivers.includes(driver.id) ? 'opacity-50 cursor-not-allowed' : ''">
+                                           :class="selectedDrivers.length >= assigningOpp?.required_drivers && !selectedDrivers.includes(driver.id) ? 'opacity-50 cursor-not-allowed' : ''">
                                         <input type="checkbox" :value="driver.id" x-model="selectedDrivers"
-                                               :disabled="selectedDrivers.length >= assigningOpp?.missing_drivers && !selectedDrivers.includes(driver.id)"
+                                               :disabled="selectedDrivers.length >= assigningOpp?.required_drivers && !selectedDrivers.includes(driver.id)"
                                                class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
                                         <div>
                                             <div class="font-bold text-[var(--cc-text)]" x-text="driver.name"></div>
@@ -689,7 +708,7 @@
                     <button @click="showAssignModal = false" class="px-5 py-2.5 rounded-xl border border-[var(--cc-border)] text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] hover:bg-[var(--cc-bg)] text-sm font-semibold transition">
                         Batal
                     </button>
-                    <button @click="saveAssignment()" :disabled="isAssigning || (selectedFleets.length === 0 && selectedDrivers.length === 0)" 
+                    <button @click="saveAssignment()" :disabled="isAssigning" 
                             class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 text-sm font-semibold transition disabled:opacity-50 flex items-center gap-2">
                         <span x-show="isAssigning" class="material-symbols-outlined animate-spin" style="font-size: 18px">progress_activity</span>
                         <span x-text="isAssigning ? 'Menyimpan...' : 'Simpan Alokasi'"></span>
@@ -732,8 +751,8 @@
                     return;
                 }
                 this.assigningOpp = opp;
-                this.selectedFleets = [];
-                this.selectedDrivers = [];
+                this.selectedFleets = (opp.assigned_vehicles || opp.assignedVehicles || []).map(v => v.id);
+                this.selectedDrivers = (opp.assigned_drivers || opp.assignedDrivers || []).map(d => d.id);
                 this.showAssignModal = true;
                 
                 this.loadAvailableData(opp.id);
@@ -755,10 +774,6 @@
             },
 
             async saveAssignment() {
-                if (this.selectedFleets.length === 0 && this.selectedDrivers.length === 0) {
-                    alert('Silakan pilih minimal 1 kendaraan atau supir.');
-                    return;
-                }
                 this.isAssigning = true;
                 try {
                     const res = await fetch(`/api/vehicles/assign-to-opportunity/${this.assigningOpp.id}`, {
@@ -776,7 +791,8 @@
                     if (res.ok) {
                         window.location.reload();
                     } else {
-                        alert('Gagal menyimpan alokasi.');
+                        const err = await res.json();
+                        alert(err.message || 'Gagal menyimpan alokasi.');
                     }
                 } catch(e) {
                     console.error(e);

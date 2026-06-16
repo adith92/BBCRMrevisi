@@ -172,4 +172,69 @@ class Opportunity extends Model
             }
         );
     }
+
+    public function requiredFleetQty(): int
+    {
+        $qty = 0;
+        if (!empty($this->products) && is_array($this->products)) {
+            foreach ($this->products as $p) {
+                $cat = strtolower($p['category'] ?? '');
+                $name = strtolower($p['name'] ?? $p['product_name'] ?? '');
+                if ($cat === 'mobil long term' || $cat === 'long term' || $name === 'mobil long term' || $name === 'long term') {
+                    $qty += (int)($p['quantity'] ?? 0);
+                }
+            }
+        }
+
+        if ($qty === 0 && $this->product_id) {
+            $this->loadMissing('product.category');
+            if ($this->product) {
+                $prodName = strtolower($this->product->name);
+                $catName = $this->product->category ? strtolower($this->product->category->name) : '';
+                if ($prodName === 'mobil long term' || $catName === 'mobil long term' || $catName === 'long term') {
+                    if (preg_match('/—\s*(\d+)\s*unit/i', $this->title, $matches)) {
+                        $qty = (int)$matches[1];
+                    } else {
+                        $qty = 1;
+                    }
+                }
+            }
+        }
+
+        return $qty;
+    }
+
+    public function requiredDriverQty(): int
+    {
+        $qty = 0;
+        if (!empty($this->products) && is_array($this->products)) {
+            foreach ($this->products as $p) {
+                $cat = strtolower($p['category'] ?? '');
+                $name = strtolower($p['name'] ?? $p['product_name'] ?? '');
+                if ($cat === 'supir' || $cat === 'driver' || $cat === 'service' || $name === 'supir' || $name === 'driver') {
+                    $qty += (int)($p['quantity'] ?? 0);
+                }
+            }
+        }
+
+        if ($qty === 0 && $this->product_id) {
+            $this->loadMissing('product.category');
+            if ($this->product) {
+                $prodName = strtolower($this->product->name);
+                $catName = $this->product->category ? strtolower($this->product->category->name) : '';
+                if ($prodName === 'supir' || $prodName === 'driver' || $catName === 'supir' || $catName === 'driver' || $catName === 'service') {
+                    if (preg_match('/—\s*(\d+)\s*(unit|orang|driver|supir)/i', $this->title, $matches)) {
+                        $qty = (int)$matches[1];
+                    } else {
+                        $qty = 1;
+                    }
+                }
+            }
+        }
+
+        // Optional fallback: uncomment the line below if you want 1 driver per vehicle when no Driver product is present.
+        // $qty = $this->requiredFleetQty();
+
+        return $qty;
+    }
 }
