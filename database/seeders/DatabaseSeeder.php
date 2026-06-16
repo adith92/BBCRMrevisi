@@ -355,7 +355,7 @@ class DatabaseSeeder extends Seeder
             }
 
             $rows[] = [
-                'plate_number' => sprintf('BB %04d %s', $sequence, Str::upper(fake()->lexify('??'))),
+                'plate_number' => sprintf('BB %04d %s', $sequence, Str::upper(Str::random(2))),
                 'brand' => $modelSpec[0],
                 'model' => $modelSpec[1],
                 'capacity' => $modelSpec[2],
