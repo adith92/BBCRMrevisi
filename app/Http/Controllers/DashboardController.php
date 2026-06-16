@@ -500,14 +500,33 @@ class DashboardController extends Controller
         // Chart Data: Revenue Trend (Last 6 Months) for the whole team
         $salesIds = $teamMembers->pluck('id')->toArray();
         $revenueTrend = ['labels' => [], 'data' => []];
+
+        $startDate = Carbon::now()->subMonths(5)->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
+
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $yearMonthSelect = match ($driver) {
+            'sqlite' => "strftime('%Y-%m', actual_close_date)",
+            'pgsql'  => "to_char(actual_close_date, 'YYYY-MM')",
+            default  => "DATE_FORMAT(actual_close_date, '%Y-%m')",
+        };
+
+        $aggregatedData = Opportunity::whereIn('sales_id', $salesIds)
+            ->where('stage', 'won')
+            ->whereBetween('actual_close_date', [$startDate, $endDate])
+            ->groupBy(\Illuminate\Support\Facades\DB::raw($yearMonthSelect))
+            ->select(
+                \Illuminate\Support\Facades\DB::raw("{$yearMonthSelect} as month_key"),
+                \Illuminate\Support\Facades\DB::raw('SUM(COALESCE(final_value, estimated_value, 0)) as total')
+            )
+            ->pluck('total', 'month_key')
+            ->toArray();
+
         for ($i = 5; $i >= 0; $i--) {
             $m = Carbon::now()->subMonths($i);
             $revenueTrend['labels'][] = $m->format('M Y');
-            $revenueTrend['data'][] = Opportunity::whereIn('sales_id', $salesIds)
-                ->where('stage', 'won')
-                ->whereMonth('actual_close_date', $m->month)
-                ->whereYear('actual_close_date', $m->year)
-                ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
+            $key = $m->format('Y-m');
+            $revenueTrend['data'][] = isset($aggregatedData[$key]) ? (float) $aggregatedData[$key] : 0;
         }
 
         return view('dashboard.manager', compact(
@@ -555,14 +574,33 @@ class DashboardController extends Controller
         
         // Chart Data: Revenue Trend (Last 6 Months)
         $revenueTrend = ['labels' => [], 'data' => []];
+
+        $startDate = Carbon::now()->subMonths(5)->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
+
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $yearMonthSelect = match ($driver) {
+            'sqlite' => "strftime('%Y-%m', actual_close_date)",
+            'pgsql'  => "to_char(actual_close_date, 'YYYY-MM')",
+            default  => "DATE_FORMAT(actual_close_date, '%Y-%m')",
+        };
+
+        $aggregatedData = Opportunity::where('sales_id', $user->id)
+            ->where('stage', 'won')
+            ->whereBetween('actual_close_date', [$startDate, $endDate])
+            ->groupBy(\Illuminate\Support\Facades\DB::raw($yearMonthSelect))
+            ->select(
+                \Illuminate\Support\Facades\DB::raw("{$yearMonthSelect} as month_key"),
+                \Illuminate\Support\Facades\DB::raw('SUM(COALESCE(final_value, estimated_value, 0)) as total')
+            )
+            ->pluck('total', 'month_key')
+            ->toArray();
+
         for ($i = 5; $i >= 0; $i--) {
             $m = Carbon::now()->subMonths($i);
             $revenueTrend['labels'][] = $m->format('M Y');
-            $revenueTrend['data'][] = Opportunity::where('sales_id', $user->id)
-                ->where('stage', 'won')
-                ->whereMonth('actual_close_date', $m->month)
-                ->whereYear('actual_close_date', $m->year)
-                ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
+            $key = $m->format('Y-m');
+            $revenueTrend['data'][] = isset($aggregatedData[$key]) ? (float) $aggregatedData[$key] : 0;
         }
 
         $targetRecord = \App\Models\SalesTarget::where('user_id', $user->id)
