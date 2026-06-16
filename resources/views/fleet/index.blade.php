@@ -85,7 +85,7 @@
                         <div class="flex justify-between text-amber-500 font-bold"><span>Supir Missing:</span> <span>{{ $opp->missing_drivers }} Person(s)</span></div>
                     </div>
                 </div>
-                <button type="button" @click.prevent="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
+                <button type="button" @click.stop.prevent="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
                     Assign / Fulfill
                 </button>
             </div>
@@ -261,7 +261,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button type="button" @click.prevent="openAssignModal({{ $opp->id }})" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-gray-900 shadow-md hover:bg-indigo-500 transition cursor-pointer">
+                                <button type="button" @click.stop.prevent="openAssignModal({{ $opp->id }})" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-gray-900 shadow-md hover:bg-indigo-500 transition cursor-pointer">
                                     <span class="material-symbols-outlined text-[16px]">link</span> Assign Now
                                 </button>
                             </td>
@@ -620,8 +620,10 @@
     @endif
 
     {{-- Assign Vehicle Modal --}}
-    <template x-if="showAssignModal">
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+        <div x-show="showAssignModal"
+             x-cloak
+             style="display: none;"
+             class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
              x-transition.opacity>
             <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
                  @click.outside="showAssignModal = false">
@@ -716,7 +718,6 @@
                 </div>
             </div>
         </div>
-    </template>
 </div>
 @push('scripts')
 <script>
@@ -750,13 +751,16 @@
                     console.error('Opportunity not found:', oppId);
                     return;
                 }
+                this.showCreateModal = false;
+                this.showAssignModal = false;
+
                 // Deep clone to avoid proxy reactivity suppression bugs in Alpine
                 this.assigningOpp = JSON.parse(JSON.stringify(opp));
                 this.selectedFleets = (this.assigningOpp.assigned_vehicles || this.assigningOpp.assignedVehicles || []).map(v => v.id);
                 this.selectedDrivers = (this.assigningOpp.assigned_drivers || this.assigningOpp.assignedDrivers || []).map(d => d.id);
                 
-                // Show modal after data starts loading (force alpine nextTick)
-                Alpine.nextTick(() => {
+                // Open on the next browser frame so the trigger click cannot be swallowed by outside-click handlers.
+                window.requestAnimationFrame(() => {
                     this.showAssignModal = true;
                 });
                 
