@@ -93,6 +93,39 @@ class RoleBugFixTest extends TestCase
     }
 
     /** @test */
+    public function assign_modal_is_not_nested_inside_register_vehicle_modal(): void
+    {
+        $gm = $this->user('gm');
+
+        $response = $this->actingAs($gm)
+            ->get(route('fleet.index'));
+
+        $response->assertOk();
+
+        $dom = new \DOMDocument();
+        $previousUseInternalErrors = libxml_use_internal_errors(true);
+        $dom->loadHTML($response->getContent());
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousUseInternalErrors);
+
+        $xpath = new \DOMXPath($dom);
+        $assignModal = $xpath->query('//*[@x-show="showAssignModal"]')->item(0);
+
+        $this->assertNotNull($assignModal, 'Assign modal container must be rendered on Fleet index.');
+
+        $ancestor = $assignModal->parentNode;
+        while ($ancestor instanceof \DOMElement) {
+            $this->assertNotSame(
+                'showCreateModal',
+                $ancestor->getAttribute('x-show'),
+                'Assign modal must not be nested inside the Register Vehicle modal wrapper.'
+            );
+
+            $ancestor = $ancestor->parentNode;
+        }
+    }
+
+    /** @test */
     public function driver_detail_route_loads_correctly(): void
     {
         $gm = $this->user('gm');

@@ -617,6 +617,7 @@
                 </div>
             </div>
     </div>
+    </div>
     @endif
 
     {{-- Assign Vehicle Modal --}}
