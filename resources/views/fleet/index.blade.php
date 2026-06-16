@@ -725,7 +725,7 @@
                 }
             },
 
-            async openAssignModal(oppId) {
+            openAssignModal(oppId) {
                 const opp = this.pendingOpps.find(o => String(o.id) === String(oppId));
                 if (!opp) {
                     console.error('Opportunity not found:', oppId);
@@ -735,14 +735,19 @@
                 this.selectedFleets = [];
                 this.selectedDrivers = [];
                 this.showAssignModal = true;
+                
+                this.loadAvailableData(opp.id);
+            },
+
+            async loadAvailableData(oppId) {
                 try {
-                    const res = await fetch(`/api/vehicles/available?opportunity_id=${opp.id}`);
+                    const res = await fetch(`/api/vehicles/available?opportunity_id=${oppId}`);
                     this.availableFleets = await res.json();
                 } catch(e) {
                     console.error('Failed to load vehicles', e);
                 }
                 try {
-                    const res = await fetch(`/api/drivers/available?opportunity_id=${opp.id}`);
+                    const res = await fetch(`/api/drivers/available?opportunity_id=${oppId}`);
                     this.availableDrivers = await res.json();
                 } catch(e) {
                     console.error('Failed to load drivers', e);
