@@ -84,6 +84,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/kpi/targets', [SalesTargetController::class, 'store'])->name('kpi.store')->middleware('role:gm,manager');
 
     // Subscriptions
+    Route::post('/subscriptions/billing/run', [SubscriptionController::class, 'runBilling'])->name('subscriptions.billing.run')->middleware('role:gm,finance,manager');
     Route::resource('subscriptions', SubscriptionController::class)->middleware('role:gm,manager,finance');
     Route::post('/subscriptions/{subscription}/terminate', [SubscriptionController::class, 'terminate'])->name('subscriptions.terminate')->middleware('role:gm,finance');
 

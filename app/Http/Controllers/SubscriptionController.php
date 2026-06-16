@@ -17,7 +17,7 @@ class SubscriptionController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:gm,finance,manager')->only(['create', 'store', 'terminate']);
+        $this->middleware('role:gm,finance,manager')->only(['create', 'store', 'terminate', 'runBilling']);
     }
 
     public function index()

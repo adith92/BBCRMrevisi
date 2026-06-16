@@ -3,6 +3,12 @@
 @section('header_title', 'Subscription Billing')
 
 @section('content')
+@php
+    $canManageSubscriptions = auth()->user()->isGM()
+        || auth()->user()->isFinance()
+        || auth()->user()->isManager();
+@endphp
+
 <x-breadcrumb :items="[
     ['url' => route('dashboard'), 'label' => 'Dashboard'],
     ['url' => '#', 'label' => 'Subscription Billing'],
@@ -14,11 +20,16 @@
     <span class="text-xl">⚠️</span>
     <div>
         <span class="font-semibold">{{ $dueTodayCount }} kontrak</span> jatuh tempo hari ini dan belum ditagih.
-        @can('role:gm,finance,manager')
-        <a href="{{ route('subscriptions.billing.run') }}"
-           onclick="return confirm('Jalankan billing sekarang?')"
-           class="ml-2 underline font-semibold hover:text-amber-300">Proses Sekarang</a>
-        @endcan
+        @if($canManageSubscriptions)
+        <form action="{{ route('subscriptions.billing.run') }}" method="POST" class="inline">
+            @csrf
+            <button type="submit"
+                    onclick="return confirm('Jalankan billing sekarang?')"
+                    class="ml-2 underline font-semibold hover:text-amber-300 bg-transparent border-0 p-0 cursor-pointer">
+                Proses Sekarang
+            </button>
+        </form>
+        @endif
     </div>
 </div>
 @endif
@@ -42,12 +53,12 @@
             <h2 class="text-xl font-semibold text-[var(--cc-text)]">Subscription Billing</h2>
             <p class="text-sm text-[var(--cc-text-muted)] mt-0.5">Kelola kontrak berlangganan kendaraan</p>
         </div>
-        @can('role:gm,finance,manager')
+        @if($canManageSubscriptions)
         <a href="{{ route('subscriptions.create') }}"
            class="inline-flex items-center gap-2 bg-indigo-600 text-gray-900 px-4 py-2.5 rounded-xl hover:bg-indigo-500 transition-all text-sm font-semibold shadow-lg shadow-indigo-600/20">
             ➕ Tambah Kontrak
         </a>
-        @endcan
+        @endif
     </div>
 
     {{-- Status Filter Tabs --}}

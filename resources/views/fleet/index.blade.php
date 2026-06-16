@@ -256,7 +256,7 @@
                                         <span>Kendaraan:</span> <span class="{{ $opp->missing_fleets > 0 ? 'text-amber-500 font-semibold' : 'text-emerald-500 font-semibold' }}">{{ $opp->assignedVehicles->count() }} / {{ $opp->required_fleets }} Assigned (Kurang {{ $opp->missing_fleets }})</span>
                                     </div>
                                     <div class="flex items-center gap-1.5 text-xs text-[var(--cc-text-muted)]">
-                                        <span>Supir:</span> <span class="{{ $opp->missing_drivers > 0 ? 'text-amber-500 font-semibold' : 'text-emerald-500 font-semibold' }}">{{ $opp->assignedDrivers->count() }} / {{ $opp->required_fleets }} Assigned (Kurang {{ $opp->missing_drivers }})</span>
+                                        <span>Supir:</span> <span class="{{ $opp->missing_drivers > 0 ? 'text-amber-500 font-semibold' : 'text-emerald-500 font-semibold' }}">{{ $opp->assignedDrivers->count() }} / {{ $opp->required_drivers }} Assigned (Kurang {{ $opp->missing_drivers }})</span>
                                     </div>
                                 </div>
                             </td>
@@ -810,4 +810,3 @@
 </script>
 @endpush
 @endsection
-

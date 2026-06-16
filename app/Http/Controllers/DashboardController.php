@@ -597,30 +597,17 @@ class DashboardController extends Controller
             ->whereIn('stage', ['proposal', 'negotiation', 'won'])
             ->get()
             ->filter(function ($opp) {
-                $requiredFleets = 0;
-                
-                if ($opp->product_id) {
-                    $opp->loadMissing('product');
-                    if ($opp->product && ($opp->product->name === 'Mobil Long Term' || $opp->product->product_category_id == 2)) {
-                        if (preg_match('/—\s*(\d+)\s*unit/i', $opp->title, $matches)) {
-                            $requiredFleets = (int)$matches[1];
-                        } else {
-                            $requiredFleets = 1;
-                        }
-                    }
+                $requiredFleets = $opp->requiredFleetQty();
+                $requiredDrivers = $opp->requiredDriverQty();
+
+                if ($requiredFleets === 0 && $requiredDrivers === 0) {
+                    return false;
                 }
-                
-                if (!empty($opp->products) && is_array($opp->products)) {
-                    $requiredFleets += collect($opp->products)
-                        ->filter(fn($p) => isset($p['category']) && ($p['category'] === 'Mobil Long Term' || $p['category'] === 'Long Term'))
-                        ->sum(fn($p) => (int)($p['quantity'] ?? 0));
-                }
-                
-                if ($requiredFleets == 0) return false;
-                
+
                 $opp->required_fleets = $requiredFleets;
+                $opp->required_drivers = $requiredDrivers;
                 $opp->missing_fleets = max(0, $requiredFleets - $opp->assignedVehicles->count());
-                $opp->missing_drivers = max(0, $requiredFleets - $opp->assignedDrivers->count());
+                $opp->missing_drivers = max(0, $requiredDrivers - $opp->assignedDrivers->count());
                 
                 return $opp->missing_fleets > 0 || $opp->missing_drivers > 0;
             })->values();
