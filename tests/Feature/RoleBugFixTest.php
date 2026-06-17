@@ -238,7 +238,7 @@ class RoleBugFixTest extends TestCase
     }
 
     /** @test */
-    public function fleet_index_displays_required_driver_count_for_pending_assignments(): void
+    public function driver_index_displays_required_driver_count_for_pending_assignments(): void
     {
         $operational = $this->user('operational');
 
@@ -262,7 +262,7 @@ class RoleBugFixTest extends TestCase
         ]);
 
         $response = $this->actingAs($operational)
-            ->get(route('fleet.index'));
+            ->get(route('drivers.index'));
 
         $response->assertOk();
         $response->assertSee('Supir Required:');

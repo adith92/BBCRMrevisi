@@ -104,17 +104,6 @@
         <div class="flex items-center gap-3 mb-1">
             <h1 class="text-xl font-black tracking-tight" style="color: var(--cc-text);">{{ __('ui.bluebird_crm') }} <span style="color:#1468a8;">{{ __('ui.command_center') }}</span></h1>
         </div>
-        <p class="text-xs" style="color: var(--cc-text-muted);">{{ __('ui.corporate_intel') }}</p>
-        <div class="flex flex-wrap items-center gap-2 mt-3">
-            <a href="{{ route('dashboard') }}" class="badge-demo">{{ __('ui.live_demo') }}</a>
-            <a href="{{ route('analytics.index') }}" class="badge-demo">{{ __('ui.june_2026') }}</a>
-            <a href="{{ route('dashboard.gm') }}" class="badge-live flex items-center gap-1.5">
-                <span class="pulse-dot" style="width:5px;height:5px;"></span>
-                {{ __('ui.director_hq') }}
-            </a>
-            <a href="{{ route('analytics.index') }}" style="background:rgba(141,107,184,0.12);color:#72529a;border:1px solid rgba(141,107,184,0.2);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">{{ __('ui.api_ready') }}</a>
-            <a href="{{ route('bookings.index') }}" style="background:rgba(215,167,47,0.14);color:#8c6814;border:1px solid rgba(215,167,47,0.26);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">{{ __('ui.render_deploy') }}</a>
-        </div>
     </div>
     <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
         {{-- Date Range / Month / Year Filter Controls --}}
@@ -344,43 +333,36 @@
         </div>
     </div>
 
-    {{-- ===== Fleet League (1/3 width) ===== --}}
+    {{-- ===== Top Opportunities (1/3 width, kept on legacy widget id for saved-layout compatibility) ===== --}}
     <div class="grid-stack-item" gs-id="widget-fleet-league" gs-x="8" gs-y="6" gs-w="4" gs-h="8">
         <div class="grid-stack-item-content">
             <div class="cc-card p-5 h-full overflow-auto">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]" style="color:#f59e0b;">emoji_events</span>
-                        <span class="text-xs font-bold uppercase tracking-widest" style="color:#94a3b8;">{{ __('ui.fleet_league') }}</span>
+                        <span class="material-symbols-outlined text-[18px]" style="color:#ef4444;">whatshot</span>
+                        <span class="text-xs font-bold uppercase tracking-widest" style="color:#94a3b8;">{{ __('ui.hot_opportunities') }}</span>
                     </div>
-                    <a href="{{ route('fleet.index') }}" class="text-[10px] font-semibold" style="color:#3b82f6;">{{ __('ui.view_all') }}</a>
+                    <a href="{{ route('opportunities.index') }}" class="text-[10px] font-semibold" style="color:#3b82f6;">{{ __('ui.view_all') }}</a>
                 </div>
-                @php
-                $fleets = $fleetLeague ?? [
-                    ['name'=>'Golden Bird','pct'=>92,'color'=>'#f59e0b','badge'=>__('ui.high_performer'),'badgeColor'=>'rgba(245,158,11,0.12)','badgeText'=>'#fbbf24'],
-                    ['name'=>'Big Bird','pct'=>84,'color'=>'#10b981','badge'=>__('ui.stable'),'badgeColor'=>'rgba(16,185,129,0.12)','badgeText'=>'#34d399'],
-                    ['name'=>'Cititrans','pct'=>78,'color'=>'#3b82f6','badge'=>__('ui.needs_growth'),'badgeColor'=>'rgba(59,130,246,0.12)','badgeText'=>'#60a5fa'],
-                    ['name'=>'Exec. Transport','pct'=>73,'color'=>'#8b5cf6','badge'=>__('ui.under_review'),'badgeColor'=>'rgba(139,92,246,0.12)','badgeText'=>'#a78bfa'],
-                ];
-                @endphp
-                <div class="space-y-4">
-                    @foreach($fleets as $i => $f)
-                    <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="flex items-center gap-2">
-                                <div class="rank-num" style="background: var(--cc-th-bg); color: var(--cc-text-muted);">{{ $i+1 }}</div>
-                                <a href="{{ route('fleet.index') }}" class="text-xs font-semibold dashboard-link text-cc">{{ $f['name'] }}</a>
+                <div class="space-y-3">
+                    @forelse($topOpportunities as $i => $opportunity)
+                    <a href="{{ route('opportunities.show', $opportunity->id) }}" class="block dashboard-link rounded-xl p-3 border border-[var(--cc-border)] hover:bg-black/5 dark:hover:bg-white/5 transition">
+                        <div class="flex items-center justify-between gap-3 mb-1">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="rank-num" style="background: var(--cc-th-bg); color: var(--cc-text-muted);">{{ $i + 1 }}</div>
+                                <span class="text-xs font-semibold text-cc truncate">{{ $opportunity->client->company_name ?? $opportunity->title }}</span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span style="background:{{ $f['badgeColor'] }};color:{{ $f['badgeText'] }};font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;">{{ $f['badge'] }}</span>
-                                <span class="text-xs font-bold text-cc">{{ $f['pct'] }}%</span>
-                            </div>
+                            <span class="text-[11px] font-bold text-emerald-400 shrink-0">{{ \App\Helpers\FormatHelper::formatIDR($opportunity->estimated_value ?? 0) }}</span>
                         </div>
-                        <div class="fleet-bar">
-                            <div class="fleet-bar-fill" style="width:{{ $f['pct'] }}%;background:{{ $f['color'] }};opacity:0.8;"></div>
+                        <div class="text-[10px] text-cc-muted truncate">{{ $opportunity->title }}</div>
+                        <div class="flex items-center gap-2 mt-1.5 text-[10px] text-cc-muted">
+                            <span class="px-1.5 py-0.5 rounded border border-[var(--cc-border)] uppercase">{{ str_replace('_', ' ', $opportunity->stage) }}</span>
+                            <span class="truncate">{{ $opportunity->sales->name ?? '-' }}</span>
                         </div>
-                    </div>
-                    @endforeach
+                    </a>
+                    @empty
+                    <div class="py-8 text-center text-sm text-cc-muted">{{ __('ui.no_active_opportunity') }}</div>
+                    @endforelse
                 </div>
             </div>
         </div>

@@ -360,6 +360,12 @@ class DashboardController extends Controller
             ];
         }
 
+        $topOpportunities = Opportunity::with(['client', 'sales'])
+            ->whereIn('stage', ['call_meeting', 'prospecting', 'proposal', 'negotiation'])
+            ->orderByDesc('estimated_value')
+            ->take(5)
+            ->get();
+
         // 7. Weekly Revenue movement data
         $weeklyRevenue = [];
         $weeklyLabels = [];
@@ -465,7 +471,7 @@ class DashboardController extends Controller
             'actTypes', 'activityChartLabels', 'activityChartData',
             'sparkRevenue', 'sparkBookings', 'sparkFleet', 'sparkClients', 'sparkInvoice',
             'bookingsSignal', 'clientsSignal', 'utilizationRate', 'fleetLeague',
-            'weeklyRevenue', 'weeklyLabels', 'activeBookings'
+            'weeklyRevenue', 'weeklyLabels', 'activeBookings', 'topOpportunities'
         ));
     }
 

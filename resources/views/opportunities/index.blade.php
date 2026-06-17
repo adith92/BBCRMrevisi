@@ -51,10 +51,21 @@
             </select>
         </div>
         @endisset
+        @if(isset($managers) && $managers->count() > 0)
+        <div>
+            <label class="block dark-label mb-1">{{ __('ui.filter_manager') }}</label>
+            <select name="manager_id" class="dark-input text-sm px-3 py-2 min-w-40">
+                <option value="">{{ __('ui.all_managers') }}</option>
+                @foreach($managers as $manager)
+                <option value="{{ $manager->id }}" @selected((string)request('manager_id')===(string)$manager->id)>{{ $manager->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
         <button type="submit" class="btn-primary text-sm px-4 py-2">
             <span class="material-symbols-outlined text-[18px]">filter_alt</span> Filter
         </button>
-        @if(request('stage') || request('sales_id'))
+        @if(request('stage') || request('sales_id') || request('manager_id'))
         <a href="{{ route('opportunities.index') }}" class="text-cc-muted hover:text-cc font-medium text-sm px-3 py-2">Reset</a>
         @endif
     </form>
@@ -62,66 +73,51 @@
     {{-- Table --}}
     <div class="cc-card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm resizable-table dark-table" data-table-id="opportunities-table">
+            <table class="w-full text-sm resizable-table dark-table" data-table-id="opportunities-table" x-data="opportunityTable()">
                 <thead>
                     <tr class="border-b border-[var(--cc-border)]">
-                        <th class="px-5 py-3 text-left">Opportunity</th>
-                        <th class="px-5 py-3 text-left">Client</th>
-                        <th class="px-5 py-3 text-left">Sales</th>
-                        <th class="px-5 py-3 text-left">Stage</th>
-                        <th class="px-5 py-3 text-right">Estimasi</th>
+                        <th class="px-5 py-3 text-left cursor-pointer select-none" @click="sort('title')">Opportunity <span x-text="icon('title')"></span></th>
+                        <th class="px-5 py-3 text-left cursor-pointer select-none" @click="sort('company_name')">{{ __('ui.client') }} <span x-text="icon('company_name')"></span></th>
+                        <th class="px-5 py-3 text-left cursor-pointer select-none" @click="sort('sales_name')">{{ __('ui.sales_rep') }} <span x-text="icon('sales_name')"></span></th>
+                        <th class="px-5 py-3 text-left cursor-pointer select-none" @click="sort('manager_name')">{{ __('ui.sales_manager') }} <span x-text="icon('manager_name')"></span></th>
+                        <th class="px-5 py-3 text-left cursor-pointer select-none" @click="sort('stage')">Stage <span x-text="icon('stage')"></span></th>
+                        <th class="px-5 py-3 text-right cursor-pointer select-none" @click="sort('estimated_value')">{{ __('ui.value') }} <span x-text="icon('estimated_value')"></span></th>
+                        <th class="px-5 py-3 text-left cursor-pointer select-none" @click="sort('created_at')">{{ __('ui.created_at') }} <span x-text="icon('created_at')"></span></th>
                         <th class="px-5 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[var(--cc-border)]">
-                    @forelse($opportunities as $op)
-                    @php
-                        $stageColors = [
-                            'prospecting' => 'bg-blue-500/12 text-blue-500 dark:text-blue-400 border border-blue-500/20',
-                            'proposal'    => 'bg-indigo-500/12 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20',
-                            'negotiation' => 'bg-amber-500/12 text-amber-600 dark:text-amber-400 border border-amber-500/20',
-                            'won'         => 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
-                            'lost'        => 'bg-red-500/12 text-red-600 dark:text-red-400 border border-red-500/20',
-                        ];
-                    @endphp
+                    <template x-for="row in sortedRows()" :key="row.id">
                     <tr class="transition-colors">
                         <td class="px-5 py-3.5">
-                            <a href="{{ route('opportunities.show', $op->id) }}" class="text-cc-cyan font-medium hover:underline">
-                                {{ $op->title ?? $op->product->name ?? 'Opportunity #'.$op->id }}
-                            </a>
+                            <a :href="row.show_url" class="text-cc-cyan font-medium hover:underline" x-text="row.title"></a>
+                            <div class="text-[11px] text-cc-muted font-mono" x-text="row.opp_number"></div>
                         </td>
                         <td class="px-5 py-3.5">
-                            @if($op->client)
-                            <a href="{{ route('clients.show', $op->client->id) }}" class="text-cc-cyan hover:underline">
-                                {{ $op->client->company_name }}
-                            </a>
-                            @else
-                            <span class="text-cc-muted">—</span>
-                            @endif
+                            <a x-show="row.client_url" :href="row.client_url" class="text-cc-cyan hover:underline" x-text="row.company_name"></a>
+                            <span x-show="!row.client_url" class="text-cc-muted">-</span>
                         </td>
                         <td class="px-5 py-3.5">
-                            @if($op->sales)
-                            <a href="{{ route('sales.performance', $op->sales->id) }}" class="text-cc-cyan hover:underline">
-                                {{ $op->sales->name }}
-                            </a>
-                            @else
-                            <span class="text-cc-muted">—</span>
-                            @endif
+                            <a x-show="row.sales_url" :href="row.sales_url" class="text-cc-cyan hover:underline" x-text="row.sales_name"></a>
+                            <span x-show="!row.sales_url" class="text-cc-muted">-</span>
                         </td>
+                        <td class="px-5 py-3.5 text-cc-muted" x-text="row.manager_name"></td>
                         <td class="px-5 py-3.5">
-                            <span class="inline-flex px-2.5 py-0.5 rounded-lg text-[11px] font-bold {{ $stageColors[$op->stage] ?? 'bg-slate-500/12 text-slate-500 border border-slate-500/20' }}">{{ ucfirst($op->stage) }}</span>
+                            <span class="inline-flex px-2.5 py-0.5 rounded-lg text-[11px] font-bold" :class="stageClass(row.stage)" x-text="row.stage_label"></span>
                         </td>
-                        <td class="px-5 py-3.5 text-right font-medium text-[var(--cc-text)]">{{ \App\Helpers\FormatHelper::formatIDR($op->estimated_value ?? 0) }}</td>
+                        <td class="px-5 py-3.5 text-right font-medium text-[var(--cc-text)]" x-text="row.estimated_value_fmt"></td>
+                        <td class="px-5 py-3.5 text-cc-muted" x-text="row.created_at_fmt"></td>
                         <td class="px-5 py-3.5 text-right">
-                            <a href="{{ route('opportunities.show', $op->id) }}" class="text-cc-cyan hover:underline text-xs font-semibold">Detail →</a>
+                            <a :href="row.show_url" class="text-cc-cyan hover:underline text-xs font-semibold">Detail</a>
                         </td>
                     </tr>
-                    @empty
-                    <tr><td colspan="6" class="px-5 py-10 text-center text-cc-muted">
+                    </template>
+                    <template x-if="rows.length === 0">
+                    <tr><td colspan="8" class="px-5 py-10 text-center text-cc-muted">
                         <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">inbox</span>
                         Belum ada opportunity
                     </td></tr>
-                    @endforelse
+                    </template>
                 </tbody>
             </table>
         </div>
@@ -130,4 +126,50 @@
         @endif
     </div>
 </div>
+@push('scripts')
+<script>
+    function opportunityTable() {
+        return {
+            sortBy: 'created_at',
+            sortDir: 'desc',
+            rows: @json($opportunityRows),
+            sort(field) {
+                if (this.sortBy === field) {
+                    this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+                    return;
+                }
+                this.sortBy = field;
+                this.sortDir = field === 'estimated_value' || field === 'created_at' ? 'desc' : 'asc';
+            },
+            icon(field) {
+                if (this.sortBy !== field) return '';
+                return this.sortDir === 'asc' ? 'ASC' : 'DESC';
+            },
+            stageClass(stage) {
+                return {
+                    prospecting: 'bg-blue-500/12 text-blue-500 dark:text-blue-400 border border-blue-500/20',
+                    proposal: 'bg-indigo-500/12 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20',
+                    negotiation: 'bg-amber-500/12 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                    won: 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                    lost: 'bg-red-500/12 text-red-600 dark:text-red-400 border border-red-500/20',
+                }[stage] || 'bg-slate-500/12 text-slate-500 border border-slate-500/20';
+            },
+            sortedRows() {
+                return [...this.rows].sort((a, b) => {
+                    const av = a[this.sortBy] ?? '';
+                    const bv = b[this.sortBy] ?? '';
+
+                    if (typeof av === 'number' || typeof bv === 'number') {
+                        return this.sortDir === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av);
+                    }
+
+                    return this.sortDir === 'asc'
+                        ? String(av).localeCompare(String(bv))
+                        : String(bv).localeCompare(String(av));
+                });
+            }
+        };
+    }
+</script>
+@endpush
 @endsection

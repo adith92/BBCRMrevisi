@@ -176,14 +176,20 @@ class Opportunity extends Model
     public function requiredFleetQty(): int
     {
         $qty = 0;
-        if (!empty($this->products) && is_array($this->products)) {
+        $hasProductRows = !empty($this->products) && is_array($this->products);
+
+        if ($hasProductRows) {
             foreach ($this->products as $p) {
                 $cat = strtolower($p['category'] ?? '');
                 $name = strtolower($p['name'] ?? $p['product_name'] ?? '');
-                if ($cat === 'mobil long term' || $cat === 'long term' || $name === 'mobil long term' || $name === 'long term') {
+                if ($this->isFleetProductText($cat) || $this->isFleetProductText($name)) {
                     $qty += (int)($p['quantity'] ?? 0);
                 }
             }
+        }
+
+        if ($qty === 0 && !$hasProductRows && (int) $this->pax > 0) {
+            $qty = (int) $this->pax;
         }
 
         if ($qty === 0 && $this->product_id) {
@@ -191,7 +197,7 @@ class Opportunity extends Model
             if ($this->product) {
                 $prodName = strtolower($this->product->name);
                 $catName = $this->product->category ? strtolower($this->product->category->name) : '';
-                if ($prodName === 'mobil long term' || $catName === 'mobil long term' || $catName === 'long term') {
+                if ($this->isFleetProductText($prodName) || $this->isFleetProductText($catName)) {
                     if (preg_match('/—\s*(\d+)\s*unit/i', $this->title, $matches)) {
                         $qty = (int)$matches[1];
                     } else {
@@ -207,14 +213,20 @@ class Opportunity extends Model
     public function requiredDriverQty(): int
     {
         $qty = 0;
-        if (!empty($this->products) && is_array($this->products)) {
+        $hasProductRows = !empty($this->products) && is_array($this->products);
+
+        if ($hasProductRows) {
             foreach ($this->products as $p) {
                 $cat = strtolower($p['category'] ?? '');
                 $name = strtolower($p['name'] ?? $p['product_name'] ?? '');
-                if ($cat === 'supir' || $cat === 'driver' || $cat === 'service' || $name === 'supir' || $name === 'driver') {
+                if ($this->isDriverProductText($cat) || $this->isDriverProductText($name)) {
                     $qty += (int)($p['quantity'] ?? 0);
                 }
             }
+        }
+
+        if ($qty === 0 && !$hasProductRows && (int) $this->pax > 0) {
+            $qty = (int) $this->pax;
         }
 
         if ($qty === 0 && $this->product_id) {
@@ -222,7 +234,7 @@ class Opportunity extends Model
             if ($this->product) {
                 $prodName = strtolower($this->product->name);
                 $catName = $this->product->category ? strtolower($this->product->category->name) : '';
-                if ($prodName === 'supir' || $prodName === 'driver' || $catName === 'supir' || $catName === 'driver' || $catName === 'service') {
+                if ($this->isDriverProductText($prodName) || $this->isDriverProductText($catName)) {
                     if (preg_match('/—\s*(\d+)\s*(unit|orang|driver|supir)/i', $this->title, $matches)) {
                         $qty = (int)$matches[1];
                     } else {
@@ -236,5 +248,26 @@ class Opportunity extends Model
         // $qty = $this->requiredFleetQty();
 
         return $qty;
+    }
+
+    private function isFleetProductText(string $value): bool
+    {
+        $value = trim(strtolower($value));
+
+        return $value === 'mobil long term'
+            || $value === 'long term'
+            || str_contains($value, 'mobil long')
+            || str_contains($value, 'long term fleet');
+    }
+
+    private function isDriverProductText(string $value): bool
+    {
+        $value = trim(strtolower($value));
+
+        return $value === 'supir'
+            || $value === 'driver'
+            || $value === 'service'
+            || str_contains($value, 'supir')
+            || str_contains($value, 'driver');
     }
 }

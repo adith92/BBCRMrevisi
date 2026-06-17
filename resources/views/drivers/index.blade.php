@@ -20,6 +20,8 @@
         || auth()->user()->isPool()
         || auth()->user()->isManager()
         || auth()->user()->isGM();
+    $canAssign = auth()->user()->isOperational() || auth()->user()->isPool();
+    $pendingDriverCount = isset($pendingAssignments) ? $pendingAssignments->where('missing_drivers', '>', 0)->count() : 0;
     $statusColors = [
         'available' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         'assigned'  => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -28,7 +30,11 @@
     ];
 @endphp
 
-<div class="space-y-6 pb-20" x-data="{ showCreateModal: false }">
+<script type="application/json" id="pending-driver-assignments-data">
+    @json(isset($pendingAssignments) ? $pendingAssignments : [])
+</script>
+
+<div class="space-y-6 pb-20" x-data="driverPage">
     
     {{-- Header Panel --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -52,11 +58,45 @@
         @endif
     </div>
 
+    {{-- Pending Driver Assignments --}}
+    @if(isset($pendingAssignments) && $pendingAssignments->count() > 0 && $canAssign)
+    <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6">
+        <h2 class="text-amber-500 font-bold mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined">warning</span>
+            Driver Assignment: Supir Long Term ({{ $pendingDriverCount }} pending / {{ $pendingAssignments->count() }} total)
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($pendingAssignments as $opp)
+            <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-xl p-4 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="font-bold text-[var(--cc-text)] text-sm mb-1">{{ $opp->title }}</div>
+                    <div class="text-xs text-[var(--cc-text-muted)] mb-3 flex justify-between">
+                        <span>{{ $opp->client->company_name ?? 'No Client' }}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 uppercase">{{ $opp->stage }}</span>
+                    </div>
+                    <div class="text-sm bg-amber-500/5 p-2 rounded border border-amber-500/10 mb-4 space-y-1">
+                        <div class="flex justify-between"><span>Supir Required:</span> <strong>{{ $opp->required_drivers }}</strong></div>
+                        <div class="flex justify-between"><span>Supir Assigned:</span> <strong>{{ $opp->assignedDrivers->count() }}</strong></div>
+                        <div class="flex justify-between {{ $opp->missing_drivers > 0 ? 'text-amber-500' : 'text-emerald-500' }} font-bold">
+                            <span>Status:</span>
+                            <span>{{ $opp->missing_drivers > 0 ? $opp->missing_drivers . ' Person Missing' : 'Fulfilled' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" @click.stop.prevent="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
+                    {{ $opp->missing_drivers > 0 ? 'Assign Driver' : 'Ubah Alokasi Supir' }}
+                </button>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Stats Grid --}}
     @php
         $currentStatus = request('status', 'All');
     @endphp
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
         <a href="{{ request()->fullUrlWithQuery(['status' => 'All']) }}" 
            class="block rounded-2xl border bg-[var(--cc-surface)] p-4 backdrop-blur-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg {{ $currentStatus === 'All' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-[var(--cc-border)] hover:border-indigo-500/40' }}">
             <div class="text-xs font-bold text-[var(--cc-text-muted)] uppercase tracking-wider">Total Supir</div>
@@ -69,6 +109,13 @@
             <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Available</div>
             <div class="text-3xl font-mono font-bold text-emerald-400 mt-1">{{ $stats['available'] }}</div>
             <div class="text-[10px] text-emerald-500 mt-1">Ready for assignment</div>
+        </a>
+
+        <a href="{{ request()->fullUrlWithQuery(['status' => 'approval_pending']) }}"
+           class="block rounded-2xl border bg-indigo-500/10 p-4 backdrop-blur-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg {{ $currentStatus === 'approval_pending' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-indigo-500/20 hover:border-indigo-500/50' }}">
+            <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Assign Pending</div>
+            <div class="text-3xl font-mono font-bold text-indigo-400 mt-1">{{ $pendingDriverCount }}</div>
+            <div class="text-[10px] text-indigo-500 mt-1">Pending Driver Assignments</div>
         </a>
         
         <a href="{{ request()->fullUrlWithQuery(['status' => 'assigned']) }}" 
@@ -282,5 +329,152 @@
             </div>
         </div>
     </div>
+
+    {{-- Assign Driver Modal --}}
+    <div x-show="showAssignModal"
+         x-cloak
+         style="display: none;"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+         x-transition.opacity>
+        <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+             @click.outside="showAssignModal = false">
+            <div class="p-6 border-b border-[var(--cc-border)] flex items-center justify-between bg-[var(--cc-bg-muted)]">
+                <h3 class="text-lg font-bold text-[var(--cc-text)]">Alokasi Supir</h3>
+                <button @click="showAssignModal = false" class="text-[var(--cc-text-muted)] hover:text-rose-500 transition">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+                @if(auth()->user()->isPool())
+                <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl text-xs flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">info</span>
+                    <span>You are assigning drivers from your pool only.</span>
+                </div>
+                @endif
+
+                <template x-if="assigningOpp?.required_drivers > 0">
+                    <div>
+                        <div class="mb-2.5 text-sm font-semibold text-[var(--cc-text)] flex justify-between">
+                            <span>Pilih Supir / Driver</span>
+                            <span class="text-xs text-[var(--cc-text-muted)]">
+                                Pilihan: <strong class="text-indigo-400" x-text="selectedDrivers.length"></strong> / <strong x-text="assigningOpp?.required_drivers"></strong> orang
+                            </span>
+                        </div>
+                        <div class="space-y-2 max-h-[260px] overflow-y-auto border border-[var(--cc-border)] p-3 rounded-2xl bg-[var(--cc-bg-muted)]/55 custom-scrollbar">
+                            <template x-if="availableDrivers.length === 0">
+                                <div class="text-center py-4 text-[var(--cc-text-muted)] text-xs">
+                                    Tidak ada supir yang tersedia.
+                                </div>
+                            </template>
+                            <template x-for="driver in availableDrivers" :key="driver.id">
+                                <label class="flex items-center gap-3 p-2.5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] hover:border-indigo-500 cursor-pointer transition text-xs"
+                                       :class="selectedDrivers.length >= assigningOpp?.required_drivers && !selectedDrivers.includes(driver.id) ? 'opacity-50 cursor-not-allowed' : ''">
+                                    <input type="checkbox" :value="driver.id" x-model="selectedDrivers"
+                                           :disabled="selectedDrivers.length >= assigningOpp?.required_drivers && !selectedDrivers.includes(driver.id)"
+                                           class="rounded text-indigo-500 focus:ring-indigo-500 bg-[var(--cc-bg)] border-[var(--cc-border)]">
+                                    <div>
+                                        <div class="font-bold text-[var(--cc-text)]" x-text="driver.name"></div>
+                                        <div class="text-[9px] text-[var(--cc-text-muted)]" x-text="driver.pool ? driver.pool.name : ''"></div>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="p-6 border-t border-[var(--cc-border)] bg-[var(--cc-bg-muted)] flex justify-end gap-3">
+                <button @click="showAssignModal = false" class="px-5 py-2.5 rounded-xl border border-[var(--cc-border)] text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] hover:bg-[var(--cc-bg)] text-sm font-semibold transition">
+                    Batal
+                </button>
+                <button @click="saveAssignment()" :disabled="isAssigning"
+                        class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 text-sm font-semibold transition disabled:opacity-50 flex items-center gap-2">
+                    <span x-show="isAssigning" class="material-symbols-outlined animate-spin" style="font-size: 18px">progress_activity</span>
+                    <span x-text="isAssigning ? 'Menyimpan...' : 'Simpan Alokasi'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+@push('scripts')
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('driverPage', () => ({
+            showCreateModal: false,
+            showAssignModal: false,
+            assigningOpp: null,
+            availableDrivers: [],
+            selectedDrivers: [],
+            isAssigning: false,
+            pendingOpps: [],
+
+            init() {
+                const pendingOppsElement = document.getElementById('pending-driver-assignments-data');
+                this.pendingOpps = pendingOppsElement ? JSON.parse(pendingOppsElement.textContent) : [];
+            },
+
+            openAssignModal(oppId) {
+                const opp = this.pendingOpps.find(o => String(o.id) === String(oppId));
+                if (!opp) {
+                    console.error('Opportunity not found:', oppId);
+                    return;
+                }
+
+                this.showCreateModal = false;
+                this.showAssignModal = false;
+                this.assigningOpp = JSON.parse(JSON.stringify(opp));
+                this.selectedDrivers = (this.assigningOpp.assigned_drivers || this.assigningOpp.assignedDrivers || []).map(d => d.id);
+
+                window.requestAnimationFrame(() => {
+                    this.showAssignModal = true;
+                });
+
+                this.loadAvailableDrivers(opp.id);
+            },
+
+            async loadAvailableDrivers(oppId) {
+                try {
+                    const res = await fetch(`/api/drivers/available?opportunity_id=${oppId}`);
+                    this.availableDrivers = await res.json();
+                } catch(e) {
+                    console.error('Failed to load drivers', e);
+                }
+            },
+
+            async saveAssignment() {
+                this.isAssigning = true;
+                try {
+                    const res = await fetch(`/api/vehicles/assign-to-opportunity/${this.assigningOpp.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            driver_ids: this.selectedDrivers
+                        })
+                    });
+
+                    if (res.ok) {
+                        this.showAssignModal = false;
+                        this.assigningOpp = null;
+
+                        const url = new URL(window.location.href);
+                        window.location.href = url.toString();
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Gagal menyimpan alokasi supir.');
+                    }
+                } catch(e) {
+                    console.error(e);
+                } finally {
+                    this.isAssigning = false;
+                }
+            }
+        }));
+    });
+</script>
+@endpush
 @endsection

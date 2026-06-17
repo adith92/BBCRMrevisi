@@ -264,6 +264,55 @@ class PoolAssignmentTest extends TestCase
         $this->assertEquals($opp->id, $driver->assigned_opportunity_id);
     }
 
+    public function test_partial_vehicle_assignment_does_not_release_existing_driver_assignment(): void
+    {
+        $data = $this->setupDbData();
+
+        $opp = Opportunity::factory()->create([
+            'stage' => 'won',
+            'products' => [
+                [
+                    'category' => 'Mobil Long Term',
+                    'quantity' => 1,
+                    'estimatedValue' => 25000000,
+                ],
+                [
+                    'category' => 'Supir',
+                    'quantity' => 1,
+                    'estimatedValue' => 300000,
+                ],
+            ],
+        ]);
+
+        $data['driverJkt']->update([
+            'assigned_opportunity_id' => $opp->id,
+            'status' => 'assigned',
+        ]);
+
+        $response = $this->actingAs($data['userJakarta'])
+            ->postJson("/api/vehicles/assign-to-opportunity/{$opp->id}", [
+                'vehicle_ids' => [$data['vehicleJkt']->id],
+            ]);
+
+        $response->assertOk();
+
+        $driver = $data['driverJkt']->fresh();
+        $this->assertEquals('assigned', $driver->status);
+        $this->assertEquals($opp->id, $driver->assigned_opportunity_id);
+    }
+
+    public function test_required_fleet_and_driver_quantities_fall_back_to_pax_when_products_are_empty(): void
+    {
+        $opp = Opportunity::factory()->create([
+            'stage' => 'won',
+            'products' => [],
+            'pax' => 12,
+        ]);
+
+        $this->assertSame(12, $opp->requiredFleetQty());
+        $this->assertSame(12, $opp->requiredDriverQty());
+    }
+
     /** @test */
     public function selected_count_cannot_exceed_required_qty(): void
     {

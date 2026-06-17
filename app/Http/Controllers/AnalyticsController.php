@@ -6,9 +6,11 @@ use App\Models\Opportunity;
 use App\Models\Client;
 use App\Models\User;
 use App\Models\ActivityLog;
+use App\Helpers\FormatHelper;
 use App\Models\SalesTarget;
 use App\Models\Invoice;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
@@ -193,43 +195,111 @@ class AnalyticsController extends Controller
         ));
     }
 
-    public function salesPerformance()
+    public function salesPerformance(Request $request)
     {
         $now = Carbon::now();
-        $salesUsers = User::whereIn('role', ['sales', 'manager'])->orderBy('name')->get();
+        $month = (int) $request->get('month', $now->month);
+        $year = (int) $request->get('year', $now->year);
+        $managerId = $request->get('manager_id');
 
-        $performance = $salesUsers->map(function ($user) use ($now) {
-            $opportunities = Opportunity::where('sales_id', $user->id);
-            $total   = (clone $opportunities)->count();
-            $won     = (clone $opportunities)->where('stage', 'won')->count();
-            $lost    = (clone $opportunities)->where('stage', 'lost')->count();
-            $revenue = (clone $opportunities)->where('stage', 'won')->sum('final_value');
+        $salesQuery = User::where('role', 'sales')->with('manager');
+        if ($managerId) {
+            $salesQuery->where('manager_id', $managerId);
+        }
 
-            $winRate = ($won + $lost) > 0 ? round(($won / ($won + $lost)) * 100, 1) : 0;
+        $salesUsers = $salesQuery->orderBy('name')->get();
+        $salesIds = $salesUsers->pluck('id');
 
-            $target = SalesTarget::where('user_id', $user->id)
-                ->where('period_year', $now->year)
-                ->where('period_month', $now->month)
-                ->first();
+        $managers = User::where('role', 'manager')->orderBy('name')->get(['id', 'name']);
 
-            $kpiPct = 0;
-            if ($target && $target->target_revenue > 0) {
-                $kpiPct = round(($target->actual_revenue / $target->target_revenue) * 100, 1);
+        $periodStats = Opportunity::whereIn('sales_id', $salesIds)
+            ->whereYear('updated_at', $year)
+            ->whereMonth('updated_at', $month)
+            ->select(
+                'sales_id',
+                'stage',
+                DB::raw('COUNT(*) as total_count'),
+                DB::raw('SUM(COALESCE(final_value, estimated_value, 0)) as total_value')
+            )
+            ->groupBy('sales_id', 'stage')
+            ->get()
+            ->groupBy('sales_id');
+
+        $pipelineStats = Opportunity::whereIn('sales_id', $salesIds)
+            ->whereIn('stage', ['call_meeting', 'prospecting', 'proposal', 'negotiation'])
+            ->select('sales_id', DB::raw('SUM(COALESCE(estimated_value, 0)) as pipeline_value'))
+            ->groupBy('sales_id')
+            ->pluck('pipeline_value', 'sales_id');
+
+        $targets = SalesTarget::whereIn('user_id', $salesIds)
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->pluck('target_revenue', 'user_id');
+
+        $trendLabels = [];
+        $trendBySales = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::createFromDate($year, $month, 1)->subMonths($i);
+            $trendLabels[] = $date->format('M Y');
+            $monthlyTrend = Opportunity::whereIn('sales_id', $salesIds)
+                ->where('stage', 'won')
+                ->whereYear('updated_at', $date->year)
+                ->whereMonth('updated_at', $date->month)
+                ->select('sales_id', DB::raw('SUM(COALESCE(final_value, estimated_value, 0)) as total_value'))
+                ->groupBy('sales_id')
+                ->pluck('total_value', 'sales_id');
+
+            foreach ($salesIds as $salesId) {
+                $trendBySales[$salesId][] = (float) ($monthlyTrend[$salesId] ?? 0);
             }
+        }
+
+        $salesRows = $salesUsers->map(function ($user) use ($periodStats, $pipelineStats, $targets, $trendBySales) {
+            $stats = $periodStats->get($user->id, collect())->keyBy('stage');
+            $won = (int) ($stats->get('won')->total_count ?? 0);
+            $lost = (int) ($stats->get('lost')->total_count ?? 0);
+            $totalOpportunities = (int) $stats->sum('total_count');
+            $revenue = (float) ($stats->get('won')->total_value ?? 0);
+            $target = (float) ($targets[$user->id] ?? 0);
+            $pipeline = (float) ($pipelineStats[$user->id] ?? 0);
+            $closed = $won + $lost;
+
+            $targetPct = $target > 0 ? round(($revenue / $target) * 100, 1) : 0;
+            $winRate = $closed > 0 ? round(($won / $closed) * 100, 1) : 0;
+            $avgDeal = $won > 0 ? round($revenue / $won) : 0;
+            $conversion = $closed > 0 ? round(($won / $closed) * 100, 1) : 0;
 
             return [
-                'user'                => $user,
-                'total_opportunities' => $total,
-                'won'                 => $won,
-                'lost'                => $lost,
-                'win_rate'            => $winRate,
-                'revenue'             => $revenue,
-                'kpi_pct'             => $kpiPct,
-                'target'              => $target,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'manager_name' => $user->manager?->name ?? '-',
+                'total_opportunities' => $totalOpportunities,
+                'deals_won' => $won,
+                'deals_lost' => $lost,
+                'win_rate' => $winRate,
+                'conversion' => $conversion,
+                'revenue' => $revenue,
+                'revenue_fmt' => FormatHelper::formatIDR($revenue),
+                'target' => $target,
+                'target_fmt' => FormatHelper::formatIDR($target),
+                'target_pct' => $targetPct,
+                'pipeline' => $pipeline,
+                'pipeline_fmt' => FormatHelper::formatIDR($pipeline),
+                'avg_deal' => $avgDeal,
+                'avg_deal_fmt' => FormatHelper::formatIDR($avgDeal),
+                'trend_6m' => $trendBySales[$user->id] ?? array_fill(0, 6, 0),
             ];
-        })->sortByDesc('won');
+        })->sortByDesc('revenue')->values();
 
-        return view('analytics.sales', compact('performance', 'now'));
+        return view('analytics.sales', compact(
+            'salesRows',
+            'managers',
+            'managerId',
+            'month',
+            'year',
+            'trendLabels',
+            'now'
+        ));
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

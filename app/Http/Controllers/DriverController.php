@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Driver;
+use App\Models\Opportunity;
 
 class DriverController extends Controller
 {
@@ -60,7 +61,58 @@ class DriverController extends Controller
             'leave'       => (clone $statsQuery)->where('status', 'inactive')->count(), // Using inactive as leave
         ];
 
-        return view('drivers.index', compact('drivers', 'stats'));
+        $pendingAssignments = Opportunity::with(['client', 'sales', 'assignedVehicles', 'assignedDrivers'])
+            ->whereIn('stage', ['negotiation', 'won'])
+            ->get()
+            ->filter(function ($opp) use ($user) {
+                $requiredFleets = $opp->requiredFleetQty();
+                $requiredDrivers = $opp->requiredDriverQty();
+                $assignedFleets = $opp->assignedVehicles->count();
+                $assignedDrivers = $opp->assignedDrivers->count();
+
+                $opp->required_fleets = $requiredFleets;
+                $opp->required_drivers = $requiredDrivers;
+                $opp->missing_fleets = max(0, $requiredFleets - $assignedFleets);
+                $opp->missing_drivers = max(0, $requiredDrivers - $assignedDrivers);
+                $opp->fleet_status = $opp->missing_fleets > 0 ? 'pending' : 'fulfilled';
+                $opp->driver_status = $opp->missing_drivers > 0 ? 'pending' : 'fulfilled';
+
+                if ($requiredDrivers <= 0) {
+                    return false;
+                }
+
+                if ($user->isPool() && $user->pool_id !== null) {
+                    $userPoolId = $user->pool_id;
+                    $hasOtherPoolVehicles = $opp->assignedVehicles->contains(fn($v) => $v->pool_id !== $userPoolId);
+                    $hasOtherPoolDrivers = $opp->assignedDrivers->contains(fn($d) => $d->pool_id !== $userPoolId);
+                    if ($hasOtherPoolVehicles || $hasOtherPoolDrivers) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+        $sortPending = request('sort_pending', 'date');
+        $direction = request('direction', 'asc');
+
+        if ($sortPending === 'name') {
+            $pendingAssignments = $direction === 'desc'
+                ? $pendingAssignments->sortByDesc('title')
+                : $pendingAssignments->sortBy('title');
+        } elseif ($sortPending === 'client') {
+            $pendingAssignments = $direction === 'desc'
+                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->client->company_name ?? '')
+                : $pendingAssignments->sortBy(fn($opp) => $opp->client->company_name ?? '');
+        } else {
+            $pendingAssignments = $direction === 'desc'
+                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at)
+                : $pendingAssignments->sortBy(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at);
+        }
+
+        $pendingAssignments = $pendingAssignments->values();
+
+        return view('drivers.index', compact('drivers', 'stats', 'pendingAssignments'));
     }
 
     public function show(Driver $driver)

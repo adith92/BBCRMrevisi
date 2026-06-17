@@ -76,7 +76,7 @@ class FleetController extends Controller
 
         // Ops Pending Assignments Logic
         $pendingAssignments = \App\Models\Opportunity::with(['client', 'sales', 'assignedVehicles', 'assignedDrivers'])
-            ->where('stage', 'won')
+            ->whereIn('stage', ['negotiation', 'won'])
             ->get()
             ->filter(function ($opp) use ($user) {
                 $requiredFleets = $opp->requiredFleetQty();
@@ -89,9 +89,10 @@ class FleetController extends Controller
                 $opp->required_drivers = $requiredDrivers;
                 $opp->missing_fleets = max(0, $requiredFleets - $assignedFleets);
                 $opp->missing_drivers = max(0, $requiredDrivers - $assignedDrivers);
+                $opp->fleet_status = $opp->missing_fleets > 0 ? 'pending' : 'fulfilled';
+                $opp->driver_status = $opp->missing_drivers > 0 ? 'pending' : 'fulfilled';
                 
-                $isPending = $opp->missing_fleets > 0 || $opp->missing_drivers > 0;
-                if (!$isPending) {
+                if ($requiredFleets <= 0) {
                     return false;
                 }
 
@@ -273,6 +274,8 @@ class FleetController extends Controller
 
         $vehicleIdsInput = $request->input('vehicle_ids', []);
         $driverIdsInput = $request->input('driver_ids', []);
+        $shouldSyncVehicles = $request->has('vehicle_ids');
+        $shouldSyncDrivers = $request->has('driver_ids');
 
         $requiredFleets = $opportunity->requiredFleetQty();
         $requiredDrivers = $opportunity->requiredDriverQty();
@@ -287,8 +290,12 @@ class FleetController extends Controller
             $otherPoolDriversCount = $opportunity->assignedDrivers()->withoutGlobalScope('pool')->where('pool_id', '!=', $userPoolId)->count();
         }
 
-        $totalVehiclesToAssign = count($vehicleIdsInput) + $otherPoolVehiclesCount;
-        $totalDriversToAssign = count($driverIdsInput) + $otherPoolDriversCount;
+        $totalVehiclesToAssign = $shouldSyncVehicles
+            ? count($vehicleIdsInput) + $otherPoolVehiclesCount
+            : $opportunity->assignedVehicles()->count();
+        $totalDriversToAssign = $shouldSyncDrivers
+            ? count($driverIdsInput) + $otherPoolDriversCount
+            : $opportunity->assignedDrivers()->count();
 
         if ($requiredFleets > 0 && $totalVehiclesToAssign > $requiredFleets) {
             return response()->json(['message' => "Jumlah kendaraan melebihi kebutuhan ({$requiredFleets} unit)."], 422);
@@ -312,56 +319,60 @@ class FleetController extends Controller
         $logNotes = [];
 
         \Illuminate\Support\Facades\DB::transaction(function () use (
-            $opportunity, $userPoolId, $vehicleIdsInput, $driverIdsInput, $status, &$logNotes
+            $opportunity, $userPoolId, $vehicleIdsInput, $driverIdsInput, $shouldSyncVehicles, $shouldSyncDrivers, $status, &$logNotes
         ) {
             // VEHICLES
-            $vehiclesToReleaseQuery = $opportunity->assignedVehicles();
-            if ($userPoolId !== null) {
-                $vehiclesToReleaseQuery->where('pool_id', $userPoolId);
-            }
-            $vehiclesToRelease = $vehiclesToReleaseQuery->whereNotIn('id', $vehicleIdsInput)->get();
-            if ($vehiclesToRelease->isNotEmpty()) {
-                Vehicle::whereIn('id', $vehiclesToRelease->pluck('id'))->update([
-                    'assigned_opportunity_id' => null,
-                    'status' => 'available'
-                ]);
-                $releasedPlates = $vehiclesToRelease->pluck('plate_number')->join(', ');
-                $logNotes[] = 'Kendaraan dilepas: ' . $releasedPlates;
-            }
+            if ($shouldSyncVehicles) {
+                $vehiclesToReleaseQuery = $opportunity->assignedVehicles();
+                if ($userPoolId !== null) {
+                    $vehiclesToReleaseQuery->where('pool_id', $userPoolId);
+                }
+                $vehiclesToRelease = $vehiclesToReleaseQuery->whereNotIn('id', $vehicleIdsInput)->get();
+                if ($vehiclesToRelease->isNotEmpty()) {
+                    Vehicle::whereIn('id', $vehiclesToRelease->pluck('id'))->update([
+                        'assigned_opportunity_id' => null,
+                        'status' => 'available'
+                    ]);
+                    $releasedPlates = $vehiclesToRelease->pluck('plate_number')->join(', ');
+                    $logNotes[] = 'Kendaraan dilepas: ' . $releasedPlates;
+                }
 
-            if (!empty($vehicleIdsInput)) {
-                Vehicle::whereIn('id', $vehicleIdsInput)->update([
-                    'assigned_opportunity_id' => $opportunity->id,
-                    'status' => $status
-                ]);
-                $assignedVehicles = Vehicle::whereIn('id', $vehicleIdsInput)->get();
-                $assignedPlates = $assignedVehicles->pluck('plate_number')->join(', ');
-                $logNotes[] = 'Kendaraan dialokasikan: ' . $assignedPlates;
+                if (!empty($vehicleIdsInput)) {
+                    Vehicle::whereIn('id', $vehicleIdsInput)->update([
+                        'assigned_opportunity_id' => $opportunity->id,
+                        'status' => $status
+                    ]);
+                    $assignedVehicles = Vehicle::whereIn('id', $vehicleIdsInput)->get();
+                    $assignedPlates = $assignedVehicles->pluck('plate_number')->join(', ');
+                    $logNotes[] = 'Kendaraan dialokasikan: ' . $assignedPlates;
+                }
             }
 
             // DRIVERS
-            $driversToReleaseQuery = $opportunity->assignedDrivers();
-            if ($userPoolId !== null) {
-                $driversToReleaseQuery->where('pool_id', $userPoolId);
-            }
-            $driversToRelease = $driversToReleaseQuery->whereNotIn('id', $driverIdsInput)->get();
-            if ($driversToRelease->isNotEmpty()) {
-                \App\Models\Driver::whereIn('id', $driversToRelease->pluck('id'))->update([
-                    'assigned_opportunity_id' => null,
-                    'status' => 'available'
-                ]);
-                $releasedNames = $driversToRelease->pluck('name')->join(', ');
-                $logNotes[] = 'Supir dilepas: ' . $releasedNames;
-            }
+            if ($shouldSyncDrivers) {
+                $driversToReleaseQuery = $opportunity->assignedDrivers();
+                if ($userPoolId !== null) {
+                    $driversToReleaseQuery->where('pool_id', $userPoolId);
+                }
+                $driversToRelease = $driversToReleaseQuery->whereNotIn('id', $driverIdsInput)->get();
+                if ($driversToRelease->isNotEmpty()) {
+                    \App\Models\Driver::whereIn('id', $driversToRelease->pluck('id'))->update([
+                        'assigned_opportunity_id' => null,
+                        'status' => 'available'
+                    ]);
+                    $releasedNames = $driversToRelease->pluck('name')->join(', ');
+                    $logNotes[] = 'Supir dilepas: ' . $releasedNames;
+                }
 
-            if (!empty($driverIdsInput)) {
-                \App\Models\Driver::whereIn('id', $driverIdsInput)->update([
-                    'assigned_opportunity_id' => $opportunity->id,
-                    'status' => $status
-                ]);
-                $assignedDrivers = \App\Models\Driver::whereIn('id', $driverIdsInput)->get();
-                $assignedNames = $assignedDrivers->pluck('name')->join(', ');
-                $logNotes[] = 'Supir dialokasikan: ' . $assignedNames;
+                if (!empty($driverIdsInput)) {
+                    \App\Models\Driver::whereIn('id', $driverIdsInput)->update([
+                        'assigned_opportunity_id' => $opportunity->id,
+                        'status' => $status
+                    ]);
+                    $assignedDrivers = \App\Models\Driver::whereIn('id', $driverIdsInput)->get();
+                    $assignedNames = $assignedDrivers->pluck('name')->join(', ');
+                    $logNotes[] = 'Supir dialokasikan: ' . $assignedNames;
+                }
             }
         });
 

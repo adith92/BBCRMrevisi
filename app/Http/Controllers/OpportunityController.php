@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Opportunity;
 use App\Models\Product;
 use App\Models\User;
+use App\Helpers\FormatHelper;
 use App\Services\PipelineService;
 use Illuminate\Http\Request;
 
@@ -28,7 +29,7 @@ class OpportunityController extends Controller
     {
         $user = auth()->user();
 
-        $query = Opportunity::with(['client', 'sales', 'product'])
+        $query = Opportunity::with(['client', 'sales.manager', 'product'])
             ->when(
                 $user->isSales(),
                 fn ($q) => $q->where('sales_id', $user->id)
@@ -45,17 +46,44 @@ class OpportunityController extends Controller
                 $request->filled('sales_id') && !$user->isSales(),
                 fn ($q) => $q->where('sales_id', $request->sales_id)
             )
+            ->when(
+                $request->filled('manager_id') && !$user->isSales(),
+                fn ($q) => $q->whereHas('sales', fn ($salesQuery) => $salesQuery->where('manager_id', $request->manager_id))
+            )
             ->latest();
 
         $opportunities = $query->paginate(20)->withQueryString();
 
         $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $managers = collect();
         
-        $viewData = compact('opportunities', 'clients');
+        $opportunityRows = $opportunities->getCollection()->map(function ($opportunity) {
+            return [
+                'id' => $opportunity->id,
+                'show_url' => route('opportunities.show', $opportunity->id),
+                'client_url' => $opportunity->client ? route('clients.show', $opportunity->client->id) : null,
+                'sales_url' => $opportunity->sales ? route('sales.performance', $opportunity->sales->id) : null,
+                'opp_number' => $opportunity->opp_number ?? 'OPP-' . str_pad((string) $opportunity->id, 4, '0', STR_PAD_LEFT),
+                'title' => $opportunity->title ?? $opportunity->product?->name ?? 'Opportunity #' . $opportunity->id,
+                'company_name' => $opportunity->client->company_name ?? '-',
+                'sales_name' => $opportunity->sales->name ?? '-',
+                'manager_name' => $opportunity->sales?->manager?->name ?? '-',
+                'stage' => $opportunity->stage,
+                'stage_label' => ucfirst(str_replace('_', ' ', $opportunity->stage)),
+                'estimated_value' => (float) ($opportunity->estimated_value ?? 0),
+                'estimated_value_fmt' => FormatHelper::formatIDR($opportunity->estimated_value ?? 0),
+                'created_at' => $opportunity->created_at?->timestamp ?? 0,
+                'created_at_fmt' => $opportunity->created_at?->format('d M Y') ?? '-',
+            ];
+        })->values();
+
+        $viewData = compact('opportunities', 'clients', 'managers', 'opportunityRows');
         if ($user->isGM()) {
             $viewData['salesUsers'] = User::where('role', 'sales')->orderBy('name')->get(['id', 'name']);
+            $viewData['managers'] = User::where('role', 'manager')->orderBy('name')->get(['id', 'name']);
         } elseif ($user->isManager()) {
             $viewData['salesUsers'] = User::where('manager_id', $user->id)->where('role', 'sales')->orderBy('name')->get(['id', 'name']);
+            $viewData['managers'] = User::where('id', $user->id)->get(['id', 'name']);
         }
 
         return view('opportunities.index', $viewData);
