@@ -28,6 +28,13 @@ class OpportunityController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $selectedManagerId = null;
+
+        if ($user->isGM() && $request->filled('manager_id')) {
+            $selectedManagerId = (int) $request->manager_id;
+        } elseif ($user->isManager()) {
+            $selectedManagerId = $user->id;
+        }
 
         $query = Opportunity::with(['client', 'sales.manager', 'product'])
             ->when(
@@ -43,19 +50,20 @@ class OpportunityController extends Controller
                 fn ($q) => $q->where('client_id', $request->client_id)
             )
             ->when(
-                $request->filled('sales_id') && !$user->isSales(),
+                $request->filled('sales_id') && !$user->isSales() && $selectedManagerId,
                 fn ($q) => $q->where('sales_id', $request->sales_id)
             )
             ->when(
-                $request->filled('manager_id') && !$user->isSales(),
-                fn ($q) => $q->whereHas('sales', fn ($salesQuery) => $salesQuery->where('manager_id', $request->manager_id))
+                $selectedManagerId && !$user->isSales(),
+                fn ($q) => $q->whereHas('sales', fn ($salesQuery) => $salesQuery->where('manager_id', $selectedManagerId))
             )
             ->latest();
 
         $opportunities = $query->paginate(20)->withQueryString();
 
-        $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
         $managers = collect();
+        $salesUsers = collect();
         
         $opportunityRows = $opportunities->getCollection()->map(function ($opportunity) {
             return [
@@ -77,13 +85,26 @@ class OpportunityController extends Controller
             ];
         })->values();
 
-        $viewData = compact('opportunities', 'clients', 'managers', 'opportunityRows');
         if ($user->isGM()) {
-            $viewData['salesUsers'] = User::where('role', 'sales')->orderBy('name')->get(['id', 'name']);
-            $viewData['managers'] = User::where('role', 'manager')->orderBy('name')->get(['id', 'name']);
+            $selectedManagerId = $request->filled('manager_id') ? (int) $request->manager_id : null;
+            $managers = User::where('role', 'manager')->orderBy('name')->get(['id', 'name']);
+
+            if ($selectedManagerId) {
+                $salesUsers = User::where('manager_id', $selectedManagerId)
+                    ->where('role', 'sales')
+                    ->orderBy('name')
+                    ->get(['id', 'name']);
+            }
         } elseif ($user->isManager()) {
-            $viewData['salesUsers'] = User::where('manager_id', $user->id)->where('role', 'sales')->orderBy('name')->get(['id', 'name']);
-            $viewData['managers'] = User::where('id', $user->id)->get(['id', 'name']);
+            $selectedManagerId = $user->id;
+            $salesUsers = User::where('manager_id', $user->id)->where('role', 'sales')->orderBy('name')->get(['id', 'name']);
+            $managers = User::where('id', $user->id)->get(['id', 'name']);
+        }
+
+        $viewData = compact('opportunities', 'clients', 'managers', 'selectedManagerId', 'opportunityRows');
+
+        if (!$user->isSales()) {
+            $viewData['salesUsers'] = $salesUsers;
         }
 
         return view('opportunities.index', $viewData);

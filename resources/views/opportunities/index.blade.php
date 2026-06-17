@@ -40,28 +40,32 @@
                 @endforeach
             </select>
         </div>
-        @isset($salesUsers)
-        <div>
-            <label class="block dark-label mb-1">Sales</label>
-            <select name="sales_id" class="dark-input text-sm px-3 py-2 min-w-36">
-                <option value="">Semua Sales</option>
-                @foreach($salesUsers as $s)
-                <option value="{{ $s->id }}" @selected((string)request('sales_id')===(string)$s->id)>{{ $s->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        @endisset
         @if(isset($managers) && $managers->count() > 0)
         <div>
             <label class="block dark-label mb-1">{{ __('ui.filter_manager') }}</label>
-            <select name="manager_id" class="dark-input text-sm px-3 py-2 min-w-40">
+            <select name="manager_id" class="dark-input text-sm px-3 py-2 min-w-40" onchange="this.form.sales_id.value = ''; this.form.submit();">
                 <option value="">{{ __('ui.all_managers') }}</option>
                 @foreach($managers as $manager)
-                <option value="{{ $manager->id }}" @selected((string)request('manager_id')===(string)$manager->id)>{{ $manager->name }}</option>
+                <option value="{{ $manager->id }}" @selected((string)($selectedManagerId ?? request('manager_id'))===(string)$manager->id)>{{ $manager->name }}</option>
                 @endforeach
             </select>
         </div>
         @endif
+        @isset($salesUsers)
+        <div>
+            <label class="block dark-label mb-1">{{ __('ui.sales_rep') }}</label>
+            <select name="sales_id" class="dark-input text-sm px-3 py-2 min-w-36" @disabled(isset($managers) && $managers->count() > 0 && blank($selectedManagerId))>
+                @if(isset($managers) && $managers->count() > 0 && blank($selectedManagerId))
+                <option value="">Pilih Sales Manager dulu</option>
+                @else
+                <option value="">{{ __('ui.all_sales') }}</option>
+                @foreach($salesUsers as $s)
+                <option value="{{ $s->id }}" @selected((string)request('sales_id')===(string)$s->id)>{{ $s->name }}</option>
+                @endforeach
+                @endif
+            </select>
+        </div>
+        @endisset
         <button type="submit" class="btn-primary text-sm px-4 py-2">
             <span class="material-symbols-outlined text-[18px]">filter_alt</span> Filter
         </button>
