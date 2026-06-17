@@ -8,13 +8,14 @@
 ## 📚 Urutan baca dokumen (WAJIB)
 1. `CLAUDE.md` — konteks project.
 2. `UI_UX_LOCK.md` — 🔒 tampilan dashboard depan TERKUNCI. Jangan ubah UI/UX.
-3. `MASTERPLAN_v8.0.md` — **dokumen FINAL**: visi, mindmap, RBAC, business workflow, apa yang sudah dibangun.
-4. `MASTERPROMPT_v8.0.md` — **dokumen FINAL**: persona AI, rules bisnis, model DB, rebuild dari 0, deploy.
-5. `LOGIC_MAP.md` — peta hak akses & workflow dari kode aktual.
-6. `RENCANA_IMPLEMENTASI_Sales_Pipeline.md` — keputusan & roadmap Tahap A–E (referensi historis).
-7. `VERIFIKASI_TAHAP_A.md` — cara verifikasi runtime.
+3. `HANDOFF.md` — status operasional terbaru dan catatan sesi terakhir.
+4. `MASTERPLAN_v8.2.md` — **FINAL**: visi, mindmap, ERD, business rules, roadmap build dari 0.
+5. `MASTERPROMPT_v8.2.md` — **FINAL**: blueprint rebuild dari 0 (schema penuh, model, RBAC, logic, build order).
+6. `LOGIC_MAP.md` — peta hak akses (RBAC 2-lapis) & workflow dari kode aktual.
+7. `SYSTEM_AUDIT.md` — peta teknis (route→controller, ERD, bug/risk).
+8. `VERIFIKASI_TAHAP_A.md` — cara verifikasi runtime.
 
-> v8.0 adalah sumber kebenaran terbaru. Jika ada konflik dengan dokumen lama (v7.8), ikuti v8.0.
+> **v8.2 = sumber kebenaran tunggal.** Semua dokumen versi lama (v7.8, v8.0, v8.1) sudah DIHAPUS agar rapi. Jika ragu, validasi langsung ke kode.
 
 ---
 
@@ -22,30 +23,30 @@
 
 ### Commit terakhir (sudah di-push ke `main`)
 ```
-e16ccbe fix: alpine js reactivity bug for assign modal
+a326196 fix: pisahkan modal assign dari register vehicle
+143bd6e fix: perbaiki tombol assign fulfill fleet
+ce9523b fix: perbaiki billing subscription dan hitungan alokasi supir
+56faa68 docs: update HANDOFF.md and create LOGIC_MAP.md reflecting latest architecture and workflows
 2c50188 feat: implement pool role fleet & driver assignment and fulfillment logic for won opportunities
-563cc13 Fix Alpine.js reactivity and event bubbling for Assign Modal
-c000671 Fix Alpine.js reactivity issue where async openAssignModal swallowed DOM updates
-6c6f751 Fix Alpine initialization race condition and script tag placement causing Assign Remaining button to fail
-8cc1b45 Fix Alpine.js rendering and allocation functionality on Fleet index page
-0a39a3e Fix 403 authorization for operational role, add Approval Pending tab with sorting, auto activity logs, and display assignments on Opportunity detail page
-3b2b4c5 fix: sync fleet ops filters with status calculations
-1956079 fix: ensure relations are returned on update and sync operational target status to reserved
-395c3b8 fix: resolve fleet index syntax error, fix eager loading keys, add vehicle/driver details to history, and fix title contrast in dark mode
 ```
 
 ### Yang dikerjakan sesi ini:
-**Perbaikan Bug & Implementasi Workflow Alokasi Pool:**
+**Perbaikan Bug & Sinkronisasi Workflow Alokasi Pool:**
 
 | Modul | Perubahan |
 |------|-----------|
-| **Fleet / Assign Vehicle** | Memperbaiki tuntas bug reaktivitas Alpine.js (`showAssignModal`) pada halaman Fleet yang menyebabkan tombol Assign / Fulfill tidak memunculkan modal alokasi. Diatasi dengan deep cloning proksi objek reaktif dan `Alpine.nextTick`. |
+| **Fleet / Assign-Fulfill Modal** | Root cause terakhir ditemukan: modal Assign/Fulfill masih berada di dalam wrapper modal **Register Vehicle** (`showCreateModal`). Akibatnya klik Assign/Fulfill sudah mengubah state, tetapi modal tetap tersembunyi sampai Register Vehicle dibuka. Fix: modal Assign dipisahkan dari wrapper Register Vehicle dan ditambah test regresi agar tidak nested lagi. |
+| **Fleet / Alpine State** | Sebelumnya juga diperbaiki reaktivitas Alpine (`showAssignModal`) dengan deep clone data opportunity, pencegahan event bubbling, dan render modal menggunakan `x-show` agar state tidak tertahan oleh proxy. |
 | **Pool Logic (RBAC)** | Menerapkan `pool_id` pada role Pool. User pool (misal: Pool Jakarta / Pool Surabaya) sekarang **hanya dapat memilih kendaraan dan supir** yang berasal dari pool mereka sendiri saat melakukan alokasi pada tabel *Pending Assignments*. |
-| **Operational & Long Term** | Menyempurnakan alur opportunity yang `WON` khusus untuk produk **Mobil Long Term** dan integrasi supirnya. Menambahkan tab *Approval Pending* pada module operational serta fitur sinkronisasi dengan status *reserved*. |
+| **Operational & Long Term** | Menyempurnakan alur opportunity yang `WON` khusus untuk produk **Mobil Long Term** dan integrasi supirnya. Pending Assignment tetap menjadi titik masuk operasional/pool untuk memenuhi unit dan supir. |
+| **Finance / Subscription** | Menambahkan route POST manual billing `subscriptions.billing.run` dan memperbaiki aksi billing agar memakai CSRF + pengecekan role yang valid. |
+| **Dashboard Allocation Count** | Hitungan kebutuhan supir diperbaiki agar memakai helper `requiredDriverQty()` dan tidak tercampur dengan jumlah kendaraan. |
 
 ### Konfigurasi tambahan:
 - Struktur otorisasi pada Controller (terutama Operational & Fleet) telah dirapihkan sehingga tidak memunculkan Error 403.
-- Telah dibuatkan dokumen `LOGIC_MAP.md` untuk memetakan alur hak akses dan workflow dari bisnis saat ini.
+- `tests/Feature/RoleBugFixTest.php` sekarang punya regresi khusus untuk memastikan modal Assign/Fulfill tidak lagi berada di dalam modal Register Vehicle.
+- Test terakhir yang dicatat pada sesi fix: `php artisan test` → **183 passed (492 assertions)**.
+- Catatan working tree saat update dokumen ini: ada artefak build duplikat belum terlacak (`public/build/assets/app-DtbFpjiz 2.js`, `public/build/manifest 2.json`). Jangan commit otomatis sebelum dipastikan memang dibutuhkan.
 
 ---
 
@@ -83,14 +84,11 @@ resources/views/dashboard/
 
 ---
 
-## ➡️ Langkah berikutnya: TAHAP B
-1. Tambah stage `call_meeting` di `PipelineService` ($allStages + $transitions) & migration comment opportunities.
-2. Deal baru: stage dikunci ke `call_meeting`; tambah pilihan Call/Meeting + note.
-3. Scope view pipeline: Sales=sendiri, Manager=semua tim, GM=semua (view only).
-4. Guard write pipeline: hanya Sales pemilik (`sales_id === auth id`). GM/Manager → 403 untuk store/update/moveStage.
-5. Terapkan warna pipeline gradasi biru di `resources/views/pipeline/index.blade.php`.
-
-Lalu Tahap C (opportunity_items + stage history), D (KPI per produk), E (test). Detail penuh di `RENCANA_IMPLEMENTASI_Sales_Pipeline.md`.
+## ➡️ Langkah berikutnya
+1. Jika user melaporkan bug Assign/Fulfill masih muncul di production, cek dulu apakah server sudah deploy commit `a326196` dan jalankan clear cache/view (`php artisan optimize:clear`) di environment server.
+2. Lakukan cleanup artefak duplikat `public/build/* 2.*` hanya setelah user setuju.
+3. Validasi workflow Fleet/Pool lewat browser/manual test: klik Assign/Fulfill dari kartu Pending Assignment tanpa membuka Register Vehicle lebih dulu.
+4. Jika lanjut ke dokumen masterplan/masterprompt, sinkronkan dulu `MASTERPROMPT_v7.8.md` dengan `HANDOFF.md` + `LOGIC_MAP.md`.
 
 ---
 

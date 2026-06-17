@@ -1,6 +1,6 @@
 # LOGIC MAP — Golden Bird CRM (Peta Hak Akses & Workflow)
 
-> **Versi:** Update 16 Juni 2026
+> **Versi:** Update 16 Juni 2026 malam
 > **Dokumen ini:** Memetakan alur logika bisnis, hak akses (RBAC), dan *workflow* dari sistem Golden Bird CRM berdasarkan kode yang berjalan.
 
 ---
@@ -19,6 +19,12 @@ Sistem ini memiliki **6 Role Utama**, masing-masing dengan batasan (boundary) te
 | **`finance`** (Finance) | Keuangan / Invoicing | • Mengelola data billing, payment, subscriptions, tax.<br>• View Dashboard spesifik keuangan. |
 
 ---
+
+## 1A. UI/UX Boundary Yang Wajib Dijaga
+
+- Dashboard depan/Command Center mengikuti `UI_UX_LOCK.md`; jangan ubah warna, layout, font, struktur visual, atau pola interaksi tanpa instruksi eksplisit dari user.
+- Perubahan yang diperbolehkan untuk area dashboard terkunci: data dibuat dinamis, link diperbaiki, query/backend diperbaiki, dan bug state diperbaiki.
+- Perubahan visual untuk halaman operasional/fleet boleh dilakukan hanya jika memang diminta; untuk bug fix Assign/Fulfill terakhir, perbaikan harus tetap fokus pada struktur/state modal, bukan desain.
 
 ## 2. Workflow: Sales Pipeline (Peluang / Opportunity)
 
@@ -44,7 +50,7 @@ Ketika sebuah Opportunity (dengan tipe produk tertentu seperti **Mobil Long Term
 
 ### Alur Fulfillment (Alokasi Mobil & Supir):
 1. **Trigger `WON`:** Saat Opportunity berstatus *WON*, data akan muncul di tabel **Pending Assignments** pada *Dashboard Operational* dan *Dashboard Pool*.
-2. **Kebutuhan Alokasi:** Untuk mobil long term, dibutuhkan spesifikasi pengalokasian armada (Vehicles) dan supir (Drivers).
+2. **Kebutuhan Alokasi:** Untuk mobil long term, dibutuhkan spesifikasi pengalokasian armada (Vehicles) dan supir (Drivers). Jumlah kendaraan dihitung dari helper kebutuhan kendaraan, sementara jumlah supir dihitung dari helper kebutuhan supir; dua angka ini tidak boleh saling tertukar.
 3. **Aturan Assignment per Role:**
    - **`operational`**: Dapat mengalokasikan armada/supir manapun yang tersedia (Global).
    - **`pool`**: Hanya dapat memproses *Assign / Fulfill* menggunakan aset (kendaraan & supir) yang terdaftar di database **Pool miliknya** (didasarkan pada `pool_id` dari user login).
@@ -54,6 +60,12 @@ Ketika sebuah Opportunity (dengan tipe produk tertentu seperti **Mobil Long Term
    - Saat alokasi dicabut/dilepas, armada kembali berstatus `available` dan `opportunity_id` kembali menjadi NULL.
 6. **Keamanan Transaksi (DB Transaction):** Proses assignment berjalan di dalam skema perlindungan ACID (transaksi *database*). Jika terdapat error/konflik *race condition* (contoh: 2 user berebut mobil yang sama pada detik yang sama), transaksi digagalkan untuk mencegah inkonsistensi data.
 
+### Catatan Teknis Modal Assign/Fulfill:
+- Tombol **Assign / Fulfill** harus membuka modal alokasi langsung dari kartu Pending Assignment.
+- Root cause bug terakhir: modal alokasi pernah terletak di dalam wrapper modal **Register Vehicle** (`showCreateModal`), sehingga state `showAssignModal=true` tidak terlihat sampai Register Vehicle dibuka.
+- Aturan struktur: elemen modal dengan `x-show="showAssignModal"` tidak boleh menjadi turunan elemen modal Register Vehicle dengan `x-show="showCreateModal"`.
+- Test regresi terkait ada di `tests/Feature/RoleBugFixTest.php` dengan skenario `assign_modal_is_not_nested_inside_register_vehicle_modal`.
+
 ---
 
 ## 4. Target & Revenue Logic
@@ -61,3 +73,19 @@ Ketika sebuah Opportunity (dengan tipe produk tertentu seperti **Mobil Long Term
 - Target pendapatan ditetapkan setiap awal bulan.
 - Opportunity yang berstatus **WON** akan memberikan kontribusi langsung ke persentase pencapaian (Achievement Target).
 - Filter data memungkinkan role pimpinan (GM / Manager) untuk menganalisis Breakdown Revenue (Pemasukan) berdasarkan produk, cabang, rentang waktu tertentu, serta performa per masing-masing sales di bawahnya.
+
+---
+
+## 5. Finance & Subscription Billing
+
+- Manual billing subscription memakai route POST bernama `subscriptions.billing.run`.
+- Aksi billing harus memakai CSRF dan role gate yang valid; jangan memakai directive authorization yang tidak tersedia di Blade.
+- Role utama yang boleh menjalankan billing manual: `finance`, `gm`, atau role lain yang memang sudah diberi izin eksplisit di controller.
+
+---
+
+## 6. Deployment & Cache Notes
+
+- Jika bug sudah fix di git tetapi production masih menampilkan perilaku lama, cek dulu commit yang sedang berjalan di server.
+- Untuk Laravel/Blade, hard refresh browser tidak cukup jika server masih memakai compiled view lama. Jalankan clear cache/view di server setelah deploy bila gejalanya tetap sama.
+- Artefak build duplikat seperti `public/build/* 2.*` tidak termasuk logic bisnis. Cleanup harus dilakukan terpisah dan tidak boleh dicampur dengan fix backend/frontend logic tanpa persetujuan user.
