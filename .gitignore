@@ -23,6 +23,8 @@ database/database.sqlite
 /master
 *.sqlite
 *.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
 /storage/framework/sessions/*
 !/storage/framework/sessions/.gitkeep
 /storage/framework/views/*
