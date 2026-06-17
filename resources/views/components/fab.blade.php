@@ -13,7 +13,8 @@
             @click="toggle()"
             class="fab-btn"
             :class="{ open: showModal }"
-            title="New Opportunity (N)">
+            title="New Opportunity (N)"
+            aria-label="Create new opportunity">
         <span class="material-symbols-outlined text-[24px]">add</span>
     </button>
 
@@ -33,7 +34,7 @@
             <div class="text-[13px] font-bold" style="color:var(--cc-text)">
                 ✨ New Opportunity
             </div>
-            <button @click="close()" class="topbar-icon-btn w-11 h-11 md:w-6 md:h-6">
+            <button @click="close()" class="topbar-icon-btn w-11 h-11 md:w-6 md:h-6" aria-label="Close modal">
                 <span class="material-symbols-outlined text-[18px] md:text-[16px]">close</span>
             </button>
         </div>

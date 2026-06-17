@@ -6,6 +6,7 @@
     role="button"
     tabindex="0"
     title="Toggle theme ⌘D"
+    aria-label="Toggle light/dark theme"
 >
     <div class="flex justify-between items-center w-full">
         <!-- Circle 1 (Active Moon in dark / Active Sun in light) -->

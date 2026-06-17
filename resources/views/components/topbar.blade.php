@@ -28,12 +28,12 @@
     <div class="flex items-center gap-1.5">
 
         {{-- Search (mobile) --}}
-        <button class="topbar-icon-btn lg:hidden" onclick="CRM_Palette.toggle()" title="Search ⌘K">
+        <button class="topbar-icon-btn lg:hidden" onclick="CRM_Palette.toggle()" title="Search ⌘K" aria-label="Quick search">
             <span class="material-symbols-outlined text-[19px]">search</span>
         </button>
 
         {{-- Notification bell --}}
-        <button class="topbar-icon-btn" id="notif-btn" onclick="CRM_Notif.toggle()" title="Notifications ⌘J">
+        <button class="topbar-icon-btn" id="notif-btn" onclick="CRM_Notif.toggle()" title="Notifications ⌘J" aria-label="Notifications">
             <span class="material-symbols-outlined text-[19px]">notifications</span>
             <span id="notif-badge" class="notif-badge" style="display:flex">4</span>
         </button>
@@ -42,17 +42,17 @@
         <x-theme-toggle />
 
         {{-- Focus / Presentation mode --}}
-        <button class="topbar-icon-btn hidden md:flex" onclick="CRM_Focus.toggle()" title="Presentation mode ⌘B">
+        <button class="topbar-icon-btn hidden md:flex" onclick="CRM_Focus.toggle()" title="Presentation mode ⌘B" aria-label="Toggle presentation mode">
             <span class="material-symbols-outlined text-[19px]">fullscreen</span>
         </button>
 
         {{-- Widget Customizer --}}
-        <button class="topbar-icon-btn hidden md:flex" data-widget-toggle onclick="CRM_Widget && CRM_Widget.open()" title="Customize dashboard widgets">
+        <button class="topbar-icon-btn hidden md:flex" data-widget-toggle onclick="CRM_Widget && CRM_Widget.open()" title="Customize dashboard widgets" aria-label="Customize dashboard widgets">
             <span class="material-symbols-outlined text-[19px]">dashboard_customize</span>
         </button>
 
         {{-- Keyboard shortcuts hint --}}
-        <button class="topbar-icon-btn hidden md:flex" onclick="CRM_Toast.show('⌨️ Shortcuts: ⌘K=search · N=new · E=edit · W=won · A=activity · 1-7=nav · ⌘B=focus · ?=help', 'info', 6000)" title="Keyboard shortcuts ?">
+        <button class="topbar-icon-btn hidden md:flex" onclick="CRM_Toast.show('⌨️ Shortcuts: ⌘K=search · N=new · E=edit · W=won · A=activity · 1-7=nav · ⌘B=focus · ?=help', 'info', 6000)" title="Keyboard shortcuts ?" aria-label="Show keyboard shortcuts">
             <span class="material-symbols-outlined text-[19px]">keyboard</span>
         </button>
 

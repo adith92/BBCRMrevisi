@@ -106,10 +106,10 @@
                 <span class="text-sm font-bold" style="color:var(--cc-text)">Golden Bird CRM</span>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="CRM_Palette.toggle()" class="topbar-icon-btn w-11 h-11" title="Search ⌘K">
+                <button onclick="CRM_Palette.toggle()" class="topbar-icon-btn w-11 h-11" title="Search ⌘K" aria-label="Quick search">
                     <span class="material-symbols-outlined text-[19px]">search</span>
                 </button>
-                <button id="hamburger-btn" class="topbar-icon-btn w-11 h-11" title="Menu">
+                <button id="hamburger-btn" class="topbar-icon-btn w-11 h-11" title="Menu" aria-label="Open sidebar menu">
                     <span class="material-symbols-outlined text-[22px]">menu</span>
                 </button>
             </div>

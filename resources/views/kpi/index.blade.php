@@ -388,7 +388,7 @@
                                             <template x-for="deal in (breakdownData.productMetrics[cat]?.deals || [])" :key="deal.id">
                                                 <div class="flex items-center justify-between p-2 rounded-lg bg-[var(--cc-surface)] border border-[var(--cc-border)] text-xs">
                                                     <div class="min-w-0 flex-1 pr-3">
-                                                        <a :href="'/pipeline/' + deal.id" class="font-bold text-cc-cyan hover:underline truncate" x-text="deal.title"></a>
+                                                        <a :href="'/opportunities/' + deal.id" class="font-bold text-cc-cyan hover:underline truncate" x-text="deal.title"></a>
                                                         <p class="text-[10px] text-[var(--cc-text-muted)]" x-text="deal.clientName"></p>
                                                     </div>
                                                     <div class="text-right shrink-0">
