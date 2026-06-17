@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Helpers\FormatHelper;
 use App\Services\PipelineService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class OpportunityController extends Controller
 {
@@ -29,6 +30,7 @@ class OpportunityController extends Controller
     {
         $user = auth()->user();
         $selectedManagerId = null;
+        $stageOrder = ['prospecting', 'proposal', 'negotiation', 'won', 'lost'];
 
         if ($user->isGM() && $request->filled('manager_id')) {
             $selectedManagerId = (int) $request->manager_id;
@@ -59,6 +61,7 @@ class OpportunityController extends Controller
             )
             ->latest();
 
+        $summaryOpportunities = (clone $query)->get();
         $opportunities = $query->paginate(20)->withQueryString();
 
         $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
@@ -85,6 +88,52 @@ class OpportunityController extends Controller
             ];
         })->values();
 
+        $stageSummary = collect($stageOrder)->map(function ($stage) use ($summaryOpportunities) {
+            $items = $summaryOpportunities->where('stage', $stage);
+
+            return [
+                'stage' => $stage,
+                'label' => ucfirst(str_replace('_', ' ', $stage)),
+                'count' => $items->count(),
+                'total_value' => (float) $items->sum(fn ($item) => (float) ($item->estimated_value ?? 0)),
+                'total_value_fmt' => FormatHelper::formatIDR($items->sum(fn ($item) => (float) ($item->estimated_value ?? 0))),
+            ];
+        })->values();
+
+        $salesContribution = $summaryOpportunities
+            ->groupBy('sales_id')
+            ->map(function (Collection $items) {
+                $first = $items->first();
+                $totalValue = (float) $items->sum(fn ($item) => (float) ($item->estimated_value ?? 0));
+
+                return [
+                    'sales_id' => $first?->sales_id,
+                    'name' => $first?->sales?->name ?? 'Unassigned',
+                    'count' => $items->count(),
+                    'total_value' => $totalValue,
+                    'total_value_fmt' => FormatHelper::formatIDR($totalValue),
+                ];
+            })
+            ->sortByDesc('total_value')
+            ->values();
+
+        $topOpportunities = $summaryOpportunities
+            ->sortByDesc(fn ($opportunity) => (float) ($opportunity->estimated_value ?? 0))
+            ->take(5)
+            ->map(function ($opportunity) {
+                return [
+                    'id' => $opportunity->id,
+                    'show_url' => route('opportunities.show', $opportunity->id),
+                    'title' => $opportunity->title ?? $opportunity->product?->name ?? 'Opportunity #' . $opportunity->id,
+                    'client_name' => $opportunity->client?->company_name ?? '-',
+                    'stage' => $opportunity->stage,
+                    'stage_label' => ucfirst(str_replace('_', ' ', $opportunity->stage)),
+                    'estimated_value' => (float) ($opportunity->estimated_value ?? 0),
+                    'estimated_value_fmt' => FormatHelper::formatIDR($opportunity->estimated_value ?? 0),
+                ];
+            })
+            ->values();
+
         if ($user->isGM()) {
             $selectedManagerId = $request->filled('manager_id') ? (int) $request->manager_id : null;
             $managers = User::where('role', 'manager')->orderBy('name')->get(['id', 'name']);
@@ -101,7 +150,16 @@ class OpportunityController extends Controller
             $managers = User::where('id', $user->id)->get(['id', 'name']);
         }
 
-        $viewData = compact('opportunities', 'clients', 'managers', 'selectedManagerId', 'opportunityRows');
+        $viewData = compact(
+            'opportunities',
+            'clients',
+            'managers',
+            'selectedManagerId',
+            'opportunityRows',
+            'stageSummary',
+            'salesContribution',
+            'topOpportunities'
+        );
 
         if (!$user->isSales()) {
             $viewData['salesUsers'] = $salesUsers;
