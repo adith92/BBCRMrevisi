@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Client;
+use App\Models\Driver;
 use App\Models\PurchaseOrder;
 use App\Models\Vehicle;
 use App\Models\User;
@@ -65,6 +66,7 @@ class DashboardController extends Controller
         }
 
         $availableVehicles  = Vehicle::where('status', 'available')->count();
+        $availableDrivers   = Driver::where('status', 'available')->count();
         $pendingDispatch    = Booking::where('status', 'pending')->count();
         
         // Count meetings in the last 7 days + next 7 days from ActivityLog (type = meeting)
@@ -462,7 +464,7 @@ class DashboardController extends Controller
         });
 
         return view('dashboard.gm', compact(
-            'availableVehicles', 'pendingDispatch', 'upcomingMeetings',
+            'availableVehicles', 'availableDrivers', 'pendingDispatch', 'upcomingMeetings',
             'totalMonthlyBooked', 'totalMonthlyPaid', 'outstandingInvoices',
             'completedBookings', 'activeClients', 'todayRevenue', 'users', 'deals', 'targets',
             'recentBookings', 'days7', 'days7Labels', 'days7Revenue', 'days7Deals',

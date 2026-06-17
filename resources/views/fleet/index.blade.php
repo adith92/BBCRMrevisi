@@ -19,8 +19,7 @@
 @php
     $canModify = auth()->user()->isOperational()
         || auth()->user()->isPool()
-        || auth()->user()->isManager()
-        || auth()->user()->isGM();
+        || auth()->user()->isManager();
     $canAssign = auth()->user()->isOperational() || auth()->user()->isPool();
     $pendingFleetCount = isset($pendingAssignments) ? $pendingAssignments->where('missing_fleets', '>', 0)->count() : 0;
     $statusColors = [
@@ -176,6 +175,40 @@
             </div>
         </template>
     </div>
+
+    @if(isset($fleetStatusSummary) && $fleetStatusSummary->count() > 0)
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div class="cc-card rounded-2xl p-5">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-[var(--cc-text)]">Fleet Status Distribution</h2>
+                    <p class="text-xs text-[var(--cc-text-muted)]">Ringkasan armada aktif, rented out, booked, dan maintenance.</p>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    {{ $stats['total'] }} unit
+                </span>
+            </div>
+            <div class="h-72">
+                <canvas id="fleet-status-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="cc-card rounded-2xl p-5">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-[var(--cc-text)]">Fleet by Pool</h2>
+                    <p class="text-xs text-[var(--cc-text-muted)]">Distribusi unit per pool untuk cek kapasitas cepat.</p>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Top pools
+                </span>
+            </div>
+            <div class="h-72">
+                <canvas id="fleet-pool-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    @endif
 
     @if($currentStatus === 'approval_pending')
         {{-- Approval Pending List and sorting --}}
@@ -499,6 +532,7 @@
         </div>
     @endif
 
+    @if($canModify)
     {{-- Create Vehicle Modal --}}
     <div x-show="showCreateModal" style="display: none;" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div x-show="showCreateModal"
@@ -688,8 +722,69 @@
             </div>
         </div>
 </div>
+@endif
 @push('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--cc-text-muted').trim() || '#94a3b8';
+        const cardColor = getComputedStyle(document.documentElement).getPropertyValue('--cc-card').trim() || '#111827';
+
+        const statusCanvas = document.getElementById('fleet-status-chart');
+        if (statusCanvas) {
+            const statusRows = @json($fleetStatusSummary ?? []);
+            new Chart(statusCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: statusRows.map(row => row.label),
+                    datasets: [{
+                        data: statusRows.map(row => row.count),
+                        backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#64748b'],
+                        borderColor: cardColor,
+                        borderWidth: 3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '64%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        const poolCanvas = document.getElementById('fleet-pool-chart');
+        if (poolCanvas) {
+            const poolRows = @json($fleetPoolSummary ?? []);
+            new Chart(poolCanvas, {
+                type: 'bar',
+                data: {
+                    labels: poolRows.map(row => row.pool),
+                    datasets: [{
+                        label: 'Unit',
+                        data: poolRows.map(row => row.count),
+                        backgroundColor: 'rgba(99, 102, 241, 0.72)',
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { display: false } },
+                        y: { ticks: { color: textColor, precision: 0 }, grid: { color: 'rgba(148,163,184,0.15)' } }
+                    }
+                }
+            });
+        }
+    });
+
     document.addEventListener('alpine:init', () => {
         Alpine.data('fleetPage', () => ({
             showMaintenanceDetails: false,

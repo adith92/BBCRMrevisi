@@ -61,6 +61,28 @@ class DriverController extends Controller
             'leave'       => (clone $statsQuery)->where('status', 'inactive')->count(), // Using inactive as leave
         ];
 
+        $driverStatusOrder = ['available', 'assigned', 'reserved', 'inactive'];
+        $driverStatusSummary = collect($driverStatusOrder)->map(function (string $status) use ($drivers) {
+            $count = $drivers->filter(fn ($driver) => strtolower((string) ($driver->status ?? '')) === $status)->count();
+
+            return [
+                'status' => $status,
+                'label' => ucfirst($status === 'inactive' ? 'leave' : $status),
+                'count' => $count,
+            ];
+        })->values();
+
+        $driverPoolSummary = $drivers
+            ->groupBy(fn ($driver) => $driver->pool?->name ?? 'Unassigned')
+            ->map(fn ($items, $poolName) => [
+                'pool' => $poolName,
+                'count' => $items->count(),
+            ])
+            ->sortByDesc('count')
+            ->values()
+            ->take(6)
+            ->values();
+
         $pendingAssignments = Opportunity::with(['client', 'sales', 'assignedVehicles', 'assignedDrivers'])
             ->whereIn('stage', ['negotiation', 'won'])
             ->get()
@@ -112,7 +134,7 @@ class DriverController extends Controller
 
         $pendingAssignments = $pendingAssignments->values();
 
-        return view('drivers.index', compact('drivers', 'stats', 'pendingAssignments'));
+        return view('drivers.index', compact('drivers', 'stats', 'pendingAssignments', 'driverStatusSummary', 'driverPoolSummary'));
     }
 
     public function show(Driver $driver)
@@ -134,7 +156,7 @@ class DriverController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->isOperational() && !$user->isPool() && !$user->isManager() && !$user->isGM()) {
+        if (!$user->isOperational() && !$user->isPool() && !$user->isManager()) {
             abort(403, 'Unauthorized');
         }
 

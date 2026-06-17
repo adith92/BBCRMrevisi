@@ -111,24 +111,31 @@ class DemoMassiveSeeder extends Seeder
 
         $this->command->info('  → Seeding users...');
 
-        // Create 1 GM, 1 Finance, 1 Manager
+        // Create 1 GM, 1 Finance, 5 Managers, and 10 Sales reps with a valid manager tree.
         User::firstOrCreate(['email' => 'gm@demo.crm'], ['name' => 'General Manager', 'password' => bcrypt('password123'), 'role' => 'gm']);
         User::firstOrCreate(['email' => 'finance@demo.crm'], ['name' => 'Finance Dept', 'password' => bcrypt('password123'), 'role' => 'finance']);
-        $manager = User::firstOrCreate(['email' => 'manager@demo.crm'], ['name' => 'Sales Manager', 'password' => bcrypt('password123'), 'role' => 'manager']);
+        $managers = [
+            User::firstOrCreate(['email' => 'manager1@demo.crm'], ['name' => 'Nadia Suryani', 'password' => bcrypt('password123'), 'role' => 'manager']),
+            User::firstOrCreate(['email' => 'manager2@demo.crm'], ['name' => 'Bayu Pratama', 'password' => bcrypt('password123'), 'role' => 'manager']),
+            User::firstOrCreate(['email' => 'manager3@demo.crm'], ['name' => 'Tina Marlina', 'password' => bcrypt('password123'), 'role' => 'manager']),
+            User::firstOrCreate(['email' => 'manager4@demo.crm'], ['name' => 'Arif Nugraha', 'password' => bcrypt('password123'), 'role' => 'manager']),
+            User::firstOrCreate(['email' => 'manager5@demo.crm'], ['name' => 'Wulan Pertiwi', 'password' => bcrypt('password123'), 'role' => 'manager']),
+        ];
 
         $salesNames = [
-            'Andi Pratama', 'Sari Dewi', 'Reza Firmansyah', 'Budi Hartono', 'Citra Lestari',
-            'Dedy Kurniawan', 'Eka Suharto', 'Fajar Nugroho', 'Gina Pratiwi', 'Hendra Wijaya',
+            'Aditya Prakoso', 'Bella Kartika', 'Cahyo Wirawan', 'Dian Permata', 'Eri Saputra',
+            'Farah Aulia', 'Guntur Mahesa', 'Hana Putri', 'Iqbal Maulana', 'Jihan Safira',
         ];
 
         foreach ($salesNames as $i => $name) {
+            $manager = $managers[$i % count($managers)];
             User::firstOrCreate(
                 ['email' => 'sales' . ($i + 1) . '@demo.crm'],
                 [
                     'name'       => $name,
                     'password'   => bcrypt('password123'),
                     'role'       => 'sales',
-                    'manager_id' => ($i < 3) ? $manager->id : null, // Only first 3 sales under this manager
+                    'manager_id' => $manager->id,
                 ]
             );
         }

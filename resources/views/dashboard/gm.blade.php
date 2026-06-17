@@ -464,35 +464,48 @@
         </div>
     </div>
 
-    {{-- ===== Recent Bookings (Full width) ===== --}}
-    <div class="grid-stack-item" gs-id="widget-recent-books" gs-x="0" gs-y="19" gs-w="12" gs-h="5">
+    {{-- ===== Operational Snapshot (Full width) ===== --}}
+    <div class="grid-stack-item" gs-id="widget-ops-snapshot" gs-x="0" gs-y="19" gs-w="12" gs-h="4">
         <div class="grid-stack-item-content">
-            <div class="cc-card p-5 h-full overflow-auto">
+            <div class="cc-card p-5 h-full">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]" style="color:#10b981;">route</span>
-                        <span class="text-xs font-bold uppercase tracking-widest" style="color:#94a3b8;">{{ __('ui.recent_bookings') }}</span>
+                        <span class="material-symbols-outlined text-[18px]" style="color:#10b981;">dashboard</span>
+                        <span class="text-xs font-bold uppercase tracking-widest" style="color:#94a3b8;">Operational Snapshot</span>
                     </div>
                     <a href="{{ route('bookings.index') }}" class="text-[10px] font-semibold" style="color:#3b82f6;">{{ __('ui.view_all') }}</a>
                 </div>
-                @php
-                $bookings = $recentBookings ?? [
-                    ['id'=>'GB-2026-0612','client'=>'Astra International','fleet'=>'Golden Bird','status'=>'confirmed','statusClass'=>'status-confirmed'],
-                    ['id'=>'BB-2026-0441','client'=>'Telkom Indonesia','fleet'=>'Big Bird','status'=>'On Trip','statusClass'=>'status-completed'],
-                    ['id'=>'CT-2026-0192','client'=>'Bank Mandiri','fleet'=>'Cititrans','status'=>'pending','statusClass'=>'status-pending'],
-                    ['id'=>'EX-2026-0088','client'=>'Pertamina','fleet'=>'Executive','status'=>'completed','statusClass'=>'status-completed'],
-                ];
-                @endphp
-                <div class="space-y-1">
-                    @foreach($bookings as $b)
-                    <div class="booking-row">
-                        <div class="flex-grow min-w-0">
-                            <a href="{{ route('bookings.index') }}" class="text-xs font-bold font-mono dashboard-link">{{ $b['id'] }}</a>
-                            <div class="text-[10px] text-cc-muted"><a href="{{ route('clients.index') }}" class="dashboard-link">{{ $b['client'] }}</a> - <a href="{{ route('fleet.index') }}" class="dashboard-link">{{ $b['fleet'] }}</a></div>
-                        </div>
-                        <span class="status-badge {{ $b['statusClass'] }} flex-shrink-0">{{ $b['status'] }}</span>
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="ai-metric">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Active Bookings</div>
+                        <div class="text-2xl font-black mt-1" style="color:#1468a8;">{{ $activeBookings ?? 0 }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">On trip + confirmed</div>
                     </div>
-                    @endforeach
+                    <div class="ai-metric">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Pending Dispatch</div>
+                        <div class="text-2xl font-black mt-1" style="color:#a855f7;">{{ $pendingDispatch ?? 0 }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Menunggu tindak lanjut</div>
+                    </div>
+                    <div class="ai-metric">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Available Fleet</div>
+                        <div class="text-2xl font-black mt-1" style="color:#10b981;">{{ $availableVehicles ?? 0 }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Ready to assign</div>
+                    </div>
+                    <div class="ai-metric">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Completed Bookings</div>
+                        <div class="text-2xl font-black mt-1" style="color:#f59e0b;">{{ $completedBookings ?? 0 }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Bulan berjalan</div>
+                    </div>
+                    <div class="ai-metric">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Available Drivers</div>
+                        <div class="text-2xl font-black mt-1" style="color:#0ea5e9;">{{ $availableDrivers ?? 0 }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Ready for assignment</div>
+                    </div>
+                    <div class="ai-metric">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Active Clients</div>
+                        <div class="text-2xl font-black mt-1" style="color:#7c3aed;">{{ $activeClients ?? 0 }}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Client aktif</div>
+                    </div>
                 </div>
             </div>
         </div>

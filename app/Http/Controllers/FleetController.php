@@ -74,6 +74,28 @@ class FleetController extends Controller
             'inQueue'     => (clone $statsQuery)->where('status', 'maintenance')->where('notes', 'not like', '%Servicing%')->count(),
         ];
 
+        $fleetStatusOrder = ['available', 'rent_out', 'booked', 'hold', 'maintenance', 'inactive'];
+        $fleetStatusSummary = collect($fleetStatusOrder)->map(function (string $status) use ($vehicles) {
+            $count = $vehicles->filter(fn ($vehicle) => strtolower((string) ($vehicle->status ?? '')) === $status)->count();
+
+            return [
+                'status' => $status,
+                'label' => ucfirst(str_replace('_', ' ', $status)),
+                'count' => $count,
+            ];
+        })->values();
+
+        $fleetPoolSummary = $vehicles
+            ->groupBy(fn ($vehicle) => $vehicle->pool?->name ?? 'Unassigned')
+            ->map(fn ($items, $poolName) => [
+                'pool' => $poolName,
+                'count' => $items->count(),
+            ])
+            ->sortByDesc('count')
+            ->values()
+            ->take(6)
+            ->values();
+
         // Ops Pending Assignments Logic
         $pendingAssignments = \App\Models\Opportunity::with(['client', 'sales', 'assignedVehicles', 'assignedDrivers'])
             ->whereIn('stage', ['negotiation', 'won'])
@@ -130,7 +152,7 @@ class FleetController extends Controller
 
         $pendingAssignments = $pendingAssignments->values();
 
-        return view('fleet.index', compact('vehicles', 'stats', 'pendingAssignments'));
+        return view('fleet.index', compact('vehicles', 'stats', 'pendingAssignments', 'fleetStatusSummary', 'fleetPoolSummary'));
     }
 
     public function show(Vehicle $vehicle)
@@ -210,7 +232,7 @@ class FleetController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->isOperational() && !$user->isPool() && !$user->isManager() && !$user->isGM()) {
+        if (!$user->isOperational() && !$user->isPool() && !$user->isManager()) {
             abort(403, 'Unauthorized');
         }
 
@@ -252,7 +274,7 @@ class FleetController extends Controller
     public function assignToOpportunity(\Illuminate\Http\Request $request, \App\Models\Opportunity $opportunity)
     {
         $user = auth()->user();
-        if (!$user->isOperational() && !$user->isPool() && !$user->isManager() && !$user->isGM()) {
+        if (!$user->isOperational() && !$user->isPool() && !$user->isManager()) {
             abort(403, 'Unauthorized');
         }
 

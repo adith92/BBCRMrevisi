@@ -198,9 +198,9 @@ class DriverControllerTest extends TestCase
     #[Test]
     public function store_validates_required_fields(): void
     {
-        $gm = $this->createUser('gm');
+        $manager = $this->createUser('manager');
 
-        $response = $this->actingAs($gm)->post(route('drivers.store'), []);
+        $response = $this->actingAs($manager)->post(route('drivers.store'), []);
 
         $response->assertSessionHasErrors(['name', 'phone', 'status']);
     }

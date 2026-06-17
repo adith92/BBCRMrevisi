@@ -93,6 +93,19 @@ class RoleBugFixTest extends TestCase
     }
 
     /** @test */
+    public function gm_cannot_see_fleet_register_or_assign_controls(): void
+    {
+        $gm = $this->user('gm');
+
+        $response = $this->actingAs($gm)
+            ->get(route('fleet.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('Register Vehicle', false);
+        $response->assertDontSee('Assign Fleet', false);
+    }
+
+    /** @test */
     public function assign_modal_is_not_nested_inside_register_vehicle_modal(): void
     {
         $gm = $this->user('gm');
@@ -156,6 +169,20 @@ class RoleBugFixTest extends TestCase
         $response->assertOk();
         $response->assertSee(route('drivers.show', $driver->id));
         $response->assertSee($driver->name);
+    }
+
+    /** @test */
+    public function gm_cannot_see_driver_register_or_edit_controls(): void
+    {
+        $gm = $this->user('gm');
+
+        $response = $this->actingAs($gm)
+            ->get(route('drivers.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('Register Driver', false);
+        $response->assertDontSee('Assign Driver', false);
+        $response->assertDontSee('>Edit<', false);
     }
 
     /** @test */
@@ -281,5 +308,27 @@ class RoleBugFixTest extends TestCase
         $response->assertOk();
         $response->assertSee("url.searchParams.delete('assign_opp');", false);
         $response->assertSee('window.location.href = url.toString();', false);
+    }
+
+    /** @test */
+    public function gm_cannot_store_new_fleet_or_driver_records(): void
+    {
+        $gm = $this->user('gm');
+
+        $this->actingAs($gm)
+            ->post(route('fleet.store'), [
+                'police_number' => 'B 9999 GM',
+                'brand_model' => 'Test Model',
+                'status' => 'available',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($gm)
+            ->post(route('drivers.store'), [
+                'name' => 'GM Test Driver',
+                'phone' => '08123456789',
+                'status' => 'available',
+            ])
+            ->assertForbidden();
     }
 }

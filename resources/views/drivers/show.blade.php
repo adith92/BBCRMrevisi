@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $canModify = auth()->user()->isOperational() || auth()->user()->isManager() || auth()->user()->isGM();
+    $canModify = auth()->user()->isOperational() || auth()->user()->isManager();
     $statusColors = [
         'available' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         'assigned'  => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
