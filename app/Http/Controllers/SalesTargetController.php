@@ -21,6 +21,7 @@ class SalesTargetController extends Controller
         $user = auth()->user();
         $year  = (int) $request->get('year', now()->year);
         $month = (int) $request->get('month', now()->month);
+        $targetMode = $request->routeIs('kpi.targets');
 
         $users = User::all()->map(function($u) {
             return [
@@ -86,7 +87,8 @@ class SalesTargetController extends Controller
             'month',
             'assignableUsers',
             'selectedTargetUserId',
-            'selectedTarget'
+            'selectedTarget',
+            'targetMode'
         ));
     }
 
@@ -154,7 +156,7 @@ class SalesTargetController extends Controller
         );
 
         return redirect()
-            ->route('kpi.index', ['year' => $validated['period_year'], 'month' => $validated['period_month']])
+            ->route('kpi.targets', ['year' => $validated['period_year'], 'month' => $validated['period_month'], 'user_id' => $validated['user_id']])
             ->with('success', 'Target KPI berhasil disimpan.');
     }
 

@@ -686,6 +686,18 @@
                                     Pilihan: <strong class="text-indigo-400" x-text="selectedFleets.length"></strong> / <strong x-text="assigningOpp?.required_fleets"></strong> unit
                                 </span>
                             </div>
+                            <div class="mb-3 flex flex-wrap gap-2">
+                                <button type="button" @click="autoSelectFleets()"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition">
+                                    <span class="material-symbols-outlined text-[15px]">bolt</span>
+                                    Auto Assign
+                                </button>
+                                <button type="button" @click="selectedFleets = []"
+                                        class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cc-border)] px-3 py-1.5 text-xs font-bold text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition">
+                                    <span class="material-symbols-outlined text-[15px]">backspace</span>
+                                    Clear
+                                </button>
+                            </div>
                             <div class="space-y-2 max-h-[200px] overflow-y-auto border border-[var(--cc-border)] p-3 rounded-2xl bg-[var(--cc-bg-muted)]/55 custom-scrollbar">
                                 <template x-if="availableFleets.length === 0">
                                     <div class="text-center py-4 text-[var(--cc-text-muted)] text-xs">
@@ -835,6 +847,20 @@
                 } catch(e) {
                     console.error('Failed to load vehicles', e);
                 }
+            },
+
+            autoSelectFleets() {
+                const required = Number(this.assigningOpp?.required_fleets || 0);
+                if (required <= 0) return;
+                const existing = new Set(this.selectedFleets.map(id => Number(id)));
+                const next = [...existing];
+                for (const fleet of this.availableFleets) {
+                    if (next.length >= required) break;
+                    if (!existing.has(Number(fleet.id))) {
+                        next.push(Number(fleet.id));
+                    }
+                }
+                this.selectedFleets = next.slice(0, required);
             },
 
             async saveAssignment() {

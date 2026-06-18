@@ -8,6 +8,8 @@ use App\Models\Vehicle;
 use App\Models\Driver;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
@@ -26,7 +28,38 @@ class BookingController extends Controller
 
         $bookings = $query->paginate(20);
 
-        return view('bookings.index', compact('bookings'));
+        $summaryQuery = Booking::query()
+            ->when(!$user->isGM() && !$user->isOperational() && !$user->isFinance(), fn($q) => $q->where('sales_id', $user->id))
+            ->when(request('client_id'), fn($q, $id) => $q->where('client_id', $id))
+            ->when(request('vehicle_id'), fn($q, $id) => $q->where('vehicle_id', $id))
+            ->when(request('sales_id'), fn($q, $id) => $q->where('sales_id', $id));
+
+        $statusSummary = (clone $summaryQuery)
+            ->select('status', DB::raw('COUNT(*) as total'), DB::raw('SUM(price) as revenue'))
+            ->groupBy('status')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => str($row->status)->replace('_', ' ')->title()->toString(),
+                'status' => $row->status,
+                'count' => (int) $row->total,
+                'revenue' => (float) $row->revenue,
+            ]);
+
+        $dailyRows = (clone $summaryQuery)
+            ->whereBetween('pickup_datetime', [Carbon::today()->subDays(6)->startOfDay(), Carbon::today()->endOfDay()])
+            ->select(DB::raw('DATE(pickup_datetime) as day_key'), DB::raw('COUNT(*) as total'), DB::raw('SUM(price) as revenue'))
+            ->groupBy(DB::raw('DATE(pickup_datetime)'))
+            ->pluck('total', 'day_key');
+
+        $bookingTrend = collect(range(6, 0))->map(function ($offset) use ($dailyRows) {
+            $date = Carbon::today()->subDays($offset);
+            return [
+                'label' => $date->translatedFormat('d M'),
+                'count' => (int) ($dailyRows[$date->format('Y-m-d')] ?? 0),
+            ];
+        });
+
+        return view('bookings.index', compact('bookings', 'statusSummary', 'bookingTrend'));
     }
 
     public function create()

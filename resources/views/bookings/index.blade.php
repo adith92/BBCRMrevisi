@@ -39,6 +39,39 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mb-6">
+        <div class="xl:col-span-4 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)]/45 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-[var(--cc-text)]">Status Booking</h3>
+                <span class="material-symbols-outlined text-blue-400 text-[18px]">donut_large</span>
+            </div>
+            <div class="h-52"><canvas id="booking-status-chart"></canvas></div>
+        </div>
+        <div class="xl:col-span-5 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)]/45 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-[var(--cc-text)]">Booking 7 Hari</h3>
+                <span class="material-symbols-outlined text-emerald-400 text-[18px]">stacked_line_chart</span>
+            </div>
+            <div class="h-52"><canvas id="booking-trend-chart"></canvas></div>
+        </div>
+        <div class="xl:col-span-3 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)]/45 p-4">
+            <h3 class="text-sm font-bold text-[var(--cc-text)] mb-3">Revenue by Status</h3>
+            <div class="space-y-3">
+                @forelse($statusSummary as $row)
+                    <a href="{{ route('bookings.index', array_merge(request()->query(), ['status' => $row['status']])) }}" class="block rounded-lg border border-[var(--cc-border)] bg-[var(--cc-surface)] px-3 py-2 hover:border-blue-500/50 transition">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-xs font-bold text-[var(--cc-text)]">{{ $row['label'] }}</span>
+                            <span class="text-[10px] text-[var(--cc-text-muted)]">{{ $row['count'] }} booking</span>
+                        </div>
+                        <div class="mt-1 text-sm font-mono font-bold text-emerald-400">{{ \App\Helpers\FormatHelper::formatIDR($row['revenue']) }}</div>
+                    </a>
+                @empty
+                    <div class="rounded-lg border border-dashed border-[var(--cc-border)] p-4 text-center text-xs text-[var(--cc-text-muted)]">Belum ada booking.</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-[var(--cc-bg-muted)] border-b">
@@ -97,4 +130,63 @@
 
     <div class="mt-4">{{ $bookings->links() }}</div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--cc-text-muted').trim() || '#94a3b8';
+    const cardColor = getComputedStyle(document.documentElement).getPropertyValue('--cc-card').trim() || '#111827';
+    const statusRows = @json($statusSummary ?? []);
+    const trendRows = @json($bookingTrend ?? []);
+
+    const statusCanvas = document.getElementById('booking-status-chart');
+    if (statusCanvas) {
+        new Chart(statusCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: statusRows.map(row => row.label),
+                datasets: [{
+                    data: statusRows.map(row => row.count),
+                    backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#64748b'],
+                    borderColor: cardColor,
+                    borderWidth: 3,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '64%',
+                plugins: { legend: { position: 'bottom', labels: { color: textColor } } }
+            }
+        });
+    }
+
+    const trendCanvas = document.getElementById('booking-trend-chart');
+    if (trendCanvas) {
+        new Chart(trendCanvas, {
+            type: 'bar',
+            data: {
+                labels: trendRows.map(row => row.label),
+                datasets: [{
+                    label: 'Booking',
+                    data: trendRows.map(row => row.count),
+                    backgroundColor: 'rgba(59, 130, 246, 0.72)',
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { display: false } },
+                    y: { ticks: { color: textColor, precision: 0 }, grid: { color: 'rgba(148,163,184,0.15)' } }
+                }
+            }
+        });
+    }
+});
+</script>
+@endpush
 @endsection

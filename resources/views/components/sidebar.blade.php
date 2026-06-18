@@ -225,10 +225,16 @@
 
         <div x-show="sidebarOpen" class="nav-section-label">{{ __('ui.intelligence') }}</div>
 
-        <a href="{{ route('kpi.index') }}" class="nav-item {{ Request::routeIs('kpi*') ? 'active' : '' }} flex items-center gap-3">
+        <a href="{{ route('kpi.index') }}" class="nav-item {{ Request::routeIs('kpi.index') ? 'active' : '' }} flex items-center gap-3">
             <span class="material-symbols-outlined">leaderboard</span>
             <span x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200" class="whitespace-nowrap">{{ __('ui.kpi_target') }}</span>
         </a>
+        @if(in_array($role, ['gm','manager']))
+        <a href="{{ route('kpi.targets') }}" class="nav-item {{ Request::routeIs('kpi.targets') ? 'active' : '' }} flex items-center gap-3">
+            <span class="material-symbols-outlined">track_changes</span>
+            <span x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200" class="whitespace-nowrap">Set Sales Targets</span>
+        </a>
+        @endif
         @endif
 
         @if(in_array($role, ['gm','manager']))

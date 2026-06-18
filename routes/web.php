@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
     // KPI / Sales Targets
     Route::get('/kpi', [SalesTargetController::class, 'index'])->name('kpi.index')->middleware('role:gm,manager,sales');
+    Route::get('/kpi/targets', [SalesTargetController::class, 'index'])->name('kpi.targets')->middleware('role:gm,manager');
     Route::post('/kpi/targets', [SalesTargetController::class, 'store'])->name('kpi.store')->middleware('role:gm,manager');
 
     // Subscriptions

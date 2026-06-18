@@ -396,6 +396,18 @@
                                 Pilihan: <strong class="text-indigo-400" x-text="selectedDrivers.length"></strong> / <strong x-text="assigningOpp?.required_drivers"></strong> orang
                             </span>
                         </div>
+                        <div class="mb-3 flex flex-wrap gap-2">
+                            <button type="button" @click="autoSelectDrivers()"
+                                    class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition">
+                                <span class="material-symbols-outlined text-[15px]">bolt</span>
+                                Auto Assign
+                            </button>
+                            <button type="button" @click="selectedDrivers = []"
+                                    class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--cc-border)] px-3 py-1.5 text-xs font-bold text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition">
+                                <span class="material-symbols-outlined text-[15px]">backspace</span>
+                                Clear
+                            </button>
+                        </div>
                         <div class="space-y-2 max-h-[260px] overflow-y-auto border border-[var(--cc-border)] p-3 rounded-2xl bg-[var(--cc-bg-muted)]/55 custom-scrollbar">
                             <template x-if="availableDrivers.length === 0">
                                 <div class="text-center py-4 text-[var(--cc-text-muted)] text-xs">
@@ -535,6 +547,20 @@
                 } catch(e) {
                     console.error('Failed to load drivers', e);
                 }
+            },
+
+            autoSelectDrivers() {
+                const required = Number(this.assigningOpp?.required_drivers || 0);
+                if (required <= 0) return;
+                const existing = new Set(this.selectedDrivers.map(id => Number(id)));
+                const next = [...existing];
+                for (const driver of this.availableDrivers) {
+                    if (next.length >= required) break;
+                    if (!existing.has(Number(driver.id))) {
+                        next.push(Number(driver.id));
+                    }
+                }
+                this.selectedDrivers = next.slice(0, required);
             },
 
             async saveAssignment() {

@@ -28,15 +28,15 @@
     
     <div class="shrink-0 mb-2">
         <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-1">
-            {{ in_array($currentUser['role'], ['GM', 'Manager']) ? 'Set Sales Targets (KPI)' : 'Performance Overview' }}
+            {{ $targetMode ? 'Set Sales Targets (KPI)' : 'KPI & Target Performance' }}
         </h1>
         <p class="text-[var(--cc-text-muted)]">
-            {{ in_array($currentUser['role'], ['GM', 'Manager']) ? 'Management panel to establish target KPIs.' : 'Sales Performance Monitoring' }} •
+            {{ $targetMode ? 'Management panel to establish target KPIs.' : 'Sales performance, KPI achievement, and risk monitoring.' }} •
             <span class="text-indigo-400 font-medium" x-text="currentUser.role === 'Sales' ? 'Team View' : 'Company Overview'"></span>
         </p>
     </div>
 
-    @if(in_array($currentUser['role'], ['GM', 'Manager']))
+    @if($targetMode && in_array($currentUser['role'], ['GM', 'Manager']))
     @php
         $monthOptions = collect(range(0, 11))->map(fn ($offset) => now()->startOfMonth()->addMonths($offset));
         $productTargetFields = [
@@ -58,7 +58,7 @@
     })">
         <div class="xl:col-span-4 rounded-3xl border border-[var(--cc-border)] bg-[var(--cc-surface)] p-6">
             <h2 class="text-lg font-bold text-[var(--cc-text)] mb-5">Configuration</h2>
-            <form method="GET" action="{{ route('kpi.index') }}" class="space-y-4">
+            <form method="GET" action="{{ route('kpi.targets') }}" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-[var(--cc-text-muted)] mb-2">Select Sales Representative</label>
                     <select name="user_id" onchange="this.form.submit()" class="w-full rounded-xl bg-[var(--cc-bg)] border border-[var(--cc-border)] px-4 py-3 text-sm font-semibold text-[var(--cc-text)]">
@@ -168,6 +168,53 @@
             </div>
         </div>
     </div>
+
+    <template x-if="currentUser.role !== 'Sales'">
+        <div class="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-[var(--cc-text)]">At Risk KPI</h2>
+                    <p class="text-sm text-[var(--cc-text-muted)]">Sales dan manager yang belum memenuhi target KPI bulan ini.</p>
+                </div>
+                <div class="rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-bold text-rose-400">
+                    <span x-text="atRiskSales.length"></span> Sales At Risk
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <template x-for="manager in atRiskManagers" :key="manager.user.id">
+                    <div class="rounded-2xl border border-rose-500/15 bg-[var(--cc-surface)] p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-[var(--cc-text)]" x-text="manager.user.name"></p>
+                                <p class="text-xs text-[var(--cc-text-muted)]">
+                                    Sales Manager • <span x-text="manager.riskyReps.length"></span> sales butuh perhatian
+                                </p>
+                            </div>
+                            <span class="rounded-full bg-rose-500/10 px-2 py-1 text-xs font-bold text-rose-400" x-text="manager.progress.toFixed(1) + '%'"></span>
+                        </div>
+
+                        <div class="mt-4 space-y-2">
+                            <template x-for="rep in manager.riskyReps" :key="rep.user.id">
+                                <a :href="'/sales/' + rep.user.id + '/performance'" class="flex items-center justify-between gap-3 rounded-xl border border-[var(--cc-border)] bg-black/5 dark:bg-white/5 px-3 py-2 hover:border-rose-400/50 transition">
+                                    <span class="min-w-0">
+                                        <span class="block text-sm font-bold text-[var(--cc-text)]" x-text="rep.user.name"></span>
+                                        <span class="block text-[11px] text-[var(--cc-text-muted)]" x-text="'Revenue ' + formatIDR(rep.revenue) + ' / Target ' + formatIDR(rep.target)"></span>
+                                    </span>
+                                    <span class="shrink-0 text-xs font-bold text-rose-400" x-text="rep.progress.toFixed(1) + '%'"></span>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="atRiskManagers.length === 0">
+                    <div class="xl:col-span-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 text-sm font-semibold text-emerald-400">
+                        Semua sales sudah on track untuk periode ini.
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {{-- Left Column: Progress & Target --}}
@@ -303,10 +350,10 @@
 
                     <template x-if="currentUser.role !== 'Sales' && selectedManagerId">
                         <template x-for="(item, idx) in managerLeaderboard.find(m => m.user.id === selectedManagerId)?.reps || []" :key="item.user.id">
-                            <div class="flex items-center gap-4 bg-black/5 dark:bg-gray-100/5 p-3 rounded-2xl border border-black/5 dark:border-white/5 hover:bg-black/10 dark:hover:bg-gray-100/10 transition-colors">
+                            <div class="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 bg-black/5 dark:bg-gray-100/5 p-3 rounded-2xl border border-black/5 dark:border-white/5 hover:bg-black/10 dark:hover:bg-gray-100/10 transition-colors">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs border" :class="getRankStyle(idx)" x-text="idx + 1"></div>
                                 <div class="flex-1 min-w-0">
-                                    <a :href="'/sales/' + item.user.id + '/performance'" class="truncate text-sm font-bold text-cc-cyan hover:underline" x-text="item.user.name"></a>
+                                    <a :href="'/sales/' + item.user.id + '/performance'" class="block text-sm font-bold text-cc-cyan hover:underline leading-tight whitespace-normal break-words" x-text="item.user.name"></a>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm font-mono font-bold text-emerald-400" x-text="formatIDR(item.revenue)"></p>
@@ -317,12 +364,12 @@
 
                     <template x-if="currentUser.role !== 'Sales' && !selectedManagerId">
                         <template x-for="(item, idx) in managerLeaderboard" :key="item.user.id">
-                            <div @click="selectedManagerId = item.user.id"
-                                 class="flex items-center gap-4 bg-black/5 dark:bg-gray-100/5 p-3 rounded-2xl border border-black/5 dark:border-white/5 cursor-pointer hover:border-indigo-500/50 hover:bg-black/10 dark:hover:bg-gray-100/10 transition group">
+                            <div class="bg-black/5 dark:bg-gray-100/5 rounded-2xl border border-black/5 dark:border-white/5 hover:border-indigo-500/50 hover:bg-black/10 dark:hover:bg-gray-100/10 transition group">
+                                <div class="grid grid-cols-[2rem_minmax(0,1fr)_auto_2rem] items-center gap-3 p-3">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs border" :class="getRankStyle(idx)" x-text="idx + 1"></div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
-                                        <p class="truncate text-sm font-bold text-[var(--cc-text)] group-hover:text-indigo-300 transition-colors" x-text="item.user.name"></p>
+                                        <a :href="'/sales/' + item.user.id + '/performance'" class="block text-sm font-bold text-[var(--cc-text)] group-hover:text-indigo-300 transition-colors leading-tight whitespace-normal break-words" x-text="item.user.name"></a>
                                         <a :href="'/sales/' + item.user.id + '/performance'" @click.stop
                                            class="text-cc-cyan hover:text-blue-500 flex items-center transition" title="Lihat Performa Manager">
                                             <span class="material-symbols-outlined text-[15px]">info</span>
@@ -332,6 +379,21 @@
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm font-mono font-bold text-emerald-400" x-text="formatIDR(item.revenue)"></p>
+                                </div>
+                                <button type="button" @click.stop="item.expanded = !item.expanded" class="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition" title="Lihat sales rep">
+                                    <span class="material-symbols-outlined text-[18px] transition-transform" :class="item.expanded ? 'rotate-90' : ''">chevron_right</span>
+                                </button>
+                                </div>
+                                <div x-show="item.expanded" x-cloak x-transition class="px-3 pb-3 space-y-2">
+                                    <template x-for="rep in item.reps" :key="rep.user.id">
+                                        <a :href="'/sales/' + rep.user.id + '/performance'" class="ml-10 flex items-center justify-between gap-3 rounded-xl border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 px-3 py-2 hover:border-indigo-500/40 transition">
+                                            <span class="min-w-0">
+                                                <span class="block text-xs font-bold text-[var(--cc-text)] whitespace-normal break-words" x-text="rep.user.name"></span>
+                                                <span class="block text-[10px] text-slate-400">Sales Rep</span>
+                                            </span>
+                                            <span class="shrink-0 text-xs font-mono font-bold text-emerald-400" x-text="formatIDR(rep.revenue)"></span>
+                                        </a>
+                                    </template>
                                 </div>
                             </div>
                         </template>
@@ -560,6 +622,8 @@ function dashboardManager() {
         leaderboard: [],
         managerLeaderboard: [],
         selectedManagerId: null,
+        atRiskSales: [],
+        atRiskManagers: [],
 
         showBreakdown: false,
         breakdownTitle: '',
@@ -604,7 +668,7 @@ function dashboardManager() {
             const myTeamIds = this.users.filter(u => u.managerId === (this.currentUser.role === 'Manager' ? this.currentUser.id : this.currentUser.managerId) && u.role === 'Sales').map(u => u.id);
             const myIndividualIds = [this.currentUser.id];
             
-            const visibleSalesIds = this.currentUser.role === 'GM' ? allSalesIds : (this.currentUser.role === 'Manager' ? allSalesIds : myTeamIds);
+            const visibleSalesIds = this.currentUser.role === 'GM' ? allSalesIds : (this.currentUser.role === 'Manager' ? myTeamIds : myTeamIds);
             
             this.metrics = this.calculateMetrics(visibleSalesIds);
             
@@ -617,6 +681,7 @@ function dashboardManager() {
             this.globalProgress = this.metrics.totalTarget > 0 ? (this.metrics.totalActual / this.metrics.totalTarget) * 100 : 0;
             
             this.calculateLeaderboards(visibleSalesIds);
+            this.calculateRiskLists(visibleSalesIds);
         },
         
         calculateMetrics(salesIds) {
@@ -739,7 +804,67 @@ function dashboardManager() {
             
             this.managerLeaderboard = Object.values(managers)
                 .filter(m => m.reps.length > 0)
+                .map(m => ({ ...m, expanded: false }))
                 .sort((a, b) => b.revenue - a.revenue);
+        },
+
+        getTargetForSales(userId) {
+            const target = this.targets.find(t => t.userId === userId);
+            if (!target) return 0;
+            return this.productCategories.reduce((sum, cat) => sum + (target.productTargets[cat] || 0), 0);
+        },
+
+        calculateRiskLists(visibleSalesIds) {
+            const reps = {};
+            this.users.filter(u => u.role === 'Sales' && visibleSalesIds.includes(u.id)).forEach(u => {
+                reps[u.id] = {
+                    user: u,
+                    revenue: 0,
+                    target: this.getTargetForSales(u.id),
+                    managerId: u.managerId,
+                };
+            });
+
+            this.deals.forEach(d => {
+                if (d.stage === 'Won' && reps[d.salesId]) {
+                    reps[d.salesId].revenue += (d.actualValue || 0);
+                }
+            });
+
+            this.atRiskSales = Object.values(reps)
+                .map(rep => ({
+                    ...rep,
+                    progress: rep.target > 0 ? (rep.revenue / rep.target) * 100 : 0,
+                    isRisk: rep.target <= 0 || rep.revenue < rep.target,
+                }))
+                .filter(rep => rep.isRisk)
+                .sort((a, b) => a.progress - b.progress);
+
+            const managers = {};
+            this.users.filter(u => u.role === 'Manager').forEach(u => {
+                managers[u.id] = {
+                    user: u,
+                    revenue: 0,
+                    target: 0,
+                    riskyReps: [],
+                };
+            });
+
+            this.atRiskSales.forEach(rep => {
+                if (rep.managerId && managers[rep.managerId]) {
+                    managers[rep.managerId].revenue += rep.revenue;
+                    managers[rep.managerId].target += rep.target;
+                    managers[rep.managerId].riskyReps.push(rep);
+                }
+            });
+
+            this.atRiskManagers = Object.values(managers)
+                .filter(manager => manager.riskyReps.length > 0)
+                .map(manager => ({
+                    ...manager,
+                    progress: manager.target > 0 ? (manager.revenue / manager.target) * 100 : 0,
+                }))
+                .sort((a, b) => a.progress - b.progress);
         },
 
         formatIDR(val) {
