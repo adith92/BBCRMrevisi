@@ -5,11 +5,13 @@
 @push('styles')
 <style>
     .driver-card {
-        transition: all 0.2s ease-in-out;
+        transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
     .driver-card:hover {
-        border-color: rgba(99, 102, 241, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
         background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(99, 102, 241, 0.24);
     }
 </style>
 @endpush
@@ -106,15 +108,15 @@
                     </span>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center justify-end gap-2 xl:flex-nowrap">
                 <span class="text-xs font-bold uppercase tracking-wider text-[var(--cc-text-muted)]">Sort Order</span>
                 <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'date', 'direction' => 'desc']) }}"
-                   class="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-bold transition {{ request('sort_pending', 'date') === 'date' && request('direction', 'desc') === 'desc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                   class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3.5 py-2 text-xs font-bold transition {{ request('sort_pending', 'date') === 'date' && request('direction', 'desc') === 'desc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
                     <span class="material-symbols-outlined text-[15px]">south</span>
                     Newest
                 </a>
                 <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'date', 'direction' => 'asc']) }}"
-                   class="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-bold transition {{ request('sort_pending') === 'date' && request('direction') === 'asc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                   class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3.5 py-2 text-xs font-bold transition {{ request('sort_pending') === 'date' && request('direction') === 'asc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
                     <span class="material-symbols-outlined text-[15px]">north</span>
                     Oldest
                 </a>
@@ -122,30 +124,42 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($pendingAssignments as $opp)
-            <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-[24px] p-4 shadow-sm flex flex-col justify-between">
+            @php
+                $driverPriorityScore = $opp->missing_drivers;
+                $driverPriorityClass = $driverPriorityScore >= 8
+                    ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                    : ($driverPriorityScore >= 4
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        : 'bg-sky-500/10 text-sky-400 border-sky-500/20');
+                $driverPriorityLabel = $driverPriorityScore >= 8 ? 'Critical' : ($driverPriorityScore >= 4 ? 'High' : 'Normal');
+            @endphp
+            <div class="driver-card bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-[24px] p-4 shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <div class="font-bold text-[var(--cc-text)] text-base leading-6">{{ $opp->title }}</div>
                             <div class="mt-1 text-xs text-[var(--cc-text-muted)]">{{ $opp->client->company_name ?? 'No Client' }}</div>
                         </div>
-                        <span class="shrink-0 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--cc-text-muted)]">{{ $opp->stage }}</span>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="shrink-0 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--cc-text-muted)]">{{ $opp->stage }}</span>
+                            <span class="shrink-0 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em] {{ $driverPriorityClass }}">{{ $driverPriorityLabel }}</span>
+                        </div>
                     </div>
                     <div class="mt-4 grid grid-cols-3 gap-2">
                         <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-3 py-2">
                             <div class="text-[10px] uppercase tracking-[0.18em] text-[var(--cc-text-muted)]">Required</div>
-                            <div class="mt-1 text-lg font-semibold text-[var(--cc-text)]">{{ $opp->required_drivers }}</div>
+                            <div class="mt-1 text-xl font-semibold text-[var(--cc-text)]">{{ $opp->required_drivers }}</div>
                         </div>
                         <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-3 py-2">
                             <div class="text-[10px] uppercase tracking-[0.18em] text-[var(--cc-text-muted)]">Assigned</div>
-                            <div class="mt-1 text-lg font-semibold text-[var(--cc-text)]">{{ $opp->assignedDrivers->count() }}</div>
+                            <div class="mt-1 text-xl font-semibold text-[var(--cc-text)]">{{ $opp->assignedDrivers->count() }}</div>
                         </div>
                         <div class="rounded-2xl border {{ $opp->missing_drivers > 0 ? 'border-amber-500/20 bg-amber-500/10' : 'border-emerald-500/20 bg-emerald-500/10' }} px-3 py-2">
                             <div class="text-[10px] uppercase tracking-[0.18em] {{ $opp->missing_drivers > 0 ? 'text-amber-400' : 'text-emerald-400' }}">Missing</div>
-                            <div class="mt-1 text-lg font-semibold {{ $opp->missing_drivers > 0 ? 'text-amber-300' : 'text-emerald-300' }}">{{ $opp->missing_drivers }}</div>
+                            <div class="mt-1 text-xl font-semibold {{ $opp->missing_drivers > 0 ? 'text-amber-300' : 'text-emerald-300' }}">{{ $opp->missing_drivers }}</div>
                         </div>
                     </div>
-                    <div class="mt-4 rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-3 py-3 text-sm">
+                    <div class="mt-3 rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-3 py-3 text-sm">
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-[var(--cc-text-muted)]">Status alokasi</span>
                             <span class="font-semibold {{ $opp->missing_drivers > 0 ? 'text-amber-400' : 'text-emerald-400' }}">
@@ -213,7 +227,7 @@
 
     @if(isset($driverStatusSummary) && $driverStatusSummary->count() > 0)
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div class="cc-card rounded-2xl p-5">
+        <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-5">
             <div class="flex items-start justify-between gap-3 mb-4">
                 <div>
                     <h2 class="text-lg font-bold text-[var(--cc-text)]">Driver Status Distribution</h2>
@@ -223,12 +237,21 @@
                     {{ $stats['total'] }} person
                 </span>
             </div>
-            <div class="h-72">
+            <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] p-3">
+                <div class="mb-3 flex flex-wrap gap-2">
+                    @foreach(($driverStatusSummary ?? collect()) as $row)
+                        <span class="rounded-full border border-[var(--cc-border)] bg-[var(--cc-surface)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--cc-text-muted)]">
+                            {{ $row['label'] ?? $row->label }} {{ $row['count'] ?? $row->count }}
+                        </span>
+                    @endforeach
+                </div>
+                <div class="h-64">
                 <canvas id="driver-status-chart"></canvas>
+                </div>
             </div>
         </div>
 
-        <div class="cc-card rounded-2xl p-5">
+        <div class="cc-card rounded-2xl border border-[var(--cc-border)] p-5">
             <div class="flex items-start justify-between gap-3 mb-4">
                 <div>
                     <h2 class="text-lg font-bold text-[var(--cc-text)]">Driver by Pool</h2>
@@ -238,8 +261,10 @@
                     Top pools
                 </span>
             </div>
-            <div class="h-72">
+            <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] p-3">
+                <div class="h-64">
                 <canvas id="driver-pool-chart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -292,6 +317,10 @@
             <span class="material-symbols-outlined mx-auto text-slate-500 mb-3" style="font-size: 48px;">person_off</span>
             <h3 class="text-lg font-bold text-[var(--cc-text)] mb-1">No Drivers Found</h3>
             <p class="text-sm text-[var(--cc-text-muted)]">Try adjusting your filters or search criteria.</p>
+            <a href="{{ route('drivers.index') }}" class="mt-4 inline-flex items-center gap-2 rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-400 transition hover:bg-indigo-500/20">
+                <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+                Reset filter
+            </a>
         </div>
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -543,7 +572,14 @@
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: textColor }
+                            labels: { color: textColor, usePointStyle: true, boxWidth: 10, padding: 18 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15,23,42,0.92)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            padding: 12,
+                            cornerRadius: 12
                         }
                     }
                 }
@@ -568,7 +604,16 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15,23,42,0.92)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            padding: 12,
+                            cornerRadius: 12
+                        }
+                    },
                     scales: {
                         x: { ticks: { color: textColor }, grid: { display: false } },
                         y: { ticks: { color: textColor, precision: 0 }, grid: { color: 'rgba(148,163,184,0.15)' } }

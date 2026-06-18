@@ -8,6 +8,28 @@
     $pendingDriverOnly = $unassignedOpportunities->where('missing_drivers', '>', 0)->count();
     $activeConfirmed = $activeBookingList->where('status', 'confirmed')->count();
     $activeOnTrip = $activeBookingList->where('status', 'on_trip')->count();
+    $priorityQueue = $unassignedOpportunities
+        ->map(function ($opp) {
+            $totalMissing = ($opp->missing_fleets ?? 0) + ($opp->missing_drivers ?? 0);
+            $priority = $totalMissing >= 8 ? 'Critical' : ($totalMissing >= 4 ? 'High' : 'Medium');
+            $priorityClass = $priority === 'Critical'
+                ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                : ($priority === 'High'
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    : 'bg-sky-500/10 text-sky-400 border-sky-500/20');
+
+            return (object) [
+                'model' => $opp,
+                'total_missing' => $totalMissing,
+                'priority' => $priority,
+                'priority_class' => $priorityClass,
+            ];
+        })
+        ->sortByDesc('total_missing')
+        ->values();
+    $criticalCount = $priorityQueue->where('priority', 'Critical')->count();
+    $highCount = $priorityQueue->where('priority', 'High')->count();
+    $mediumCount = $priorityQueue->where('priority', 'Medium')->count();
 @endphp
 <x-dashboard-grid :saved-layout="auth()->user()->dashboard_settings">
 
@@ -57,7 +79,7 @@
     {{-- KPI Cards --}}
     <div class="grid-stack-item" gs-id="w-available-fleet" gs-x="0" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <a href="{{ route('fleet.index', ['status' => 'available']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-green-500 h-full hover:shadow-md transition-all">
+            <a href="{{ route('fleet.index', ['status' => 'available']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-green-500 h-full transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Available Fleet</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ $availableFleet }}</p>
                 <p class="text-xs text-green-600 dark:text-green-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">View available →</p>
@@ -67,7 +89,7 @@
 
     <div class="grid-stack-item" gs-id="w-on-trip" gs-x="3" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <a href="{{ route('fleet.index', ['status' => 'on_trip']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-blue-500 h-full hover:shadow-md transition-all">
+            <a href="{{ route('fleet.index', ['status' => 'on_trip']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-blue-500 h-full transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">On Trip</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ $onTripFleet }}</p>
                 <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">View on trip →</p>
@@ -77,7 +99,7 @@
 
     <div class="grid-stack-item" gs-id="w-maintenance" gs-x="6" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <a href="{{ route('maintenance.index') }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-yellow-500 h-full hover:shadow-md transition-all">
+            <a href="{{ route('maintenance.index') }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-yellow-500 h-full transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Maintenance</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ $maintenanceFleet }}</p>
                 <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">View maintenance →</p>
@@ -87,7 +109,7 @@
 
     <div class="grid-stack-item" gs-id="w-active-bookings" gs-x="9" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
-            <a href="{{ route('bookings.index', ['status' => 'active']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-purple-500 h-full hover:shadow-md transition-all">
+            <a href="{{ route('bookings.index', ['status' => 'active']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-purple-500 h-full transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Active Bookings</p>
                 <p class="text-2xl font-bold text-[var(--cc-text)] mt-2">{{ $activeBookings }}</p>
                 <p class="text-xs text-purple-600 dark:text-purple-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">View active →</p>
@@ -147,7 +169,15 @@
                                 <td class="py-2"><x-status-badge :status="$booking->status" /></td>
                             </tr>
                             @empty
-                            <tr><td colspan="6" class="py-4 text-center text-[var(--cc-text-muted)]">No active trips right now</td></tr>
+                            <tr>
+                                <td colspan="6" class="py-8">
+                                    <div class="mx-auto max-w-md rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-6 py-6 text-center">
+                                        <span class="material-symbols-outlined text-4xl text-emerald-400">route</span>
+                                        <p class="mt-3 font-semibold text-[var(--cc-text)]">Belum ada trip aktif saat ini</p>
+                                        <p class="mt-1 text-sm text-[var(--cc-text-muted)]">Begitu booking confirmed atau on trip masuk, daftar ini akan otomatis terisi.</p>
+                                    </div>
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -180,6 +210,51 @@
                         </span>
                     </div>
                 </div>
+                <div class="mb-5 grid gap-3 lg:grid-cols-[1.25fr_1fr]">
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-red-400">Critical</p>
+                            <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $criticalCount }}</p>
+                            <p class="mt-1 text-xs text-[var(--cc-text-muted)]">missing besar, perlu cepat</p>
+                        </div>
+                        <div class="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-400">High</p>
+                            <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $highCount }}</p>
+                            <p class="mt-1 text-xs text-[var(--cc-text-muted)]">butuh tindak lanjut hari ini</p>
+                        </div>
+                        <div class="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-400">Medium</p>
+                            <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $mediumCount }}</p>
+                            <p class="mt-1 text-xs text-[var(--cc-text-muted)]">masih bisa dijadwalkan</p>
+                        </div>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-4 py-4">
+                        <div class="mb-3 flex items-center justify-between">
+                            <h4 class="text-sm font-semibold text-[var(--cc-text)]">Top Priority</h4>
+                            <span class="text-[11px] uppercase tracking-[0.2em] text-[var(--cc-text-muted)]">Compact View</span>
+                        </div>
+                        <div class="space-y-2">
+                            @forelse($priorityQueue->take(3) as $entry)
+                                <a href="{{ route('fleet.index') }}?assign_opp={{ $entry->model->id }}" class="flex items-center justify-between gap-3 rounded-xl border border-[var(--cc-border)] bg-[var(--cc-surface)] px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-indigo-500/30">
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-semibold text-[var(--cc-text)]">{{ $entry->model->title }}</p>
+                                        <p class="truncate text-xs text-[var(--cc-text-muted)]">{{ $entry->model->client->company_name ?? 'Tanpa client' }}</p>
+                                    </div>
+                                    <div class="flex shrink-0 items-center gap-2">
+                                        <span class="rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] {{ $entry->priority_class }}">
+                                            {{ $entry->priority }}
+                                        </span>
+                                        <span class="text-sm font-semibold text-[var(--cc-text)]">{{ $entry->total_missing }}</span>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-400">
+                                    Semua alokasi sudah aman.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="border-b" style="border-color:var(--cc-border)">
@@ -192,13 +267,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($unassignedOpportunities as $opp)
+                            @forelse($priorityQueue as $entry)
                             @php
+                                $opp = $entry->model;
                                 $missing = [];
                                 if ($opp->missing_fleets > 0) $missing[] = 'Kendaraan (' . $opp->missing_fleets . ' unit)';
                                 if ($opp->missing_drivers > 0) $missing[] = 'Supir (' . $opp->missing_drivers . ' orang)';
                             @endphp
-                            <tr class="border-b hover:bg-black/5 dark:hover:bg-gray-100/5 transition-colors" style="border-color:var(--cc-border)">
+                            <tr class="border-b transition-colors hover:bg-black/5 dark:hover:bg-gray-100/5" style="border-color:var(--cc-border)">
                                 <td class="py-2.5">
                                     <a href="{{ route('opportunities.show', $opp->id) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                                         {{ $opp->title }}
@@ -214,9 +290,14 @@
                                 </td>
                                 <td class="py-2.5 text-[var(--cc-text)]">{{ $opp->sales->name ?? '—' }}</td>
                                 <td class="py-2.5">
-                                    <span class="inline-flex items-center gap-1 text-xs text-red-400 font-medium">
-                                        {{ implode(' & ', $missing) }} belum di-assign
-                                    </span>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] {{ $entry->priority_class }}">
+                                            {{ $entry->priority }}
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 text-xs text-red-400 font-medium">
+                                            {{ implode(' & ', $missing) }} belum di-assign
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="py-2.5">
                                     <a href="{{ route('fleet.index') }}?assign_opp={{ $opp->id }}" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 px-3 py-1.5 text-xs font-semibold transition-all">
