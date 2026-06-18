@@ -64,10 +64,25 @@
     {{-- Pending Assignments --}}
     @if(isset($pendingAssignments) && $pendingAssignments->count() > 0 && $canAssign)
     <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6">
-        <h2 class="text-amber-500 font-bold mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined">warning</span>
-            Fleet Assignment: Mobil Long Term ({{ $pendingFleetCount }} pending / {{ $pendingAssignments->count() }} total)
-        </h2>
+        <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <h2 class="text-amber-500 font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined">warning</span>
+                Fleet Assignment: Mobil Long Term ({{ $pendingFleetCount }} pending / {{ $pendingAssignments->count() }} total)
+            </h2>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-[var(--cc-text-muted)]">Sort Required</span>
+                <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'required', 'direction' => 'desc']) }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending', 'required') === 'required' && request('direction', 'desc') === 'desc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                    <span class="material-symbols-outlined text-[15px]">south</span>
+                    Banyak ke sedikit
+                </a>
+                <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'required', 'direction' => 'asc']) }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending') === 'required' && request('direction') === 'asc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                    <span class="material-symbols-outlined text-[15px]">north</span>
+                    Sedikit ke banyak
+                </a>
+            </div>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($pendingAssignments as $opp)
             <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-xl p-4 shadow-sm flex flex-col justify-between">

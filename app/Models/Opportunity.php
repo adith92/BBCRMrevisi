@@ -252,12 +252,23 @@ class Opportunity extends Model
 
     public function demoRequiredFleetQty(int $max = 10): int
     {
-        return min($this->requiredFleetQty(), $max);
+        return $this->demoRequiredQty($this->requiredFleetQty(), 'fleet', $max);
     }
 
     public function demoRequiredDriverQty(int $max = 10): int
     {
-        return min($this->requiredDriverQty(), $max);
+        return $this->demoRequiredQty($this->requiredDriverQty(), 'driver', $max);
+    }
+
+    private function demoRequiredQty(int $qty, string $type, int $max): int
+    {
+        if ($qty <= $max) {
+            return $qty;
+        }
+
+        $seed = $type . '|' . ($this->id ?? $this->opp_number ?? $this->title ?? 'demo');
+
+        return (crc32($seed) % $max) + 1;
     }
 
     private function isFleetProductText(string $value): bool

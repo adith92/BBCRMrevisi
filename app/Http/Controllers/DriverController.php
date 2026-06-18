@@ -115,7 +115,7 @@ class DriverController extends Controller
                 return true;
             });
 
-        $sortPending = request('sort_pending', 'date');
+        $sortPending = request('sort_pending', 'required');
         $direction = request('direction', 'desc');
 
         if ($sortPending === 'name') {
@@ -126,13 +126,13 @@ class DriverController extends Controller
             $pendingAssignments = $direction === 'desc'
                 ? $pendingAssignments->sortByDesc(fn($opp) => $opp->client->company_name ?? '')
                 : $pendingAssignments->sortBy(fn($opp) => $opp->client->company_name ?? '');
-        } else {
+        } elseif ($sortPending === 'required') {
             $pendingAssignments = $pendingAssignments->sort(function ($a, $b) use ($direction) {
-                $aPriority = (($a->missing_fleets ?? 0) + ($a->missing_drivers ?? 0)) > 0 ? 1 : 0;
-                $bPriority = (($b->missing_fleets ?? 0) + ($b->missing_drivers ?? 0)) > 0 ? 1 : 0;
+                $aMissing = (int) ($a->missing_drivers ?? 0);
+                $bMissing = (int) ($b->missing_drivers ?? 0);
 
-                if ($aPriority !== $bPriority) {
-                    return $bPriority <=> $aPriority;
+                if ($aMissing !== $bMissing) {
+                    return $direction === 'asc' ? $aMissing <=> $bMissing : $bMissing <=> $aMissing;
                 }
 
                 $aDate = strtotime((string) ($a->actual_close_date ?? $a->expected_close_date ?? $a->created_at)) ?: 0;
@@ -140,6 +140,10 @@ class DriverController extends Controller
 
                 return $direction === 'asc' ? $aDate <=> $bDate : $bDate <=> $aDate;
             });
+        } else {
+            $pendingAssignments = $direction === 'desc'
+                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at)
+                : $pendingAssignments->sortBy(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at);
         }
 
         $pendingAssignments = $pendingAssignments->values();

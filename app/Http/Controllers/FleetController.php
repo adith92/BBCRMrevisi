@@ -132,7 +132,7 @@ class FleetController extends Controller
             });
 
         // Sorting Logic
-        $sortPending = request('sort_pending', 'date');
+        $sortPending = request('sort_pending', 'required');
         $direction = request('direction', 'desc');
 
         if ($sortPending === 'name') {
@@ -143,14 +143,14 @@ class FleetController extends Controller
             $pendingAssignments = $direction === 'desc' 
                 ? $pendingAssignments->sortByDesc(fn($opp) => $opp->client->company_name ?? '') 
                 : $pendingAssignments->sortBy(fn($opp) => $opp->client->company_name ?? '');
-        } else {
-            // Default: actionable requests first, then newest/oldest by selected date direction.
+        } elseif ($sortPending === 'required') {
+            // Default: biggest fleet gaps first so ops can clear the heaviest requests quickly.
             $pendingAssignments = $pendingAssignments->sort(function ($a, $b) use ($direction) {
-                $aPriority = (($a->missing_fleets ?? 0) + ($a->missing_drivers ?? 0)) > 0 ? 1 : 0;
-                $bPriority = (($b->missing_fleets ?? 0) + ($b->missing_drivers ?? 0)) > 0 ? 1 : 0;
+                $aMissing = (int) ($a->missing_fleets ?? 0);
+                $bMissing = (int) ($b->missing_fleets ?? 0);
 
-                if ($aPriority !== $bPriority) {
-                    return $bPriority <=> $aPriority;
+                if ($aMissing !== $bMissing) {
+                    return $direction === 'asc' ? $aMissing <=> $bMissing : $bMissing <=> $aMissing;
                 }
 
                 $aDate = strtotime((string) ($a->actual_close_date ?? $a->expected_close_date ?? $a->created_at)) ?: 0;
@@ -158,6 +158,10 @@ class FleetController extends Controller
 
                 return $direction === 'asc' ? $aDate <=> $bDate : $bDate <=> $aDate;
             });
+        } else {
+            $pendingAssignments = $direction === 'desc' 
+                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at) 
+                : $pendingAssignments->sortBy(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at);
         }
 
         $pendingAssignments = $pendingAssignments->values();

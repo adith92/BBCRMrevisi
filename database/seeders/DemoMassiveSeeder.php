@@ -257,7 +257,10 @@ class DemoMassiveSeeder extends Seeder
 
         $clientIds  = Client::pluck('id')->toArray();
         $salesIds   = User::where('role', 'sales')->pluck('id')->toArray();
-        $productIds = Product::pluck('id')->toArray();
+        $productMap = Product::query()
+            ->get(['id', 'name', 'kpi_key'])
+            ->keyBy('id');
+        $productIds = $productMap->keys()->all();
         $stages     = ['prospecting', 'prospecting', 'call_meeting', 'call_meeting', 'proposal', 'proposal', 'negotiation', 'won', 'lost'];
 
         if (empty($clientIds)) { $this->command->warn('No clients, skip opportunities.'); return; }
@@ -274,6 +277,8 @@ class DemoMassiveSeeder extends Seeder
             $salesId   = $salesIds[array_rand($salesIds)];
             $clientId  = $clientIds[array_rand($clientIds)];
             $productId = !empty($productIds) ? $productIds[array_rand($productIds)] : null;
+            $productKey = $productId ? ($productMap[$productId]->kpi_key ?? null) : null;
+            $assignmentQty = in_array($productKey, ['mobil_long', 'supir'], true) ? rand(1, 10) : rand(1, 50);
             $value     = rand(5, 800) * 1_000_000;
             $daysAgo   = rand(0, 365);
             $created   = $now->copy()->subDays($daysAgo)->subHours(rand(0, 23));
@@ -283,11 +288,11 @@ class DemoMassiveSeeder extends Seeder
                 'client_id'           => $clientId,
                 'sales_id'            => $salesId,
                 'product_id'          => $productId,
-                'title'               => $this->dealTitles[array_rand($this->dealTitles)] . ' — ' . rand(1, 50) . ' unit',
+                'title'               => $this->dealTitles[array_rand($this->dealTitles)] . ' — ' . $assignmentQty . ' unit',
                 'stage'               => $stage,
                 'estimated_value'     => $value,
                 'final_value'         => in_array($stage, ['won', 'lost']) ? $value * (rand(85, 100) / 100) : null,
-                'pax'                 => rand(10, 500),
+                'pax'                 => in_array($productKey, ['mobil_long', 'supir'], true) ? $assignmentQty : rand(10, 500),
                 'discount_percent'    => rand(0, 15),
                 'discount_approved'   => rand(0, 1),
                 'approved_by'         => null,
