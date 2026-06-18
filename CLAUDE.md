@@ -40,10 +40,10 @@ Mengelola: corporate clients, fleet dispatch, sales pipeline, finance & billing,
 ## 🌿 Branches
 | Branch | Purpose | Status |
 |--------|---------|--------|
-| `main` | Production-ready stable | Live di Railway |
-| `checkpoint_design` | Feature/design iteration | Active development |
+| `main` | Production-ready stable | Live di Railway — branch aktif utama |
+| `checkpoint_design` | Feature/design iteration | Tersedia tapi tidak wajib |
 
-> ⚠️ JANGAN ubah `main` langsung. Buat branch feature atau gunakan `checkpoint_design`.
+> ✅ Perubahan boleh langsung di-push ke `main`.
 
 ---
 
@@ -58,10 +58,9 @@ php artisan config:cache
 php artisan route:list
 
 # Git workflow
-git checkout ui-modern-preview
-git add resources/views/
-git commit -m "feat(ui): description"
-git push origin ui-modern-preview
+git add -A
+git commit -m "feat/fix: deskripsi dalam bahasa Indonesia"
+git push origin main
 
 # Railway
 railway status
@@ -87,8 +86,11 @@ app/Http/Controllers/
 ├── DashboardController.php     ← dashboard data per role
 routes/web.php                  ← all routes (do not modify)
 nixpacks.toml                   ← Railway build (PHP 8.4)
-DEPLOYMENT.md                   ← deploy guide Railway + Render
 SYSTEM_AUDIT.md                 ← reverse-engineered codebase audit (AI/dev reference)
+MASTERPLAN_v8.2.md              ← visi, ERD, business rules, roadmap (sumber kebenaran)
+MASTERPROMPT_v8.2.md            ← blueprint rebuild dari 0 (schema penuh, RBAC, build order)
+HANDOFF.md                      ← status operasional terbaru (baca ini dulu untuk konteks sesi)
+LOGIC_MAP.md                    ← peta RBAC 2-lapis & workflow dari kode aktual
 ```
 
 ---
@@ -130,9 +132,10 @@ Classes:
 | Manager (×5) | manager1..5@goldenbird.co.id | password123 |
 | Sales (×15) | sales1..15@goldenbird.co.id | password123 |
 | Operational | ops@goldenbird.co.id | password123 |
+| Pool | pool@goldenbird.co.id | password123 |
 | Finance | finance@goldenbird.co.id | password123 |
 
-> ⚠️ Role `director` sudah DIHAPUS (Tahap A). Login page otomatis tampilkan semua akun demo — fitur ini untuk demo saja, jangan gunakan di produksi nyata.
+> ⚠️ Role `director` sudah DIHAPUS (Tahap A) → diganti GM. Login page otomatis tampilkan semua akun demo — fitur ini untuk demo saja, jangan gunakan di produksi nyata.
 
 ---
 
@@ -141,18 +144,27 @@ Classes:
 ```
 ✅ BOLEH:
   - Ubah resources/views/ (Blade, CSS, layout)
+  - Ubah app/Http/Controllers/ (logic, validation, response)
+  - Ubah app/Services/ (business logic, pipeline, approval, KPI)
+  - Ubah app/Models/ logic, accessor, scope, method — TAPI jangan ubah relasi yang sudah ada
+  - Tambah relasi BARU di Model jika diperlukan fitur baru
   - Tambah @push('styles') dan @push('scripts') inline
-  - Tambah CSS class baru di layouts/app.blade.php
+  - Tambah CSS class baru di layouts/app.blade.php atau resources/css/app.css
   - Tambah file komponen baru di resources/views/components/
+  - Tambah route BARU di routes/web.php (bukan ubah yang existing)
+  - Push langsung ke main (setelah test ≥202 passed)
 
 ❌ DILARANG:
-  - Ubah database/migrations/
-  - Ubah routes/web.php (kecuali menambah route, bukan mengubah existing)
-  - Ubah app/Models/ relationships
-  - Ubah app/Http/Middleware/
+  - Ubah database/migrations/ yang sudah ada (tambah migration baru kalau perlu kolom baru)
+  - Ubah/hapus existing routes di routes/web.php
+  - Ubah app/Http/Middleware/ (RoleMiddleware sudah final)
   - Ubah config/ files (kecuali logging)
-  - Merge ke main tanpa review user
-  - Buat branch baru selain ui-modern-preview
+  - Ubah UI/UX dashboard GM (gm.blade.php) — TERKUNCI, lihat UI_UX_LOCK.md
+  - Hidupkan kembali role `director`
+  - Buat tabel `opportunity_items` — multi-produk WAJIB pakai JSON `products`
+  - Tambah library UI/CSS baru (sudah ada Tailwind + Alpine.js + Chart.js)
+  - Buat branch baru selain `main` atau `checkpoint_design`
+  - Commit folder `/master`, `RevisiTMPbyAG/`, atau `public/build/* 2.*`
 ```
 
 ---

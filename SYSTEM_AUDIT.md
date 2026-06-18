@@ -301,11 +301,11 @@ Legend: ✅ izin & jalan · ⛔ sengaja diblok dalam kode · ❌ tak ada akses (
 Bukan sequence aman — hapus/race bisa bikin nomor duplikat. Sama pola dengan beberapa nomor lain, tapi Opportunity/Subscription pakai `orderByDesc(...last seq)` yang lebih aman.
 
 ### [NOTE] Dokumentasi stale
-- `CLAUDE.md` masih sebut 6 role termasuk **director**, branch `ui-modern-preview`, dan demo account `director@/manager@/sales@` — semua **tidak cocok** dengan kode pasca-Tahap A (director dihapus; akun jadi `gm@`, `manager1..5@`, `sales1..15@`, `ops@`, `finance@`).
-- `masterplan_v7.8.md` sebut 5 stage `Prospecting→Proposal→Negotiation→Won→Lost`; kode punya 6 (`call_meeting` di depan).
+- `CLAUDE.md` sudah disinkronkan pasca-Tahap A: 6 role aktual (gm, manager, sales, operational, pool, finance), akun `gm@`, `manager1..5@`, `sales1..15@`, `ops@`, `finance@`, branch `main` sebagai aktif utama.
+- Kode punya 6 stage (`call_meeting` → `prospecting` → `proposal` → `negotiation` → `won`/`lost`). Dokumen v7.8 sudah dihapus; v8.2 = sumber kebenaran.
 
 ### [VERIFY] Hal yang perlu cek runtime
-- Apakah Render benar menjalankan `schedule:run` (supervisord) supaya `subscriptions:bill` aktif?
+- Apakah Railway benar menjalankan `schedule:run` supaya `subscriptions:bill` aktif? (cek via `railway logs`)
 - Apakah view mana pun memanggil `->vouchers` / `->contracts` (kalau ya → halaman 500).
 - Apakah ada tombol UI yang nge-hit `discount` / `by-client` (kalau ya → 500).
 - `/approvals` & `/settings` masih stub redirect — apakah memang belum dibutuhkan, padahal `ApprovalRequest` model + tabel masih ada.

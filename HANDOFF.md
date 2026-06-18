@@ -13,40 +13,58 @@
 5. `MASTERPROMPT_v8.2.md` — **FINAL**: blueprint rebuild dari 0 (schema penuh, model, RBAC, logic, build order).
 6. `LOGIC_MAP.md` — peta hak akses (RBAC 2-lapis) & workflow dari kode aktual.
 7. `SYSTEM_AUDIT.md` — peta teknis (route→controller, ERD, bug/risk).
-8. `VERIFIKASI_TAHAP_A.md` — cara verifikasi runtime.
+8. `UpgradePlan.md` — backlog upgrade produk yang sudah dikumpulkan dari review terakhir.
 
 > **v8.2 = sumber kebenaran tunggal.** Semua dokumen versi lama (v7.8, v8.0, v8.1) sudah DIHAPUS agar rapi. Jika ragu, validasi langsung ke kode.
 
 ---
 
-## ✅ Status sekarang: Sesi terakhir — 16 Juni 2026
+## ✅ Status sekarang: Sesi terakhir — 18 Juni 2026
 
 ### Commit terakhir (sudah di-push ke `main`)
 ```
+a9f12d6 feat: tambah target KPI produk dan rapikan dashboard role
 a326196 fix: pisahkan modal assign dari register vehicle
 143bd6e fix: perbaiki tombol assign fulfill fleet
 ce9523b fix: perbaiki billing subscription dan hitungan alokasi supir
 56faa68 docs: update HANDOFF.md and create LOGIC_MAP.md reflecting latest architecture and workflows
-2c50188 feat: implement pool role fleet & driver assignment and fulfillment logic for won opportunities
 ```
 
-### Yang dikerjakan sesi ini:
-**Perbaikan Bug & Sinkronisasi Workflow Alokasi Pool:**
+### Yang dikerjakan sesi 16–17 Juni 2026:
+**Perbaikan Bug & Sinkronisasi Workflow Alokasi Pool (16 Juni):**
 
 | Modul | Perubahan |
 |------|-----------|
-| **Fleet / Assign-Fulfill Modal** | Root cause terakhir ditemukan: modal Assign/Fulfill masih berada di dalam wrapper modal **Register Vehicle** (`showCreateModal`). Akibatnya klik Assign/Fulfill sudah mengubah state, tetapi modal tetap tersembunyi sampai Register Vehicle dibuka. Fix: modal Assign dipisahkan dari wrapper Register Vehicle dan ditambah test regresi agar tidak nested lagi. |
-| **Fleet / Alpine State** | Sebelumnya juga diperbaiki reaktivitas Alpine (`showAssignModal`) dengan deep clone data opportunity, pencegahan event bubbling, dan render modal menggunakan `x-show` agar state tidak tertahan oleh proxy. |
-| **Pool Logic (RBAC)** | Menerapkan `pool_id` pada role Pool. User pool (misal: Pool Jakarta / Pool Surabaya) sekarang **hanya dapat memilih kendaraan dan supir** yang berasal dari pool mereka sendiri saat melakukan alokasi pada tabel *Pending Assignments*. |
-| **Operational & Long Term** | Menyempurnakan alur opportunity yang `WON` khusus untuk produk **Mobil Long Term** dan integrasi supirnya. Pending Assignment tetap menjadi titik masuk operasional/pool untuk memenuhi unit dan supir. |
-| **Finance / Subscription** | Menambahkan route POST manual billing `subscriptions.billing.run` dan memperbaiki aksi billing agar memakai CSRF + pengecekan role yang valid. |
-| **Dashboard Allocation Count** | Hitungan kebutuhan supir diperbaiki agar memakai helper `requiredDriverQty()` dan tidak tercampur dengan jumlah kendaraan. |
+| **Fleet / Assign-Fulfill Modal** | Modal Assign/Fulfill dipisahkan dari wrapper modal Register Vehicle (`showCreateModal`) — sebelumnya nested sehingga tersembunyi. Ditambah test regresi `RoleBugFixTest`. |
+| **Fleet / Alpine State** | Reaktivitas Alpine (`showAssignModal`) diperbaiki dengan deep clone, pencegahan event bubbling, dan `x-show` agar state tidak tertahan proxy. |
+| **Pool Logic (RBAC)** | User pool hanya dapat memilih kendaraan dan supir dari pool sendiri saat alokasi di Pending Assignments. |
+| **Operational & Long Term** | Alur WON khusus Mobil Long Term + supir disempurnakan. Pending Assignment = titik masuk operasional/pool. |
+| **Finance / Subscription** | Route POST manual billing `subscriptions.billing.run` ditambahkan + CSRF + pengecekan role. |
+| **Dashboard Allocation Count** | Hitungan supir memakai helper `requiredDriverQty()`, tidak tercampur jumlah kendaraan. |
+
+**Perbaikan tambahan (17 Juni) — sudah di-push:**
+
+| Modul | Perubahan |
+|------|-----------|
+| **Pipeline Kanban — Nilai Rupiah drag** | `moveStage()` sekarang return `summary` (count + total per stage dari SQL). Frontend update count DAN nilai Rupiah via `data-value-badge` + `data-col-value` attribute. Sebelumnya Rupiah tidak berubah saat drag. |
+| **Pipeline — Table View toggle** | Toggle Kanban/Table sekarang in-place (pakai `#pipeline-table-view` + `x-show`) — sebelumnya redirect ke `/opportunities`. |
+| **Pipeline — Stage header colors** | Warna header kolom pipeline diperbaiki untuk dark/light mode contrast (`.stage-pro`, `.stage-prop`, `.stage-neg` dll via `html.dark`/`html.light`). |
+| **MassiveVehicleBookingSeeder** | Fix kolom Booking (`pickup_datetime`, `dropoff_datetime`, `destination`, `created_by`) dan Voucher (`voucher_code`, `title`, `denomination`, dll) agar match fillable model. |
+| **Dockerfile** | CMD ditambah background seed `MassiveVehicleBookingSeeder` agar auto-run tiap deploy. |
+| **Session / CSRF** | `render.yaml`: `SESSION_DRIVER` file → `cookie` + `SESSION_ENCRYPT=true` + `SESSION_SECURE_COOKIE=true` (fix 419 Page Expired di Render). |
+
+**Upgrade dashboard & KPI (18 Juni) — sudah di-push:**
+
+| Modul | Perubahan |
+|------|-----------|
+| **KPI Target GM/Manager** | Halaman KPI sekarang punya form Set Sales Targets per Sales Representative + bulan target + 6 target produk: Mobil Short, Bis Short, E-Voucher, Mobil Long, Bis Long, Supir. Total target dihitung otomatis dan disimpan ke `sales_targets`. |
+| **Manager Dashboard** | Revenue Trend tim punya range Hari/Minggu/Bulan/3 Bulan/6 Bulan. Pipeline per Sales memakai nilai pipeline + stage breakdown. KPI Tim diganti ke kartu visual per sales dengan target, revenue, progress, status, win rate, dan won count. |
+| **Sales Dashboard** | Kartu Monthly Target menampilkan sumber target KPI, dan Opportunities Funnel diberi konteks bahwa datanya adalah jumlah opportunity milik sales per stage. |
+| **Quick Add Sidebar** | Menu Tambah Baru dibatasi sesuai role agar tidak menampilkan aksi yang tidak tersambung untuk role yang tidak boleh membuat data tersebut. |
 
 ### Konfigurasi tambahan:
-- Struktur otorisasi pada Controller (terutama Operational & Fleet) telah dirapihkan sehingga tidak memunculkan Error 403.
-- `tests/Feature/RoleBugFixTest.php` sekarang punya regresi khusus untuk memastikan modal Assign/Fulfill tidak lagi berada di dalam modal Register Vehicle.
-- Test terakhir yang dicatat pada sesi fix: `php artisan test` → **183 passed (492 assertions)**.
-- Catatan working tree saat update dokumen ini: ada artefak build duplikat belum terlacak (`public/build/assets/app-DtbFpjiz 2.js`, `public/build/manifest 2.json`). Jangan commit otomatis sebelum dipastikan memang dibutuhkan.
+- Test terakhir yang dicatat: `php artisan test` → **202 passed (547 assertions)**.
+- `VERIFIKASI_TAHAP_A.md` sudah dipensiunkan karena isinya verifikasi awal Tahap A dan tidak lagi menjadi panduan runtime utama.
 
 ---
 
@@ -59,7 +77,7 @@ ce9523b fix: perbaiki billing subscription dan hitungan alokasi supir
 ---
 
 ## 🎯 Keputusan yang sudah dikunci (jangan ditawar ulang)
-- **Multi-produk per deal** → tabel relasional `opportunity_items` (qty, harga, note per produk).
+- **Multi-produk per deal** → kolom **JSON `products`** di tabel `opportunities` (array of {product_id, name, category, kpi_key, qty, price, note}). ⚠️ BUKAN tabel `opportunity_items` — rencana tabel relasional sudah DIBATALKAN.
 - **6 target KPI per produk + 1 total** → 6+6 kolom di `sales_targets` (rupiah).
 - **Akses pipeline**: Sales = buat/isi/geser kartu. GM = view only (tidak bisa geser). Manager = view semua tim + approval.
 - **Approval Manager** untuk: (a) diskon, (b) perubahan ANGKA pada deal di stage yang sama. Geser stage tidak butuh approval.
@@ -86,9 +104,9 @@ resources/views/dashboard/
 
 ## ➡️ Langkah berikutnya
 1. Jika user melaporkan bug Assign/Fulfill masih muncul di production, cek dulu apakah server sudah deploy commit `a326196` dan jalankan clear cache/view (`php artisan optimize:clear`) di environment server.
-2. Lakukan cleanup artefak duplikat `public/build/* 2.*` hanya setelah user setuju.
+2. Jika muncul artefak build duplikat baru (`public/build/* 2.*`), bersihkan sebelum commit kecuali memang dibutuhkan deploy.
 3. Validasi workflow Fleet/Pool lewat browser/manual test: klik Assign/Fulfill dari kartu Pending Assignment tanpa membuka Register Vehicle lebih dulu.
-4. Jika lanjut ke dokumen masterplan/masterprompt, sinkronkan dulu `MASTERPROMPT_v7.8.md` dengan `HANDOFF.md` + `LOGIC_MAP.md`.
+4. Jika lanjut ke dokumen masterplan/masterprompt, baca `MASTERPLAN_v8.2.md` + `MASTERPROMPT_v8.2.md` — v8.2 adalah sumber kebenaran tunggal.
 
 ---
 

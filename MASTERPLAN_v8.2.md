@@ -3,7 +3,7 @@
 > Upgrade dari v8.1. Merangkum SEMUA business workflow, logic, rule & mindmap dari project AKTUAL.
 > Tanggal: 2026-06-16 · Repo: `golden-bird-crm` · Remote: `github.com/adith92/BBCRMrevisi` · Prod: Railway (`gbcrmbycodex-production.up.railway.app`).
 > Baca berurutan: `HANDOFF.md` → `UI_UX_LOCK.md` → file ini → `MASTERPROMPT_v8.2.md` → `LOGIC_MAP.md` → `SYSTEM_AUDIT.md`.
-> Status test terakhir: **183 passed (492 assertions)**.
+> Status test terakhir: **202 passed (547 assertions)**.
 
 ---
 
@@ -129,14 +129,14 @@ GOLDEN BIRD CRM
 - ✅ Hierarki 1 GM → 5 Manager → 15 Sales.
 - ✅ Dashboard per role + GridStack + Command Center GM (TERKUNCI).
 - ✅ Finance: Invoice/Payment/Subscription (+manual billing)/Voucher/billing_pin.
-- ✅ Test 183 passed.
+- ✅ Test 202 passed.
 
 ---
 
 ## 🚧 BACKLOG / CATATAN
-- Cleanup artefak build duplikat (`public/build/* 2.*`) — hanya setelah disetujui.
+- Cleanup artefak build duplikat (`public/build/* 2.*`) jika muncul lagi sebelum commit.
 - Verifikasi fulfillment manual via browser (klik Assign/Fulfill dari Pending Assignment tanpa buka Register Vehicle).
-- Sinkronkan dokumen lama (`MASTERPROMPT_v7.8.md`) atau pensiunkan; v8.2 = sumber kebenaran.
+- Dokumen lama (v7.8, v8.0, v8.1) sudah dihapus; v8.2 = sumber kebenaran tunggal.
 - Cek temuan di `SYSTEM_AUDIT.md` (CSRF kanban/API, booking_number race).
 
 ---
@@ -193,7 +193,7 @@ Voucher ─ belongsTo Client, Product, issued_by(User)
 6. **KPI**: SalesTarget 6 produk + total, KpiService recordWon.
 7. **Finance**: Invoice/Payment/Subscription (+manual billing)/Voucher.
 8. **Dashboard & platform**: dashboard per role (GM TERKUNCI), GridStack, analytics, global search, i18n, dark/light.
-9. **Test**: target ≥183 passed.
+9. **Test**: target ≥202 passed.
 
 > Detail schema & logic implementasi ada di `MASTERPROMPT_v8.2.md` (Sec.7–13).
 
