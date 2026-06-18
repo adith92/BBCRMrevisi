@@ -66,16 +66,16 @@
                 Driver Assignment: Supir Long Term ({{ $pendingDriverCount }} pending / {{ $pendingAssignments->count() }} total)
             </h2>
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs font-bold uppercase tracking-wider text-[var(--cc-text-muted)]">Sort Required</span>
-                <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'required', 'direction' => 'desc']) }}"
-                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending', 'required') === 'required' && request('direction', 'desc') === 'desc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                <span class="text-xs font-bold uppercase tracking-wider text-[var(--cc-text-muted)]">Sort Order</span>
+                <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'date', 'direction' => 'desc']) }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending', 'date') === 'date' && request('direction', 'desc') === 'desc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
                     <span class="material-symbols-outlined text-[15px]">south</span>
-                    Banyak ke sedikit
+                    Newest
                 </a>
-                <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'required', 'direction' => 'asc']) }}"
-                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending') === 'required' && request('direction') === 'asc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'date', 'direction' => 'asc']) }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending') === 'date' && request('direction') === 'asc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
                     <span class="material-symbols-outlined text-[15px]">north</span>
-                    Sedikit ke banyak
+                    Oldest
                 </a>
             </div>
         </div>

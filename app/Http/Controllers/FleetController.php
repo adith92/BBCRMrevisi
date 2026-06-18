@@ -132,7 +132,7 @@ class FleetController extends Controller
             });
 
         // Sorting Logic
-        $sortPending = request('sort_pending', 'required');
+        $sortPending = request('sort_pending', 'date');
         $direction = request('direction', 'desc');
 
         if ($sortPending === 'name') {
@@ -143,21 +143,10 @@ class FleetController extends Controller
             $pendingAssignments = $direction === 'desc' 
                 ? $pendingAssignments->sortByDesc(fn($opp) => $opp->client->company_name ?? '') 
                 : $pendingAssignments->sortBy(fn($opp) => $opp->client->company_name ?? '');
-        } elseif ($sortPending === 'required') {
-            // Default: biggest fleet gaps first so ops can clear the heaviest requests quickly.
-            $pendingAssignments = $pendingAssignments->sort(function ($a, $b) use ($direction) {
-                $aMissing = (int) ($a->missing_fleets ?? 0);
-                $bMissing = (int) ($b->missing_fleets ?? 0);
-
-                if ($aMissing !== $bMissing) {
-                    return $direction === 'asc' ? $aMissing <=> $bMissing : $bMissing <=> $aMissing;
-                }
-
-                $aDate = strtotime((string) ($a->actual_close_date ?? $a->expected_close_date ?? $a->created_at)) ?: 0;
-                $bDate = strtotime((string) ($b->actual_close_date ?? $b->expected_close_date ?? $b->created_at)) ?: 0;
-
-                return $direction === 'asc' ? $aDate <=> $bDate : $bDate <=> $aDate;
-            });
+        } elseif ($sortPending === 'date') {
+            $pendingAssignments = $direction === 'desc'
+                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at)
+                : $pendingAssignments->sortBy(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at);
         } else {
             $pendingAssignments = $direction === 'desc' 
                 ? $pendingAssignments->sortByDesc(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at) 
