@@ -2,12 +2,23 @@
     $role = Auth::user()->role ?? '';
     $roleIcons  = ['director'=>'👔','gm'=>'🏢','manager'=>'📊','sales'=>'💼','operational'=>'🚗','pool'=>'🅿️','finance'=>'💰'];
     $roleLabels = ['director'=>'Director HQ','gm'=>'General Manager','manager'=>'Manager','sales'=>'Sales Officer','operational'=>'Operations','pool'=>'Pool Admin','finance'=>'Finance'];
-    $demoSwitchUsers = \App\Models\User::whereIn('role', ['gm', 'manager', 'sales', 'operational', 'pool', 'finance'])
-        ->orderByRaw("CASE role WHEN 'gm' THEN 1 WHEN 'manager' THEN 2 WHEN 'sales' THEN 3 WHEN 'operational' THEN 4 WHEN 'pool' THEN 5 WHEN 'finance' THEN 6 ELSE 7 END")
-        ->orderBy('manager_id')
+    $demoSwitchGm = \App\Models\User::where('role', 'gm')
+        ->orderByRaw("CASE WHEN email = 'gm@goldenbird.co.id' THEN 0 ELSE 1 END")
+        ->orderBy('id')
+        ->first();
+    $demoSwitchManagers = \App\Models\User::where('role', 'manager')
+        ->with(['subordinates' => fn ($query) => $query->where('role', 'sales')->orderBy('name')])
+        ->orderBy('name')
+        ->get();
+    $demoSwitchOps = \App\Models\User::whereIn('role', ['operational', 'pool', 'finance'])
+        ->orderByRaw("CASE role WHEN 'operational' THEN 1 WHEN 'pool' THEN 2 WHEN 'finance' THEN 3 ELSE 4 END")
         ->orderBy('name')
         ->get()
         ->groupBy('role');
+    $demoSwitchCount = ($demoSwitchGm ? 1 : 0)
+        + $demoSwitchManagers->count()
+        + $demoSwitchManagers->sum(fn ($manager) => $manager->subordinates->count())
+        + $demoSwitchOps->flatten()->count();
 @endphp
 
 <aside id="sidebar" 
@@ -28,7 +39,7 @@
     {{-- Navigation --}}
     <nav class="flex-grow overflow-y-auto px-3 py-3 space-y-0.5">
 
-        @if($demoSwitchUsers->flatten()->count() > 1)
+        @if($demoSwitchCount > 1)
         <div x-show="sidebarOpen" class="nav-section-label">Demo Switch</div>
         <div x-data="{ open: false }" class="relative mb-2">
             <button type="button"
@@ -47,21 +58,86 @@
                  x-transition:enter-start="opacity-0 -translate-y-1"
                  x-transition:enter-end="opacity-100 translate-y-0"
                  class="mt-1 rounded-xl border border-[var(--cc-sidebar-divider)] bg-black/5 dark:bg-slate-950/40 overflow-hidden">
+                @if($demoSwitchGm)
+                <div class="px-3 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-[var(--cc-sidebar-user-role)]">General Management</div>
+                <div class="space-y-0.5 px-1 pb-2">
+                    <form method="POST" action="{{ route('system.switch-demo-user') }}">
+                        @csrf
+                        <input type="hidden" name="user_id" value="{{ $demoSwitchGm->id }}">
+                        <button type="submit"
+                                class="w-full flex items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition-all {{ auth()->id() === $demoSwitchGm->id ? 'bg-blue-500/15 text-blue-400' : 'text-[var(--cc-sidebar-link)] hover:bg-white/10' }}">
+                            <span class="material-symbols-outlined text-[15px]">apartment</span>
+                            <span class="min-w-0">
+                                <span class="block truncate font-semibold">{{ $demoSwitchGm->name }}</span>
+                                <span class="block truncate text-[10px] opacity-70">General Manager</span>
+                            </span>
+                        </button>
+                    </form>
+                </div>
+                @endif
+
+                @if($demoSwitchManagers->isNotEmpty())
+                <div class="px-3 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-[var(--cc-sidebar-user-role)]">Sales Managers</div>
+                <div class="space-y-1 px-1 pb-2">
+                    @foreach($demoSwitchManagers as $switchManager)
+                    <div x-data="{ expanded: {{ $switchManager->id === auth()->user()->manager_id || auth()->id() === $switchManager->id ? 'true' : 'false' }} }" class="rounded-lg overflow-hidden">
+                        <div class="flex items-stretch {{ auth()->id() === $switchManager->id ? 'bg-blue-500/15 text-blue-400' : 'text-[var(--cc-sidebar-link)] hover:bg-white/10' }} rounded-lg transition-all">
+                            <form method="POST" action="{{ route('system.switch-demo-user') }}" class="min-w-0 flex-1">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $switchManager->id }}">
+                                <button type="submit" class="w-full flex items-center gap-2 px-2 py-2 text-left text-xs">
+                                    <span class="material-symbols-outlined text-[15px]">leaderboard</span>
+                                    <span class="min-w-0">
+                                        <span class="block truncate font-semibold">{{ $switchManager->name }}</span>
+                                        <span class="block truncate text-[10px] opacity-70">{{ $switchManager->subordinates->count() }} Sales Rep</span>
+                                    </span>
+                                </button>
+                            </form>
+                            @if($switchManager->subordinates->isNotEmpty())
+                            <button type="button"
+                                    @click.stop="expanded = !expanded"
+                                    class="flex w-8 items-center justify-center text-[var(--cc-sidebar-user-role)] hover:text-blue-400"
+                                    title="Lihat sales rep">
+                                <span class="material-symbols-outlined text-[16px] transition-transform" :class="expanded ? 'rotate-90' : ''">chevron_right</span>
+                            </button>
+                            @endif
+                        </div>
+
+                        @if($switchManager->subordinates->isNotEmpty())
+                        <div x-show="expanded" x-cloak x-transition class="ml-4 mt-1 space-y-0.5 border-l border-[var(--cc-sidebar-divider)] pl-2">
+                            @foreach($switchManager->subordinates as $switchSales)
+                            <form method="POST" action="{{ route('system.switch-demo-user') }}">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $switchSales->id }}">
+                                <button type="submit"
+                                        class="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[11px] transition-all {{ auth()->id() === $switchSales->id ? 'bg-blue-500/15 text-blue-400' : 'text-[var(--cc-sidebar-link)] hover:bg-white/10' }}">
+                                    <span class="material-symbols-outlined text-[13px]">business_center</span>
+                                    <span class="min-w-0">
+                                        <span class="block truncate font-semibold">{{ $switchSales->name }}</span>
+                                        <span class="block truncate text-[9px] opacity-70">Sales Rep</span>
+                                    </span>
+                                </button>
+                            </form>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+
                 @php
                     $switchGroups = [
-                        'gm' => 'General Management',
-                        'manager' => 'Sales Managers',
-                        'sales' => 'Sales Representatives',
                         'operational' => 'Operations',
                         'pool' => 'Pool',
                         'finance' => 'Finance',
                     ];
                 @endphp
                 @foreach($switchGroups as $switchRole => $switchLabel)
-                    @if(($demoSwitchUsers[$switchRole] ?? collect())->isNotEmpty())
+                    @if(($demoSwitchOps[$switchRole] ?? collect())->isNotEmpty())
                     <div class="px-3 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-[var(--cc-sidebar-user-role)]">{{ $switchLabel }}</div>
                     <div class="space-y-0.5 px-1 pb-2">
-                        @foreach($demoSwitchUsers[$switchRole] as $switchUser)
+                        @foreach($demoSwitchOps[$switchRole] as $switchUser)
                         <form method="POST" action="{{ route('system.switch-demo-user') }}">
                             @csrf
                             <input type="hidden" name="user_id" value="{{ $switchUser->id }}">
