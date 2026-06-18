@@ -3,10 +3,59 @@
 @section('header_title', 'Operational Dashboard')
 
 @section('content')
+@php
+    $pendingFleetOnly = $unassignedOpportunities->where('missing_fleets', '>', 0)->count();
+    $pendingDriverOnly = $unassignedOpportunities->where('missing_drivers', '>', 0)->count();
+    $activeConfirmed = $activeBookingList->where('status', 'confirmed')->count();
+    $activeOnTrip = $activeBookingList->where('status', 'on_trip')->count();
+@endphp
 <x-dashboard-grid :saved-layout="auth()->user()->dashboard_settings">
 
+    <div class="grid-stack-item" gs-id="w-operational-overview" gs-x="0" gs-y="0" gs-w="12" gs-h="3">
+        <div class="grid-stack-item-content">
+            <section class="cc-card rounded-[28px] border border-[var(--cc-border)] px-6 py-6 lg:px-7 lg:py-7 h-full overflow-hidden">
+                <div class="flex h-full flex-col justify-between gap-6 lg:flex-row lg:items-start">
+                    <div class="max-w-3xl">
+                        <div class="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-400">
+                            Command Center
+                        </div>
+                        <h1 class="mt-4 text-2xl font-semibold tracking-tight text-[var(--cc-text)] lg:text-3xl">
+                            Operational Control Tower
+                        </h1>
+                        <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--cc-text-muted)]">
+                            Ringkasan cepat untuk pergerakan booking aktif, kapasitas armada, dan antrean alokasi yang masih perlu tindakan hari ini.
+                        </p>
+                    </div>
+
+                    <div class="grid w-full max-w-2xl grid-cols-2 gap-3 lg:grid-cols-4">
+                        <div class="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-400">Fleet Ready</p>
+                            <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $availableFleet }}</p>
+                            <p class="mt-1 text-xs text-[var(--cc-text-muted)]">unit siap jalan</p>
+                        </div>
+                        <div class="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-400">Trip Live</p>
+                            <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $activeBookings }}</p>
+                            <p class="mt-1 text-xs text-[var(--cc-text-muted)]">booking aktif</p>
+                        </div>
+                        <div class="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-400">Fleet Queue</p>
+                            <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $pendingFleetOnly }}</p>
+                            <p class="mt-1 text-xs text-[var(--cc-text-muted)]">butuh kendaraan</p>
+                        </div>
+                        <div class="rounded-2xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-fuchsia-400">Driver Queue</p>
+                            <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $pendingDriverOnly }}</p>
+                            <p class="mt-1 text-xs text-[var(--cc-text-muted)]">butuh supir</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
     {{-- KPI Cards --}}
-    <div class="grid-stack-item" gs-id="w-available-fleet" gs-x="0" gs-y="0" gs-w="3" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-available-fleet" gs-x="0" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
             <a href="{{ route('fleet.index', ['status' => 'available']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-green-500 h-full hover:shadow-md transition-all">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Available Fleet</p>
@@ -16,7 +65,7 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="w-on-trip" gs-x="3" gs-y="0" gs-w="3" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-on-trip" gs-x="3" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
             <a href="{{ route('fleet.index', ['status' => 'on_trip']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-blue-500 h-full hover:shadow-md transition-all">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">On Trip</p>
@@ -26,7 +75,7 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="w-maintenance" gs-x="6" gs-y="0" gs-w="3" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-maintenance" gs-x="6" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
             <a href="{{ route('maintenance.index') }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-yellow-500 h-full hover:shadow-md transition-all">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Maintenance</p>
@@ -36,7 +85,7 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="w-active-bookings" gs-x="9" gs-y="0" gs-w="3" gs-h="2">
+    <div class="grid-stack-item" gs-id="w-active-bookings" gs-x="9" gs-y="3" gs-w="3" gs-h="2">
         <div class="grid-stack-item-content">
             <a href="{{ route('bookings.index', ['status' => 'active']) }}" class="group block cc-card rounded-xl shadow p-5 border-l-4 border-purple-500 h-full hover:shadow-md transition-all">
                 <p class="text-[var(--cc-text-muted)] text-xs uppercase tracking-wider font-semibold">Active Bookings</p>
@@ -47,12 +96,25 @@
     </div>
 
     {{-- Active Trips Table --}}
-    <div class="grid-stack-item" gs-id="w-active-trips" gs-x="0" gs-y="2" gs-w="12" gs-h="6">
+    <div class="grid-stack-item" gs-id="w-active-trips" gs-x="0" gs-y="5" gs-w="12" gs-h="6">
         <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl shadow p-5 h-full overflow-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base font-semibold text-[var(--cc-text)]">Active Trips</h3>
-                    <a href="{{ route('bookings.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium">View all →</a>
+            <div class="cc-card rounded-[24px] shadow p-5 h-full overflow-auto border border-[var(--cc-border)]">
+                <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-[var(--cc-text)]">Active Trips Monitor</h3>
+                        <p class="mt-1 text-sm text-[var(--cc-text-muted)]">Pantau perjalanan yang sedang confirmed atau on trip tanpa harus pindah halaman.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
+                            Confirmed {{ $activeConfirmed }}
+                        </span>
+                        <span class="rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-400">
+                            On Trip {{ $activeOnTrip }}
+                        </span>
+                        <a href="{{ route('bookings.index') }}" class="rounded-full border border-[var(--cc-border)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--cc-text-muted)] transition hover:border-blue-500/30 hover:text-blue-400">
+                            View All
+                        </a>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -95,15 +157,28 @@
     </div>
 
     {{-- Action Required Panel --}}
-    <div class="grid-stack-item" gs-id="w-action-required" gs-x="0" gs-y="8" gs-w="12" gs-h="5">
+    <div class="grid-stack-item" gs-id="w-action-required" gs-x="0" gs-y="11" gs-w="12" gs-h="5">
         <div class="grid-stack-item-content">
-            <div class="cc-card rounded-xl shadow p-5 h-full overflow-auto border-l-4 border-red-500">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="material-symbols-outlined text-red-500">warning</span>
-                    <h3 class="text-base font-semibold text-[var(--cc-text)]">Action Required: Unassigned Won Opportunities</h3>
-                    <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/10 text-red-400">
-                        {{ $unassignedOpportunities->count() }} Pending Allocation
-                    </span>
+            <div class="cc-card rounded-[24px] shadow p-5 h-full overflow-auto border border-red-500/20 bg-gradient-to-br from-red-500/[0.08] via-transparent to-transparent">
+                <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined rounded-2xl border border-red-500/20 bg-red-500/10 p-2 text-red-400">warning</span>
+                        <div>
+                            <h3 class="text-lg font-semibold text-[var(--cc-text)]">Action Required Queue</h3>
+                            <p class="mt-1 text-sm text-[var(--cc-text-muted)]">Daftar opportunity yang sudah berjalan tetapi alokasi kendaraan atau supirnya belum lengkap.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] bg-red-500/10 text-red-400 border border-red-500/20">
+                            {{ $unassignedOpportunities->count() }} Pending
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            Fleet {{ $pendingFleetOnly }}
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20">
+                            Driver {{ $pendingDriverOnly }}
+                        </span>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">

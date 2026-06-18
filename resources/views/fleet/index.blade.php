@@ -40,44 +40,85 @@
 <div class="space-y-6 pb-20" x-data="fleetPage">
     
     {{-- Header Panel --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-2 flex items-center gap-2">
-                <span class="material-symbols-outlined h-8 w-8 text-indigo-400" style="font-size: 32px">directions_car</span>
-                Operational Pool & Long-Term Fleet
-            </h1>
-            <p class="text-[var(--cc-text-muted)] max-w-2xl text-sm">
-                Operational dashboard to register, allocate, and monitor vehicle fleets assigned exclusively to <strong class="text-indigo-400">Mobil Long Term</strong> contracts.
-            </p>
+    <section class="cc-card rounded-[28px] border border-[var(--cc-border)] px-6 py-6 lg:px-7 lg:py-7">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-3xl">
+                <div class="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-400">
+                    Operational Fleet
+                </div>
+                <h1 class="mt-4 flex items-center gap-3 text-3xl font-semibold tracking-tight text-[var(--cc-text)]">
+                    <span class="material-symbols-outlined text-indigo-400" style="font-size: 34px">directions_car</span>
+                    Operational Pool & Long-Term Fleet
+                </h1>
+                <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--cc-text-muted)]">
+                    Pusat kendali untuk register unit, membaca kapasitas pool, dan memproses alokasi armada yang masih pending untuk kontrak <strong class="text-indigo-400">Mobil Long Term</strong>.
+                </p>
+            </div>
+
+            <div class="grid w-full max-w-3xl grid-cols-2 gap-3 lg:grid-cols-4">
+                <div class="rounded-2xl border border-slate-500/20 bg-[var(--cc-bg-muted)] px-4 py-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--cc-text-muted)]">Total Fleet</p>
+                    <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $stats['total'] }}</p>
+                    <p class="mt-1 text-xs text-[var(--cc-text-muted)]">unit terdaftar</p>
+                </div>
+                <div class="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-400">Available</p>
+                    <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $stats['available'] }}</p>
+                    <p class="mt-1 text-xs text-[var(--cc-text-muted)]">siap assign</p>
+                </div>
+                <div class="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-400">Pending Queue</p>
+                    <p class="mt-2 text-2xl font-semibold text-[var(--cc-text)]">{{ $pendingFleetCount }}</p>
+                    <p class="mt-1 text-xs text-[var(--cc-text-muted)]">butuh alokasi</p>
+                </div>
+                <div class="flex items-end justify-end">
+                    @if($canModify)
+                    <button @click="showCreateModal = true" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:bg-indigo-500">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        Register Vehicle
+                    </button>
+                    @endif
+                </div>
+            </div>
         </div>
-        
-        @if($canModify)
-        <div class="flex items-center gap-3">
-            <button @click="showCreateModal = true" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
-                <span class="material-symbols-outlined text-[16px]">add</span>
-                Register Vehicle
-            </button>
-        </div>
-        @endif
-    </div>
+    </section>
 
     {{-- Pending Assignments --}}
     @if(isset($pendingAssignments) && $pendingAssignments->count() > 0 && $canAssign)
-    <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6">
-        <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <h2 class="text-amber-500 font-bold flex items-center gap-2">
-                <span class="material-symbols-outlined">warning</span>
-                Fleet Assignment: Mobil Long Term ({{ $pendingFleetCount }} pending / {{ $pendingAssignments->count() }} total)
-            </h2>
+    <section class="rounded-[28px] border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.08] via-transparent to-transparent p-6">
+        <div class="mb-5 flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+            <div class="max-w-3xl">
+                <div class="flex items-center gap-2 text-amber-400">
+                    <span class="material-symbols-outlined">warning</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-[0.24em]">Assignment Queue</span>
+                </div>
+                <h2 class="mt-3 text-2xl font-semibold text-[var(--cc-text)]">
+                    Fleet Assignment: Mobil Long Term
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-[var(--cc-text-muted)]">
+                    Prioritas kendaraan yang masih belum teralokasi penuh. Bagian ini disusun untuk mempercepat assign unit paling baru atau backlog yang lebih lama.
+                </p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <span class="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-300">
+                        {{ $pendingFleetCount }} pending
+                    </span>
+                    <span class="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-300">
+                        {{ $pendingAssignments->count() }} total queue
+                    </span>
+                    <span class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">
+                        {{ $stats['available'] }} unit ready
+                    </span>
+                </div>
+            </div>
             <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs font-bold uppercase tracking-wider text-[var(--cc-text-muted)]">Sort Order</span>
                 <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'date', 'direction' => 'desc']) }}"
-                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending', 'date') === 'date' && request('direction', 'desc') === 'desc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                   class="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-bold transition {{ request('sort_pending', 'date') === 'date' && request('direction', 'desc') === 'desc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
                     <span class="material-symbols-outlined text-[15px]">south</span>
                     Newest
                 </a>
                 <a href="{{ request()->fullUrlWithQuery(['sort_pending' => 'date', 'direction' => 'asc']) }}"
-                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition {{ request('sort_pending') === 'date' && request('direction') === 'asc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
+                   class="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-bold transition {{ request('sort_pending') === 'date' && request('direction') === 'asc' ? 'border-amber-400 bg-amber-400/15 text-amber-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' }}">
                     <span class="material-symbols-outlined text-[15px]">north</span>
                     Oldest
                 </a>
@@ -85,29 +126,45 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($pendingAssignments as $opp)
-            <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-xl p-4 shadow-sm flex flex-col justify-between">
+            <div class="bg-[var(--cc-surface)] border border-[var(--cc-border)] rounded-[24px] p-4 shadow-sm flex flex-col justify-between">
                 <div>
-                    <div class="font-bold text-[var(--cc-text)] text-sm mb-1">{{ $opp->title }}</div>
-                    <div class="text-xs text-[var(--cc-text-muted)] mb-3 flex justify-between">
-                        <span>{{ $opp->client->company_name ?? 'No Client' }}</span>
-                        <span class="px-2 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 uppercase">{{ $opp->stage }}</span>
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="font-bold text-[var(--cc-text)] text-base leading-6">{{ $opp->title }}</div>
+                            <div class="mt-1 text-xs text-[var(--cc-text-muted)]">{{ $opp->client->company_name ?? 'No Client' }}</div>
+                        </div>
+                        <span class="shrink-0 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--cc-text-muted)]">{{ $opp->stage }}</span>
                     </div>
-                    <div class="text-sm bg-amber-500/5 p-2 rounded border border-amber-500/10 mb-4 space-y-1">
-                        <div class="flex justify-between"><span>Mobil Required:</span> <strong>{{ $opp->required_fleets }}</strong></div>
-                        <div class="flex justify-between"><span>Mobil Assigned:</span> <strong>{{ $opp->assignedVehicles->count() }}</strong></div>
-                        <div class="flex justify-between {{ $opp->missing_fleets > 0 ? 'text-amber-500' : 'text-emerald-500' }} font-bold">
-                            <span>Status:</span>
-                            <span>{{ $opp->missing_fleets > 0 ? $opp->missing_fleets . ' Unit Missing' : 'Fulfilled' }}</span>
+                    <div class="mt-4 grid grid-cols-3 gap-2">
+                        <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-3 py-2">
+                            <div class="text-[10px] uppercase tracking-[0.18em] text-[var(--cc-text-muted)]">Required</div>
+                            <div class="mt-1 text-lg font-semibold text-[var(--cc-text)]">{{ $opp->required_fleets }}</div>
+                        </div>
+                        <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-3 py-2">
+                            <div class="text-[10px] uppercase tracking-[0.18em] text-[var(--cc-text-muted)]">Assigned</div>
+                            <div class="mt-1 text-lg font-semibold text-[var(--cc-text)]">{{ $opp->assignedVehicles->count() }}</div>
+                        </div>
+                        <div class="rounded-2xl border {{ $opp->missing_fleets > 0 ? 'border-amber-500/20 bg-amber-500/10' : 'border-emerald-500/20 bg-emerald-500/10' }} px-3 py-2">
+                            <div class="text-[10px] uppercase tracking-[0.18em] {{ $opp->missing_fleets > 0 ? 'text-amber-400' : 'text-emerald-400' }}">Missing</div>
+                            <div class="mt-1 text-lg font-semibold {{ $opp->missing_fleets > 0 ? 'text-amber-300' : 'text-emerald-300' }}">{{ $opp->missing_fleets }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-3 py-3 text-sm">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-[var(--cc-text-muted)]">Status alokasi</span>
+                            <span class="font-semibold {{ $opp->missing_fleets > 0 ? 'text-amber-400' : 'text-emerald-400' }}">
+                                {{ $opp->missing_fleets > 0 ? $opp->missing_fleets . ' unit belum terpenuhi' : 'Sudah terpenuhi' }}
+                            </span>
                         </div>
                     </div>
                 </div>
-                <button type="button" @click.stop.prevent="openAssignModal({{ $opp->id }})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition">
+                <button type="button" @click.stop.prevent="openAssignModal({{ $opp->id }})" class="mt-4 w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold transition">
                     {{ $opp->missing_fleets > 0 ? 'Assign Fleet' : 'Ubah Alokasi Fleet' }}
                 </button>
             </div>
             @endforeach
         </div>
-    </div>
+    </section>
     @endif
 
     {{-- Fleet Stats Grid --}}
