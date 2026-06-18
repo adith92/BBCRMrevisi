@@ -29,6 +29,9 @@
                     <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
                         <div class="bg-indigo-500 h-1.5 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.6)]" style="width: {{ $achievementPct }}%"></div>
                     </div>
+                    <p class="text-[10px] text-[var(--cc-text-muted)] mt-2">
+                        {{ $hasTarget ? 'Target bulan ini ditetapkan dari modul KPI.' : 'Target bulan ini belum ditetapkan GM/Manager.' }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -129,9 +132,12 @@
     <div class="grid-stack-item" gs-id="w-funnel-chart" gs-x="0" gs-y="4" gs-w="6" gs-h="5">
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl shadow p-5 h-full relative group">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-base font-semibold" style="color:var(--cc-text)">Opportunities Funnel</h3>
-                    <span class="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded text-[var(--cc-text-muted)]">Click bar to view details</span>
+                <div class="flex justify-between items-start gap-3 mb-3">
+                    <div>
+                        <h3 class="text-base font-semibold" style="color:var(--cc-text)">Opportunities Funnel - Semua Data</h3>
+                        <p class="text-xs text-[var(--cc-text-muted)] mt-1">Jumlah opportunity milik sales ini per stage.</p>
+                    </div>
+                    <span class="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded text-[var(--cc-text-muted)]">Klik bar untuk detail</span>
                 </div>
                 <div id="funnelChart" style="min-height:280px" class="cursor-pointer"></div>
             </div>

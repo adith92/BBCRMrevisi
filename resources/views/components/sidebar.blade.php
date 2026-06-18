@@ -101,7 +101,7 @@
         @endif
 
         {{-- Quick Add Dropdown --}}
-        @if(in_array($role, ['gm','manager','sales','operational','pool']))
+        @if(in_array($role, ['gm','manager','sales','operational']))
         <div x-show="sidebarOpen" class="nav-section-label mt-3">{{ __('ui.quick_add') ?? 'Tambah Baru' }}</div>
         <div x-data="{ open: false }" class="relative">
             <button @click="open = !open"
@@ -124,12 +124,14 @@
                     <span class="material-symbols-outlined text-[14px]">star</span>
                     <span>Deal / Opportunity</span>
                 </a>
+                @endif
+                @if($role === 'sales')
                 <a href="{{ route('clients.create') }}" class="nav-item text-[12px] flex items-center gap-2">
                     <span class="material-symbols-outlined text-[14px]">corporate_fare</span>
                     <span>Klien Baru</span>
                 </a>
                 @endif
-                @if(in_array($role, ['gm','manager','sales','operational','pool']))
+                @if(in_array($role, ['gm','manager','sales','operational']))
                 <a href="{{ route('bookings.create') }}" class="nav-item text-[12px] flex items-center gap-2">
                     <span class="material-symbols-outlined text-[14px]">route</span>
                     <span>Booking</span>

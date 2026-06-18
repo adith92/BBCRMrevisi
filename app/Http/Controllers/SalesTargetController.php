@@ -49,14 +49,24 @@ class SalesTargetController extends Controller
             ->where('period_month', $month)
             ->get();
 
+        $assignableUsers = User::where('role', 'sales')
+            ->when($user->isManager(), fn ($query) => $query->where('manager_id', $user->id))
+            ->orderBy('name')
+            ->get();
+
+        $selectedTargetUserId = (int) $request->get('user_id', $assignableUsers->first()?->id);
+        $selectedTarget = $selectedTargetUserId
+            ? SalesTarget::firstOrNew([
+                'user_id' => $selectedTargetUserId,
+                'period_year' => $year,
+                'period_month' => $month,
+            ])
+            : null;
+
         $targets = $dbTargets->map(function($t) {
             return [
                 'userId' => $t->user_id,
-                'productTargets' => [
-                    'Mobil Long Term'  => (float)$t->target_revenue * 0.6,
-                    'E-Voucher'        => (float)$t->target_revenue * 0.3,
-                    'Supir'            => (float)$t->target_revenue * 0.1,
-                ]
+                'productTargets' => $this->productTargetsFor($t),
             ];
         });
 
@@ -67,7 +77,17 @@ class SalesTargetController extends Controller
             'managerId' => $user->manager_id,
         ];
 
-        return view('kpi.index', compact('users', 'deals', 'targets', 'currentUser', 'year', 'month'));
+        return view('kpi.index', compact(
+            'users',
+            'deals',
+            'targets',
+            'currentUser',
+            'year',
+            'month',
+            'assignableUsers',
+            'selectedTargetUserId',
+            'selectedTarget'
+        ));
     }
 
     public function store(Request $request)
@@ -82,6 +102,12 @@ class SalesTargetController extends Controller
             'target_opportunities' => 'nullable|integer|min:0',
             'target_won'           => 'nullable|integer|min:0',
             'target_revenue'       => 'nullable|numeric|min:0',
+            'target_mobil_short'   => 'nullable|numeric|min:0',
+            'target_bis_short'     => 'nullable|numeric|min:0',
+            'target_evoucher'      => 'nullable|numeric|min:0',
+            'target_mobil_long'    => 'nullable|numeric|min:0',
+            'target_bis_long'      => 'nullable|numeric|min:0',
+            'target_supir'         => 'nullable|numeric|min:0',
         ]);
 
         // Manager can only set for their own subordinates
@@ -92,6 +118,18 @@ class SalesTargetController extends Controller
                 abort(403, 'Anda hanya bisa menetapkan target untuk anggota tim Anda.');
             }
         }
+
+        $productTargetFields = [
+            'target_mobil_short',
+            'target_bis_short',
+            'target_evoucher',
+            'target_mobil_long',
+            'target_bis_long',
+            'target_supir',
+        ];
+
+        $productTargetTotal = collect($productTargetFields)
+            ->sum(fn ($field) => (float) ($validated[$field] ?? 0));
 
         SalesTarget::updateOrCreate(
             [
@@ -105,7 +143,13 @@ class SalesTargetController extends Controller
                 'target_visits'        => $validated['target_visits'] ?? 0,
                 'target_opportunities' => $validated['target_opportunities'] ?? 0,
                 'target_won'           => $validated['target_won'] ?? 0,
-                'target_revenue'       => $validated['target_revenue'] ?? 0,
+                'target_revenue'       => $productTargetTotal > 0 ? $productTargetTotal : ($validated['target_revenue'] ?? 0),
+                'target_mobil_short'   => $validated['target_mobil_short'] ?? 0,
+                'target_bis_short'     => $validated['target_bis_short'] ?? 0,
+                'target_evoucher'      => $validated['target_evoucher'] ?? 0,
+                'target_mobil_long'    => $validated['target_mobil_long'] ?? 0,
+                'target_bis_long'      => $validated['target_bis_long'] ?? 0,
+                'target_supir'         => $validated['target_supir'] ?? 0,
             ]
         );
 
@@ -144,6 +188,31 @@ class SalesTargetController extends Controller
         }
 
         return compact('labels', 'meetings', 'calls', 'revenue');
+    }
+
+    private function productTargetsFor(SalesTarget $target): array
+    {
+        $explicitTargets = [
+            'Mobil Short Term' => (float) $target->target_mobil_short,
+            'Bis Short Term'   => (float) $target->target_bis_short,
+            'E-Voucher'        => (float) $target->target_evoucher,
+            'Mobil Long Term'  => (float) $target->target_mobil_long,
+            'Bis Long Term'    => (float) $target->target_bis_long,
+            'Supir'            => (float) $target->target_supir,
+        ];
+
+        if (array_sum($explicitTargets) > 0) {
+            return $explicitTargets;
+        }
+
+        return [
+            'Mobil Short Term' => 0,
+            'Bis Short Term'   => 0,
+            'E-Voucher'        => (float) $target->target_revenue * 0.3,
+            'Mobil Long Term'  => (float) $target->target_revenue * 0.6,
+            'Bis Long Term'    => 0,
+            'Supir'            => (float) $target->target_revenue * 0.1,
+        ];
     }
 
     private function computeOverallScore(SalesTarget $target): float

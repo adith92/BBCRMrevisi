@@ -455,11 +455,7 @@ class DashboardController extends Controller
         $targets = $dbTargets->map(function($t) {
             return [
                 'userId' => $t->user_id,
-                'productTargets' => [
-                    'Mobil Long Term'  => (float)$t->target_revenue * 0.6,
-                    'E-Voucher'        => (float)$t->target_revenue * 0.3,
-                    'Supir'            => (float)$t->target_revenue * 0.1,
-                ]
+                'productTargets' => $this->productTargetsFor($t),
             ];
         });
 
@@ -492,13 +488,29 @@ class DashboardController extends Controller
         }
 
         $teamMembers = $teamQuery->get()->map(function ($s) use ($now) {
-            $won   = Opportunity::where('sales_id', $s->id)->whereMonth('actual_close_date', $now->month)->whereYear('actual_close_date', $now->year)->where('stage', 'won')->count();
+            $wonQuery = Opportunity::where('sales_id', $s->id)
+                ->whereMonth('actual_close_date', $now->month)
+                ->whereYear('actual_close_date', $now->year)
+                ->where('stage', 'won');
+
+            $won   = (clone $wonQuery)->count();
             $lost  = Opportunity::where('sales_id', $s->id)->whereMonth('actual_close_date', $now->month)->whereYear('actual_close_date', $now->year)->where('stage', 'lost')->count();
             $total = $won + $lost;
+            $wonRevenue = (float) (clone $wonQuery)->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(final_value, estimated_value, 0)'));
+            $targetRecord = \App\Models\SalesTarget::where('user_id', $s->id)
+                ->where('period_year', $now->year)
+                ->where('period_month', $now->month)
+                ->first();
+            $targetRevenue = (float) ($targetRecord?->target_revenue ?? 0);
+
             $s->won_count      = $won;
             $s->lost_count     = $lost;
             $s->pipeline_value = Opportunity::where('sales_id', $s->id)->whereNotIn('stage', ['won', 'lost'])->sum('estimated_value') ?? 0;
             $s->win_rate       = $total > 0 ? round($won / $total * 100) : 0;
+            $s->won_revenue    = $wonRevenue;
+            $s->target_revenue = $targetRevenue;
+            $s->kpi_pct        = $targetRevenue > 0 ? round(($wonRevenue / $targetRevenue) * 100) : 0;
+            $s->kpi_status     = $targetRevenue <= 0 ? 'Belum diset' : ($s->kpi_pct >= 100 ? 'On Track' : ($s->kpi_pct >= 60 ? 'Need Follow Up' : 'At Risk'));
             return $s;
         });
 
@@ -512,13 +524,16 @@ class DashboardController extends Controller
         // Per-sales stage breakdown: [{name: ..., totals: {stage: count}}]
         $stageBreakdown = $teamMembers->map(function ($s) use ($stages) {
             $totals = [];
+            $values = [];
             foreach ($stages as $stage) {
                 $totals[$stage] = Opportunity::where('sales_id', $s->id)->where('stage', $stage)->count();
+                $values[$stage] = (float) Opportunity::where('sales_id', $s->id)->where('stage', $stage)->sum('estimated_value');
             }
-            return ['name' => $s->name, 'totals' => $totals];
+            return ['name' => $s->name, 'totals' => $totals, 'values' => $values];
         })->all();
 
-        $recentActivities = ActivityLog::latest()->take(10)->get();
+        $salesIds = $teamMembers->pluck('id')->toArray();
+        $recentActivities = ActivityLog::whereIn('sales_id', $salesIds)->latest()->take(10)->get();
         $activityIcons    = [
             'call'    => 'phone',
             'email'   => 'mail',
@@ -527,7 +542,6 @@ class DashboardController extends Controller
         ];
 
         // Chart Data: Revenue Trend (Last 6 Months) for the whole team
-        $salesIds = $teamMembers->pluck('id')->toArray();
         $revenueTrend = ['labels' => [], 'data' => []];
 
         $startDate = Carbon::now()->subMonths(5)->startOfMonth();
@@ -558,10 +572,12 @@ class DashboardController extends Controller
             $revenueTrend['data'][] = isset($aggregatedData[$key]) ? (float) $aggregatedData[$key] : 0;
         }
 
+        $revenueTrendRanges = $this->buildManagerRevenueRanges($salesIds);
+
         return view('dashboard.manager', compact(
             'teamMembers', 'teamPipelineValue', 'teamWon', 'teamLost',
             'stages', 'stageLabels', 'stageColors', 'stageBreakdown',
-            'recentActivities', 'activityIcons', 'revenueTrend'
+            'recentActivities', 'activityIcons', 'revenueTrend', 'revenueTrendRanges'
         ));
     }
 
@@ -637,6 +653,7 @@ class DashboardController extends Controller
                             ->where('period_month', $now->month)
                             ->first();
         $targetRevenue = $targetRecord ? (float)$targetRecord->target_revenue : 0;
+        $hasTarget = $targetRecord && $targetRevenue > 0;
 
         $pipelineValue = Opportunity::where('sales_id', $user->id)
                             ->whereNotIn('stage', ['won', 'lost'])
@@ -645,7 +662,7 @@ class DashboardController extends Controller
         return view('dashboard.sales', compact(
             'todayRevenue', 'weekRevenue', 'monthRevenue', 'yearRevenue',
             'myClients', 'activeBookings', 'recentBookings',
-            'salesFunnel', 'revenueTrend', 'targetRevenue', 'pipelineValue'
+            'salesFunnel', 'revenueTrend', 'targetRevenue', 'pipelineValue', 'hasTarget'
         ));
     }
 
@@ -717,5 +734,104 @@ class DashboardController extends Controller
         $user->dashboard_settings = $request->input('layout');
         $user->save();
         return response()->json(['success' => true]);
+    }
+
+    private function productTargetsFor(\App\Models\SalesTarget $target): array
+    {
+        $explicitTargets = [
+            'Mobil Short Term' => (float) $target->target_mobil_short,
+            'Bis Short Term'   => (float) $target->target_bis_short,
+            'E-Voucher'        => (float) $target->target_evoucher,
+            'Mobil Long Term'  => (float) $target->target_mobil_long,
+            'Bis Long Term'    => (float) $target->target_bis_long,
+            'Supir'            => (float) $target->target_supir,
+        ];
+
+        if (array_sum($explicitTargets) > 0) {
+            return $explicitTargets;
+        }
+
+        return [
+            'Mobil Short Term' => 0,
+            'Bis Short Term'   => 0,
+            'E-Voucher'        => (float) $target->target_revenue * 0.3,
+            'Mobil Long Term'  => (float) $target->target_revenue * 0.6,
+            'Bis Long Term'    => 0,
+            'Supir'            => (float) $target->target_revenue * 0.1,
+        ];
+    }
+
+    private function buildManagerRevenueRanges(array $salesIds): array
+    {
+        return [
+            'daily' => $this->buildRevenueTrend($salesIds, Carbon::now()->subDays(6)->startOfDay(), Carbon::now()->endOfDay(), 'day'),
+            'weekly' => $this->buildRevenueTrend($salesIds, Carbon::now()->subWeeks(7)->startOfWeek(), Carbon::now()->endOfWeek(), 'week'),
+            'monthly' => $this->buildRevenueTrend($salesIds, Carbon::now()->subMonths(5)->startOfMonth(), Carbon::now()->endOfMonth(), 'month'),
+            'quarter' => $this->buildRevenueTrend($salesIds, Carbon::now()->subMonths(2)->startOfMonth(), Carbon::now()->endOfMonth(), 'month'),
+            'semester' => $this->buildRevenueTrend($salesIds, Carbon::now()->subMonths(5)->startOfMonth(), Carbon::now()->endOfMonth(), 'month'),
+        ];
+    }
+
+    private function buildRevenueTrend(array $salesIds, Carbon $startDate, Carbon $endDate, string $bucket): array
+    {
+        if (empty($salesIds)) {
+            return ['labels' => [], 'data' => []];
+        }
+
+        $query = Opportunity::whereIn('sales_id', $salesIds)
+            ->where('stage', 'won')
+            ->whereBetween('actual_close_date', [$startDate, $endDate]);
+
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $select = match ($bucket) {
+            'day' => match ($driver) {
+                'sqlite' => "strftime('%Y-%m-%d', actual_close_date)",
+                'pgsql' => "to_char(actual_close_date, 'YYYY-MM-DD')",
+                default => "DATE_FORMAT(actual_close_date, '%Y-%m-%d')",
+            },
+            'week' => match ($driver) {
+                'sqlite' => "strftime('%Y-%W', actual_close_date)",
+                'pgsql' => "to_char(actual_close_date, 'IYYY-IW')",
+                default => "DATE_FORMAT(actual_close_date, '%x-%v')",
+            },
+            default => match ($driver) {
+                'sqlite' => "strftime('%Y-%m', actual_close_date)",
+                'pgsql' => "to_char(actual_close_date, 'YYYY-MM')",
+                default => "DATE_FORMAT(actual_close_date, '%Y-%m')",
+            },
+        };
+
+        $aggregatedData = (clone $query)
+            ->groupBy(\Illuminate\Support\Facades\DB::raw($select))
+            ->select(
+                \Illuminate\Support\Facades\DB::raw("{$select} as bucket_key"),
+                \Illuminate\Support\Facades\DB::raw('SUM(COALESCE(final_value, estimated_value, 0)) as total')
+            )
+            ->pluck('total', 'bucket_key')
+            ->toArray();
+
+        $labels = [];
+        $data = [];
+        $cursor = $startDate->copy();
+
+        while ($cursor->lte($endDate)) {
+            if ($bucket === 'day') {
+                $key = $cursor->format('Y-m-d');
+                $labels[] = $cursor->translatedFormat('d M');
+                $cursor->addDay();
+            } elseif ($bucket === 'week') {
+                $key = $cursor->format('Y-W');
+                $labels[] = 'Minggu ' . $cursor->format('W');
+                $cursor->addWeek();
+            } else {
+                $key = $cursor->format('Y-m');
+                $labels[] = $cursor->format('M Y');
+                $cursor->addMonth();
+            }
+
+            $data[] = isset($aggregatedData[$key]) ? (float) $aggregatedData[$key] : 0;
+        }
+
+        return compact('labels', 'data');
     }
 }

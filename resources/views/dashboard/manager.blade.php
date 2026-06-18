@@ -42,7 +42,19 @@
     <div class="grid-stack-item" gs-id="w-revenue-chart" gs-x="0" gs-y="2" gs-w="12" gs-h="5">
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl border border-[var(--cc-border)] shadow-sm p-5 h-full">
-                <h3 class="font-semibold mb-4" style="color:var(--cc-text)">Revenue Trend (6 Months) - Seluruh Tim</h3>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="font-semibold" style="color:var(--cc-text)">Revenue Trend Tim</h3>
+                        <p class="text-xs text-[var(--cc-text-muted)] mt-1">Revenue won milik sales di bawah manager ini.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-1 text-xs" id="revenueRangeButtons">
+                        <button type="button" data-range="daily" class="range-btn px-3 py-1.5 rounded-lg border border-[var(--cc-border)] text-[var(--cc-text-muted)]">Hari</button>
+                        <button type="button" data-range="weekly" class="range-btn px-3 py-1.5 rounded-lg border border-[var(--cc-border)] text-[var(--cc-text-muted)]">Minggu</button>
+                        <button type="button" data-range="monthly" class="range-btn active px-3 py-1.5 rounded-lg border border-indigo-500 bg-indigo-500/10 text-indigo-400">Bulan</button>
+                        <button type="button" data-range="quarter" class="range-btn px-3 py-1.5 rounded-lg border border-[var(--cc-border)] text-[var(--cc-text-muted)]">3 Bulan</button>
+                        <button type="button" data-range="semester" class="range-btn px-3 py-1.5 rounded-lg border border-[var(--cc-border)] text-[var(--cc-text-muted)]">6 Bulan</button>
+                    </div>
+                </div>
                 <div id="revenueChart" style="min-height:280px"></div>
             </div>
         </div>
@@ -53,7 +65,8 @@
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl border border-[var(--cc-border)] shadow-sm overflow-hidden h-full">
                 <div class="px-5 py-4 border-b border-[var(--cc-border)]">
-                    <h3 class="font-semibold text-[var(--cc-text)]">Pipeline per Sales (Stage Breakdown)</h3>
+                    <h3 class="font-semibold text-[var(--cc-text)]">Pipeline per Sales (Nilai & Stage)</h3>
+                    <p class="text-xs text-[var(--cc-text-muted)] mt-1">Bar memakai nilai pipeline, angka kecil tetap menunjukkan jumlah deal.</p>
                 </div>
                 <div class="p-5 space-y-4 overflow-y-auto" style="max-height:calc(100% - 56px)">
                     @php
@@ -80,23 +93,26 @@
                     </div>
 
                     @forelse($stageBreakdown as $row)
-                    @php $rowTotal = array_sum($row['totals']); @endphp
+                    @php
+                        $rowTotal = array_sum($row['totals']);
+                        $rowValueTotal = array_sum($row['values'] ?? []);
+                    @endphp
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-sm font-medium text-[var(--cc-text)]">{{ $row['name'] }}</span>
-                            <span class="text-xs text-[var(--cc-text-muted)]">{{ $rowTotal }} total</span>
+                            <span class="text-xs text-[var(--cc-text-muted)]">Rp {{ number_format($rowValueTotal, 0, ',', '.') }} • {{ $rowTotal }} deal</span>
                         </div>
                         <div class="flex h-5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                             @foreach($stages as $s)
-                            @if(isset($row['totals'][$s]) && $row['totals'][$s] > 0 && $rowTotal > 0)
+                            @if(isset($row['values'][$s]) && $row['values'][$s] > 0 && $rowValueTotal > 0)
                             <div class="{{ $stageColors[$s] ?? 'bg-gray-300 dark:bg-gray-600' }} flex items-center justify-center text-gray-900 text-xs"
-                                 style="width: {{ round(($row['totals'][$s] / $rowTotal) * 100) }}%"
-                                 title="{{ $stageLabelsMap[$s] ?? $s }}: {{ $row['totals'][$s] }}">
+                                 style="width: {{ round(($row['values'][$s] / $rowValueTotal) * 100) }}%"
+                                 title="{{ $stageLabelsMap[$s] ?? $s }}: Rp {{ number_format($row['values'][$s], 0, ',', '.') }} / {{ $row['totals'][$s] }} deal">
                                 {{ $row['totals'][$s] }}
                             </div>
                             @endif
                             @endforeach
-                            @if($rowTotal == 0)
+                            @if($rowValueTotal == 0)
                             <div class="flex-1 flex items-center justify-center text-xs text-[var(--cc-text-muted)]">Belum ada</div>
                             @endif
                         </div>
@@ -161,44 +177,39 @@
                 <div class="px-5 py-4 border-b border-[var(--cc-border)]">
                     <h3 class="font-semibold text-[var(--cc-text)]">KPI Tim - {{ now()->format('F Y') }}</h3>
                 </div>
-                <div class="overflow-x-auto" style="max-height:calc(100% - 56px)">
-                    <table class="w-full text-sm">
-                        <thead class="bg-black/5 dark:bg-gray-100/5 text-xs text-[var(--cc-text-muted)] uppercase sticky top-0">
-                            <tr>
-                                <th class="px-4 py-3 text-left">Sales</th>
-                                <th class="px-4 py-3 text-center">Won</th>
-                                <th class="px-4 py-3 text-center">Win Rate</th>
-                                <th class="px-4 py-3 text-right">Revenue</th>
-                                <th class="px-4 py-3 text-center">KPI%</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-[var(--cc-border)]">
-                            @forelse($teamMembers as $member)
-                            <tr class="hover:bg-black/5 dark:hover:bg-gray-100/5">
-                                <td class="px-4 py-3 font-medium text-[var(--cc-text)]">{{ $member->name }}</td>
-                                <td class="px-4 py-3 text-center text-green-600 dark:text-green-400 font-semibold">{{ $member->won_count }}</td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="text-xs px-2 py-0.5 rounded font-medium
-                                        {{ $member->win_rate >= 50 ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400' }}">
-                                        {{ $member->win_rate }}%
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-right text-[var(--cc-text)]">Rp {{ number_format($member->won_revenue ?? 0, 0, ',', '.') }}</td>
-                                <td class="px-4 py-3 text-center">
-                                    <div class="flex items-center gap-1 justify-center">
-                                        <div class="w-14 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="h-2 rounded-full {{ $member->kpi_pct >= 100 ? 'bg-green-500' : ($member->kpi_pct >= 60 ? 'bg-yellow-400' : 'bg-red-400') }}"
-                                                style="width: {{ min($member->kpi_pct, 100) }}%"></div>
-                                        </div>
-                                        <span class="text-xs text-[var(--cc-text)]">{{ $member->kpi_pct }}%</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="5" class="px-4 py-6 text-center text-[var(--cc-text-muted)]">Belum ada anggota tim.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div class="p-5 overflow-y-auto" style="max-height:calc(100% - 56px)">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        @forelse($teamMembers as $member)
+                        <div class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <h4 class="font-bold text-[var(--cc-text)]">{{ $member->name }}</h4>
+                                    <p class="text-xs text-[var(--cc-text-muted)] mt-1">{{ $member->won_count }} won • Win rate {{ $member->win_rate }}%</p>
+                                </div>
+                                <span class="text-[10px] px-2 py-1 rounded-full font-bold {{ $member->kpi_pct >= 100 ? 'bg-green-500/15 text-green-400' : ($member->kpi_pct >= 60 ? 'bg-yellow-500/15 text-yellow-400' : 'bg-red-500/15 text-red-400') }}">
+                                    {{ $member->kpi_status }}
+                                </span>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex justify-between text-xs text-[var(--cc-text-muted)] mb-1">
+                                    <span>Revenue</span>
+                                    <span>Target</span>
+                                </div>
+                                <div class="flex justify-between text-sm font-mono font-bold text-[var(--cc-text)]">
+                                    <span>Rp {{ number_format($member->won_revenue ?? 0, 0, ',', '.') }}</span>
+                                    <span>Rp {{ number_format($member->target_revenue ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="mt-3 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                                    <div class="h-2 rounded-full {{ $member->kpi_pct >= 100 ? 'bg-green-500' : ($member->kpi_pct >= 60 ? 'bg-yellow-400' : 'bg-red-400') }}"
+                                        style="width: {{ min($member->kpi_pct, 100) }}%"></div>
+                                </div>
+                                <div class="text-right text-xs font-bold text-[var(--cc-text)] mt-1">{{ $member->kpi_pct }}%</div>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="md:col-span-3 px-4 py-6 text-center text-[var(--cc-text-muted)]">Belum ada anggota tim.</div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
@@ -214,7 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var textColor = isDark ? '#94a3b8' : '#64748b';
 
     // Revenue Trend
-    var revData = {!! json_encode($revenueTrend ?? ['labels'=>[],'data'=>[]]) !!};
+    var revenueRanges = {!! json_encode($revenueTrendRanges ?? ['monthly' => ($revenueTrend ?? ['labels'=>[],'data'=>[]])]) !!};
+    var revData = revenueRanges.monthly || {!! json_encode($revenueTrend ?? ['labels'=>[],'data'=>[]]) !!};
     var revenueOptions = {
         series: [{ name: "Revenue Tim", data: revData.data }],
         chart: { type: 'area', height: 280, toolbar: { show: false }, background: 'transparent' },
@@ -228,7 +240,20 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     setTimeout(() => {
-        new ApexCharts(document.querySelector("#revenueChart"), revenueOptions).render();
+        var revenueChart = new ApexCharts(document.querySelector("#revenueChart"), revenueOptions);
+        revenueChart.render();
+        document.querySelectorAll('#revenueRangeButtons .range-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var selected = revenueRanges[button.dataset.range] || revenueRanges.monthly;
+                document.querySelectorAll('#revenueRangeButtons .range-btn').forEach(function(btn) {
+                    btn.classList.remove('active', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-400');
+                    btn.classList.add('border-[var(--cc-border)]', 'text-[var(--cc-text-muted)]');
+                });
+                button.classList.add('active', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-400');
+                revenueChart.updateOptions({ xaxis: { categories: selected.labels } });
+                revenueChart.updateSeries([{ name: "Revenue Tim", data: selected.data }]);
+            });
+        });
     }, 300);
 });
 </script>

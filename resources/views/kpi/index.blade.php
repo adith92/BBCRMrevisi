@@ -27,12 +27,111 @@
 <div x-data="dashboardManager()" x-init="initData()" class="space-y-8 flex flex-col h-full pb-8">
     
     <div class="shrink-0 mb-2">
-        <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-1">Performance Overview</h1>
+        <h1 class="text-3xl font-bold tracking-tight text-[var(--cc-text)] mb-1">
+            {{ in_array($currentUser['role'], ['GM', 'Manager']) ? 'Set Sales Targets (KPI)' : 'Performance Overview' }}
+        </h1>
         <p class="text-[var(--cc-text-muted)]">
-            Sales Performance Monitoring • 
+            {{ in_array($currentUser['role'], ['GM', 'Manager']) ? 'Management panel to establish target KPIs.' : 'Sales Performance Monitoring' }} •
             <span class="text-indigo-400 font-medium" x-text="currentUser.role === 'Sales' ? 'Team View' : 'Company Overview'"></span>
         </p>
     </div>
+
+    @if(in_array($currentUser['role'], ['GM', 'Manager']))
+    @php
+        $monthOptions = collect(range(0, 11))->map(fn ($offset) => now()->startOfMonth()->addMonths($offset));
+        $productTargetFields = [
+            ['name' => 'target_mobil_short', 'label' => 'Mobil Short Term'],
+            ['name' => 'target_bis_short', 'label' => 'Bis Short Term'],
+            ['name' => 'target_evoucher', 'label' => 'E-Voucher'],
+            ['name' => 'target_mobil_long', 'label' => 'Mobil Long Term'],
+            ['name' => 'target_bis_long', 'label' => 'Bis Long Term'],
+            ['name' => 'target_supir', 'label' => 'Supir'],
+        ];
+    @endphp
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5" x-data="kpiTargetForm({
+        mobilShort: {{ (float) ($selectedTarget?->target_mobil_short ?? 0) }},
+        bisShort: {{ (float) ($selectedTarget?->target_bis_short ?? 0) }},
+        evoucher: {{ (float) ($selectedTarget?->target_evoucher ?? 0) }},
+        mobilLong: {{ (float) ($selectedTarget?->target_mobil_long ?? 0) }},
+        bisLong: {{ (float) ($selectedTarget?->target_bis_long ?? 0) }},
+        supir: {{ (float) ($selectedTarget?->target_supir ?? 0) }}
+    })">
+        <div class="xl:col-span-4 rounded-3xl border border-[var(--cc-border)] bg-[var(--cc-surface)] p-6">
+            <h2 class="text-lg font-bold text-[var(--cc-text)] mb-5">Configuration</h2>
+            <form method="GET" action="{{ route('kpi.index') }}" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-[var(--cc-text-muted)] mb-2">Select Sales Representative</label>
+                    <select name="user_id" onchange="this.form.submit()" class="w-full rounded-xl bg-[var(--cc-bg)] border border-[var(--cc-border)] px-4 py-3 text-sm font-semibold text-[var(--cc-text)]">
+                        @foreach($assignableUsers as $targetUser)
+                            <option value="{{ $targetUser->id }}" @selected($selectedTargetUserId === $targetUser->id)>{{ $targetUser->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-[var(--cc-text-muted)] mb-2">Target Month</label>
+                    <select name="month_year" onchange="const [y,m]=this.value.split('-'); this.form.year.value=y; this.form.month.value=m; this.form.submit();" class="w-full rounded-xl bg-[var(--cc-bg)] border border-[var(--cc-border)] px-4 py-3 text-sm font-semibold text-[var(--cc-text)]">
+                        @foreach($monthOptions as $date)
+                            <option value="{{ $date->format('Y-n') }}" @selected($year === (int) $date->year && $month === (int) $date->month)>{{ $date->translatedFormat('F Y') }}</option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" name="year" value="{{ $year }}">
+                    <input type="hidden" name="month" value="{{ $month }}">
+                </div>
+            </form>
+            <div class="mt-6 border-t border-[var(--cc-border)] pt-5">
+                <p class="text-xs font-bold uppercase tracking-widest text-[var(--cc-text-muted)] mb-3">Quick Presets</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" @click="applyPreset(50000000)" class="rounded-xl border border-[var(--cc-border)] px-3 py-2 text-xs font-bold text-[var(--cc-text)] hover:bg-indigo-500/10">Rp 50 Juta All</button>
+                    <button type="button" @click="applyPreset(150000000)" class="rounded-xl border border-[var(--cc-border)] px-3 py-2 text-xs font-bold text-[var(--cc-text)] hover:bg-indigo-500/10">Rp 150 Juta All</button>
+                    <button type="button" @click="applyPreset(300000000)" class="rounded-xl border border-[var(--cc-border)] px-3 py-2 text-xs font-bold text-[var(--cc-text)] hover:bg-indigo-500/10">Rp 300 Juta All</button>
+                    <button type="button" @click="applyPreset(500000000)" class="rounded-xl border border-[var(--cc-border)] px-3 py-2 text-xs font-bold text-[var(--cc-text)] hover:bg-indigo-500/10">Rp 500 Juta All</button>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('kpi.store') }}" class="xl:col-span-8 rounded-3xl border border-[var(--cc-border)] bg-[var(--cc-surface)] p-6">
+            @csrf
+            <input type="hidden" name="user_id" value="{{ $selectedTargetUserId }}">
+            <input type="hidden" name="period_year" value="{{ $year }}">
+            <input type="hidden" name="period_month" value="{{ $month }}">
+            <input type="hidden" name="target_revenue" :value="totalTarget">
+            <h2 class="text-lg font-bold text-[var(--cc-text)] mb-5">Target Nominal per Produk (Rupiah)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach($productTargetFields as $field)
+                @php
+                    $modelMap = [
+                        'target_mobil_short' => 'mobilShort',
+                        'target_bis_short' => 'bisShort',
+                        'target_evoucher' => 'evoucher',
+                        'target_mobil_long' => 'mobilLong',
+                        'target_bis_long' => 'bisLong',
+                        'target_supir' => 'supir',
+                    ];
+                    $modelName = $modelMap[$field['name']];
+                @endphp
+                <label class="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] p-4">
+                    <span class="block text-xs font-bold uppercase tracking-widest text-[var(--cc-text-muted)] mb-2">{{ $field['label'] }}</span>
+                    <div class="flex items-center rounded-xl bg-[var(--cc-bg)] border border-[var(--cc-border)] px-3 py-2">
+                        <span class="text-[var(--cc-text-muted)] text-sm font-bold mr-2">Rp</span>
+                        <input type="number" min="0" step="1000000" name="{{ $field['name'] }}" x-model.number="{{ $modelName }}" class="w-full bg-transparent border-0 p-0 text-sm font-mono font-bold text-[var(--cc-text)] focus:ring-0">
+                    </div>
+                    <span class="mt-2 block text-xs text-indigo-400 font-mono" x-text="'Formatted: ' + formatIDR({{ $modelName }})"></span>
+                </label>
+                @endforeach
+            </div>
+            <div class="mt-6 border-t border-[var(--cc-border)] pt-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-muted)] px-4 py-3 flex-1">
+                    <span class="text-xs font-bold uppercase tracking-widest text-[var(--cc-text-muted)]">Total Keseluruhan Target</span>
+                    <span class="block md:inline md:float-right text-lg font-mono font-bold text-emerald-400" x-text="formatIDR(totalTarget)"></span>
+                </div>
+                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-500">
+                    <span class="material-symbols-outlined text-[16px]">save</span>
+                    Simpan Target
+                </button>
+            </div>
+        </form>
+    </div>
+    @endif
 
     {{-- KPI Highlight Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -415,6 +514,36 @@
 
 @push('scripts')
 <script>
+function kpiTargetForm(initialValues) {
+    return {
+        mobilShort: initialValues.mobilShort || 0,
+        bisShort: initialValues.bisShort || 0,
+        evoucher: initialValues.evoucher || 0,
+        mobilLong: initialValues.mobilLong || 0,
+        bisLong: initialValues.bisLong || 0,
+        supir: initialValues.supir || 0,
+        get totalTarget() {
+            return Number(this.mobilShort || 0)
+                + Number(this.bisShort || 0)
+                + Number(this.evoucher || 0)
+                + Number(this.mobilLong || 0)
+                + Number(this.bisLong || 0)
+                + Number(this.supir || 0);
+        },
+        applyPreset(amount) {
+            this.mobilShort = amount;
+            this.bisShort = amount;
+            this.evoucher = amount;
+            this.mobilLong = amount;
+            this.bisLong = amount;
+            this.supir = amount;
+        },
+        formatIDR(value) {
+            return 'Rp ' + new Intl.NumberFormat('id-ID').format(Number(value || 0));
+        }
+    };
+}
+
 function dashboardManager() {
     return {
         currentUser: @json($currentUser),
