@@ -18,7 +18,7 @@ class ClientController extends Controller
     {
         $user = auth()->user();
 
-        $query = Client::with(['assignedSales', 'invoices'])
+        $baseQuery = Client::query()
             ->withCount(['opportunities as won_opportunities_count' => function ($q) {
                 $q->where('stage', 'won');
             }])
@@ -27,10 +27,25 @@ class ClientController extends Controller
             }], 'final_value')
             ->when($user->isSales(), fn($q) => $q->where('assigned_sales_id', $user->id));
 
+        $query = (clone $baseQuery)->with(['assignedSales', 'invoices']);
+
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('company_name', 'like', "%{$search}%")
+                    ->orWhere('pic_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('industry', 'like', "%{$search}%")
+                    ->orWhereHas('assignedSales', function ($salesQuery) use ($search) {
+                        $salesQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
         // Filter status
         if ($request->filled('filter_status')) {
             $status = $request->input('filter_status');
-            if (in_array($status, ['active', 'inactive'])) {
+            if (in_array($status, ['active', 'inactive', 'prospect'])) {
                 $query->where('status', $status);
             }
         }
@@ -49,12 +64,52 @@ class ClientController extends Controller
 
         $clients = $query->paginate(20)->withQueryString();
 
+        $summarySource = (clone $baseQuery)->get(['id', 'company_name', 'status', 'industry']);
+
+        $summary = [
+            'total_clients' => $summarySource->count(),
+            'active_clients' => $summarySource->where('status', 'active')->count(),
+            'prospect_clients' => $summarySource->where('status', 'prospect')->count(),
+            'inactive_clients' => $summarySource->where('status', 'inactive')->count(),
+            'active_revenue' => (clone $baseQuery)->where('status', 'active')->sum('won_opportunities_sum'),
+            'at_risk_clients' => $summarySource
+                ->filter(fn($client) => $client->status !== 'active' || ((int) ($client->won_opportunities_count ?? 0) === 0))
+                ->count(),
+            'top_industry' => $summarySource
+                ->filter(fn($client) => filled($client->industry))
+                ->groupBy('industry')
+                ->sortByDesc(fn($group) => $group->count())
+                ->keys()
+                ->first() ?? 'Belum ada',
+        ];
+
+        $industryRevenue = (clone $baseQuery)
+            ->get(['industry'])
+            ->filter(fn($client) => filled($client->industry) && (float) ($client->won_opportunities_sum ?? 0) > 0)
+            ->groupBy('industry')
+            ->map(function ($group, $industry) {
+                return [
+                    'label' => $industry,
+                    'value' => (float) $group->sum(fn($client) => $client->won_opportunities_sum ?? 0),
+                ];
+            })
+            ->sortByDesc('value')
+            ->take(4)
+            ->values();
+
+        $statusBreakdown = collect([
+            ['label' => 'Active', 'value' => $summary['active_clients'], 'tone' => 'emerald'],
+            ['label' => 'Prospect', 'value' => $summary['prospect_clients'], 'tone' => 'amber'],
+            ['label' => 'At Risk', 'value' => $summary['at_risk_clients'], 'tone' => 'rose'],
+            ['label' => 'Inactive', 'value' => $summary['inactive_clients'], 'tone' => 'slate'],
+        ]);
+
         $sales = [];
         if ($user->isManager()) {
             $sales = \App\Models\User::where('manager_id', $user->id)->where('role', 'sales')->orderBy('name')->get();
         }
 
-        return view('clients.index', compact('clients', 'sales'));
+        return view('clients.index', compact('clients', 'sales', 'summary', 'industryRevenue', 'statusBreakdown'));
     }
 
     public function show(Client $client)

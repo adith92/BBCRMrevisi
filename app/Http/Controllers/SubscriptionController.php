@@ -24,10 +24,22 @@ class SubscriptionController extends Controller
     {
         $status = request('status');
         $clientId = request('client_id');
+        $search = trim((string) request('search'));
 
-        $subscriptions = Subscription::with(['client', 'vehicle', 'product', 'driver'])
+        $baseQuery = Subscription::with(['client', 'vehicle', 'product', 'driver']);
+
+        $subscriptions = (clone $baseQuery)
             ->when($status, fn($q, $s) => $q->where('status', $s))
             ->when($clientId, fn($q, $c) => $q->where('client_id', $c))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('sub_number', 'like', "%{$search}%")
+                        ->orWhereHas('client', fn($clientQuery) => $clientQuery->where('company_name', 'like', "%{$search}%"))
+                        ->orWhereHas('product', fn($productQuery) => $productQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('vehicle', fn($vehicleQuery) => $vehicleQuery->where('plate_number', 'like', "%{$search}%"))
+                        ->orWhereHas('driver', fn($driverQuery) => $driverQuery->where('name', 'like', "%{$search}%"));
+                });
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -37,7 +49,78 @@ class SubscriptionController extends Controller
             ->where('next_billing_date', '<=', today())
             ->count();
 
-        return view('subscriptions.index', compact('subscriptions', 'clients', 'status', 'clientId', 'dueTodayCount'));
+        $summarySource = (clone $baseQuery)->get();
+
+        $statusFiltered = $summarySource
+            ->when($status, fn($collection) => $collection->where('status', $status))
+            ->when($clientId, fn($collection) => $collection->where('client_id', (int) $clientId))
+            ->when($search !== '', function ($collection) use ($search) {
+                return $collection->filter(function ($subscription) use ($search) {
+                    $haystacks = [
+                        $subscription->sub_number,
+                        $subscription->client?->company_name,
+                        $subscription->product?->name,
+                        $subscription->vehicle?->plate_number,
+                        $subscription->driver?->name,
+                    ];
+
+                    foreach ($haystacks as $haystack) {
+                        if ($haystack && str_contains(strtolower($haystack), strtolower($search))) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                });
+            })
+            ->values();
+
+        $billingSummary = [
+            'active_mrr' => $statusFiltered->where('status', 'active')->sum('monthly_rate'),
+            'next_billing_count' => $statusFiltered->filter(function ($subscription) {
+                return $subscription->status === 'active'
+                    && $subscription->next_billing_date
+                    && $subscription->next_billing_date->between(today(), today()->copy()->addDays(7));
+            })->count(),
+            'expiring_soon_count' => $statusFiltered->filter(function ($subscription) {
+                return $subscription->status === 'active'
+                    && $subscription->end_date
+                    && $subscription->end_date->between(today(), today()->copy()->addDays(30));
+            })->count(),
+            'terminated_count' => $statusFiltered->filter(function ($subscription) {
+                return $subscription->status === 'terminated'
+                    && $subscription->updated_at
+                    && $subscription->updated_at->isCurrentMonth();
+            })->count(),
+        ];
+
+        $productRevenue = $statusFiltered
+            ->filter(fn($subscription) => $subscription->product?->name)
+            ->groupBy(fn($subscription) => $subscription->product->name)
+            ->map(fn($group, $product) => [
+                'label' => $product,
+                'value' => (float) $group->sum('monthly_rate'),
+            ])
+            ->sortByDesc('value')
+            ->take(4)
+            ->values();
+
+        $billingTimeline = $statusFiltered
+            ->filter(fn($subscription) => $subscription->status === 'active' && $subscription->next_billing_date)
+            ->sortBy(fn($subscription) => $subscription->next_billing_date)
+            ->take(3)
+            ->values();
+
+        return view('subscriptions.index', compact(
+            'subscriptions',
+            'clients',
+            'status',
+            'clientId',
+            'dueTodayCount',
+            'billingSummary',
+            'productRevenue',
+            'billingTimeline'
+        ));
     }
 
     public function create()

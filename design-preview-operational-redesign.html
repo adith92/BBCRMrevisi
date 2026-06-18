@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Golden Bird CRM - Operational Redesign Preview</title>
+  <style>
+    :root {
+      --bg: #0b1224;
+      --panel: #111a2e;
+      --panel-2: #16213a;
+      --line: rgba(148, 163, 184, .22);
+      --text: #e8eefc;
+      --muted: #94a3b8;
+      --blue: #38bdf8;
+      --indigo: #6366f1;
+      --amber: #f59e0b;
+      --green: #34d399;
+      --red: #fb7185;
+      --soft: rgba(99, 102, 241, .16);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, rgba(79, 70, 229, .32), transparent 32%),
+                  linear-gradient(135deg, #0b1022 0%, #0d172c 52%, #09111f 100%);
+      color: var(--text);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+
+    aside {
+      border-right: 1px solid var(--line);
+      background: rgba(17, 24, 46, .86);
+      padding: 24px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      margin-bottom: 34px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #2563eb, #22d3ee);
+      font-size: 22px;
+    }
+
+    .side-label {
+      margin: 24px 12px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .nav-item.active {
+      background: rgba(56, 189, 248, .13);
+      outline: 1px solid rgba(56, 189, 248, .32);
+      color: #f8fafc;
+    }
+
+    main {
+      padding: 26px 34px 56px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 26px;
+    }
+
+    .breadcrumb {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .search {
+      width: 360px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      background: rgba(15, 23, 42, .7);
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .primary {
+      border: 0;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: white;
+      height: 48px;
+      padding: 0 22px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 15px;
+      box-shadow: 0 12px 28px rgba(79, 70, 229, .32);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      min-height: 118px;
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(17, 26, 46, .82);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 32px;
+      margin-top: 12px;
+    }
+
+    .metric span, .section-title span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(17, 26, 46, .86);
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-title h2 {
+      margin: 4px 0 0;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .segmented {
+      display: inline-flex;
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, .62);
+    }
+
+    .segmented button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-weight: 800;
+    }
+
+    .segmented button.active {
+      color: white;
+      background: rgba(37, 99, 235, .9);
+    }
+
+    .queue {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 18px;
+    }
+
+    .assignment {
+      border-radius: 12px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, .9), rgba(15, 23, 42, .9));
+      border: 1px solid rgba(148, 163, 184, .18);
+    }
+
+    .assignment h3 {
+      margin: 0 0 4px;
+      font-size: 17px;
+    }
+
+    .assignment p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .need-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 10px 0;
+      border-top: 1px solid rgba(148, 163, 184, .13);
+      color: #cbd5e1;
+    }
+
+    .need-line b {
+      color: white;
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 99px;
+      background: rgba(148, 163, 184, .18);
+      overflow: hidden;
+      margin: 10px 0 14px;
+    }
+
+    .progress i {
+      display: block;
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, var(--amber), var(--green));
+    }
+
+    .compact-action {
+      width: 100%;
+      height: 42px;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      background: #4f46e5;
+      font-weight: 800;
+    }
+
+    .insight {
+      padding: 18px;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 52px;
+      gap: 12px;
+      align-items: center;
+      margin: 14px 0;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+
+    .bar {
+      height: 13px;
+      border-radius: 99px;
+      background: rgba(148, 163, 184, .16);
+      overflow: hidden;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #38bdf8, #6366f1);
+    }
+
+    .table-wrap {
+      padding: 18px;
+    }
+
+    .tool-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .input {
+      min-width: 340px;
+      height: 42px;
+      border-radius: 11px;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, .6);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 14px 12px;
+      background: rgba(30, 41, 59, .58);
+    }
+
+    td {
+      padding: 15px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, .13);
+      color: #dbeafe;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(52, 211, 153, .18);
+      color: #bbf7d0;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1000px) {
+      .app { grid-template-columns: 1fr; }
+      aside { display: none; }
+      .metric-grid, .layout, .queue { grid-template-columns: 1fr; }
+      .hero, .topbar, .tool-row { align-items: stretch; flex-direction: column; }
+      .search, .input { width: 100%; min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="brand-icon">B</div><div>Bluebird CRM<br><span style="color:#94a3b8;font-size:12px">COMMAND CENTER</span></div></div>
+      <div class="side-label">Demo Switch</div>
+      <div class="nav-item">Quick Switch Role</div>
+      <div class="side-label">Utama</div>
+      <div class="nav-item active">Dashboard</div>
+      <div class="side-label">Operasional</div>
+      <div class="nav-item">Fleet / Armada</div>
+      <div class="nav-item">Driver / Supir</div>
+      <div class="nav-item">Dispatch</div>
+      <div class="side-label">Finance</div>
+      <div class="nav-item">Subscription Billing</div>
+      <div class="nav-item">Keuangan & Tagihan</div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="breadcrumb">Bluebird CRM / Operational Dashboard</div>
+        <div class="search">Pencarian cepat...</div>
+      </div>
+
+      <section class="hero">
+        <div>
+          <h1>Operational Command Center</h1>
+          <p class="sub">Pantau booking aktif, alokasi fleet, driver, dan kontrak berlangganan dalam satu layar kerja.</p>
+        </div>
+        <button class="primary">+ Tambah Operasional</button>
+      </section>
+
+      <section class="metric-grid">
+        <div class="metric"><span>Available Fleet</span><strong>60</strong><p class="sub">Siap dipakai hari ini</p></div>
+        <div class="metric"><span>Active Booking</span><strong>56</strong><p class="sub">Confirmed dan on trip</p></div>
+        <div class="metric"><span>Pending Allocation</span><strong>139</strong><p class="sub">Butuh fleet / driver</p></div>
+        <div class="metric"><span>Subscription MRR</span><strong>Rp 3.8M</strong><p class="sub">Kontrak aktif bulanan</p></div>
+      </section>
+
+      <section class="layout">
+        <div class="section">
+          <div class="section-head">
+            <div class="section-title"><span>Action Queue</span><h2>Fleet Assignment</h2></div>
+            <div class="segmented"><button class="active">Newest</button><button>Oldest</button><button>Highest Need</button></div>
+          </div>
+          <div class="queue">
+            <article class="assignment">
+              <h3>Conference Transport - 7 unit</h3>
+              <p>PT Raya Persada Central Mandiri</p>
+              <div class="need-line"><span>Mobil Required</span><b>7</b></div>
+              <div class="need-line"><span>Mobil Assigned</span><b>0</b></div>
+              <div class="progress"><i style="width:0%"></i></div>
+              <button class="compact-action">Assign Fleet</button>
+            </article>
+            <article class="assignment">
+              <h3>Site Visit Transportation - 27 unit</h3>
+              <p>PT Yakin Sukses Tiga Berlian</p>
+              <div class="need-line"><span>Mobil Required</span><b>10</b></div>
+              <div class="need-line"><span>Mobil Assigned</span><b>4</b></div>
+              <div class="progress"><i style="width:40%"></i></div>
+              <button class="compact-action">Assign Fleet</button>
+            </article>
+            <article class="assignment">
+              <h3>Annual Transport Agreement</h3>
+              <p>PT Duta Pratama Utama Prima</p>
+              <div class="need-line"><span>Mobil Required</span><b>7</b></div>
+              <div class="need-line"><span>Mobil Assigned</span><b>2</b></div>
+              <div class="progress"><i style="width:28%"></i></div>
+              <button class="compact-action">Assign Fleet</button>
+            </article>
+            <article class="assignment">
+              <h3>Factory Tour Transport</h3>
+              <p>PT Krakatau Steel</p>
+              <div class="need-line"><span>Mobil Required</span><b>4</b></div>
+              <div class="need-line"><span>Mobil Assigned</span><b>1</b></div>
+              <div class="progress"><i style="width:25%"></i></div>
+              <button class="compact-action">Assign Fleet</button>
+            </article>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <div class="section-title"><span>Visual Summary</span><h2>Beban Alokasi</h2></div>
+          </div>
+          <div class="insight">
+            <div class="chart-row"><span>Fleet</span><div class="bar"><i style="width:82%"></i></div><b>139</b></div>
+            <div class="chart-row"><span>Driver</span><div class="bar"><i style="width:64%"></i></div><b>108</b></div>
+            <div class="chart-row"><span>Today</span><div class="bar"><i style="width:48%"></i></div><b>42</b></div>
+            <div class="chart-row"><span>Overdue</span><div class="bar"><i style="width:24%;background:linear-gradient(90deg,#fb7185,#f59e0b)"></i></div><b>12</b></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div class="section-title"><span>Data Table</span><h2>Clients & Subscription Ringkas</h2></div>
+        </div>
+        <div class="table-wrap">
+          <div class="tool-row">
+            <div class="input">Search client, PIC, sales, invoice...</div>
+            <div class="segmented"><button class="active">All</button><button>Active</button><button>At Risk</button></div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Company</th><th>PIC</th><th>Industry</th><th>Sales</th><th>Revenue</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>CV Abadi Makmur Niaga Mandiri</td><td>Bapak/Ibu Abadi Makmur</td><td>FMCG</td><td>Aditya Prakoso</td><td>Rp 28 Juta</td><td><span class="pill">Active</span></td></tr>
+              <tr><td>CV Mitra Sejati Global Mandiri</td><td>Bapak/Ibu Mitra Sejati</td><td>Oil & Gas</td><td>Lukman Hakim</td><td>Rp 0</td><td><span class="pill">Active</span></td></tr>
+              <tr><td>PT Omega Jaya Delta Persada</td><td>Bapak/Ibu Omega</td><td>Subscription</td><td>Dian Permata</td><td>Rp 825 Juta</td><td><span class="pill">Aktif</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
