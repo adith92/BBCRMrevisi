@@ -111,7 +111,7 @@
                     <div class="mt-2 text-sm text-[var(--cc-text-muted)]">Dari deal won</div>
                 </div>
                 <div class="summary-tile rounded-2xl p-5">
-                    <div class="summary-kicker">Client At Risk</div>
+                    <div class="summary-kicker">Accounts At Risk</div>
                     <div class="mt-3 text-3xl font-black text-[var(--cc-text)]">{{ number_format($summary['at_risk_clients']) }}</div>
                     <div class="mt-2 text-sm text-[var(--cc-text-muted)]">Minim aktivitas atau tidak aktif</div>
                 </div>

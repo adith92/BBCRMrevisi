@@ -64,6 +64,26 @@ class ClientController extends Controller
 
         $clients = $query->paginate(20)->withQueryString();
 
+        if (in_array($sortBy, ['transactions_desc', 'value_desc'], true)) {
+            $sortedPageItems = $clients->getCollection()->sort(function ($left, $right) use ($sortBy) {
+                $leftMetric = $sortBy === 'transactions_desc'
+                    ? (int) ($left->won_opportunities_count ?? 0)
+                    : (float) ($left->won_opportunities_sum ?? 0);
+
+                $rightMetric = $sortBy === 'transactions_desc'
+                    ? (int) ($right->won_opportunities_count ?? 0)
+                    : (float) ($right->won_opportunities_sum ?? 0);
+
+                if ($leftMetric === $rightMetric) {
+                    return strcasecmp($left->company_name, $right->company_name);
+                }
+
+                return $rightMetric <=> $leftMetric;
+            })->values();
+
+            $clients->setCollection($sortedPageItems);
+        }
+
         $summarySource = (clone $baseQuery)->get(['id', 'company_name', 'status', 'industry']);
 
         $summary = [
