@@ -18,6 +18,7 @@ yarn-error.log
 /.vscode
 database/database.sqlite
 /graphify-out/
+/.codegraph/
 
 # Master docs — private, jangan di-clone
 /master
