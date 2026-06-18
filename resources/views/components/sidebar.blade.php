@@ -2,6 +2,12 @@
     $role = Auth::user()->role ?? '';
     $roleIcons  = ['director'=>'👔','gm'=>'🏢','manager'=>'📊','sales'=>'💼','operational'=>'🚗','pool'=>'🅿️','finance'=>'💰'];
     $roleLabels = ['director'=>'Director HQ','gm'=>'General Manager','manager'=>'Manager','sales'=>'Sales Officer','operational'=>'Operations','pool'=>'Pool Admin','finance'=>'Finance'];
+    $demoSwitchUsers = \App\Models\User::whereIn('role', ['gm', 'manager', 'sales', 'operational', 'pool', 'finance'])
+        ->orderByRaw("CASE role WHEN 'gm' THEN 1 WHEN 'manager' THEN 2 WHEN 'sales' THEN 3 WHEN 'operational' THEN 4 WHEN 'pool' THEN 5 WHEN 'finance' THEN 6 ELSE 7 END")
+        ->orderBy('manager_id')
+        ->orderBy('name')
+        ->get()
+        ->groupBy('role');
 @endphp
 
 <aside id="sidebar" 
@@ -21,6 +27,62 @@
 
     {{-- Navigation --}}
     <nav class="flex-grow overflow-y-auto px-3 py-3 space-y-0.5">
+
+        @if($demoSwitchUsers->flatten()->count() > 1)
+        <div x-show="sidebarOpen" class="nav-section-label">Demo Switch</div>
+        <div x-data="{ open: false }" class="relative mb-2">
+            <button type="button"
+                    @click="open = !open"
+                    class="nav-item w-full flex items-center justify-between"
+                    :class="open ? 'active' : ''">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined">switch_account</span>
+                    <span x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200" class="whitespace-nowrap">Quick Switch Role</span>
+                </div>
+                <span x-show="sidebarOpen" class="material-symbols-outlined text-[16px] transition-transform" :class="open ? 'rotate-180' : ''">expand_more</span>
+            </button>
+
+            <div x-show="open && sidebarOpen" x-cloak
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="opacity-0 -translate-y-1"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="mt-1 rounded-xl border border-[var(--cc-sidebar-divider)] bg-black/5 dark:bg-slate-950/40 overflow-hidden">
+                @php
+                    $switchGroups = [
+                        'gm' => 'General Management',
+                        'manager' => 'Sales Managers',
+                        'sales' => 'Sales Representatives',
+                        'operational' => 'Operations',
+                        'pool' => 'Pool',
+                        'finance' => 'Finance',
+                    ];
+                @endphp
+                @foreach($switchGroups as $switchRole => $switchLabel)
+                    @if(($demoSwitchUsers[$switchRole] ?? collect())->isNotEmpty())
+                    <div class="px-3 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-[var(--cc-sidebar-user-role)]">{{ $switchLabel }}</div>
+                    <div class="space-y-0.5 px-1 pb-2">
+                        @foreach($demoSwitchUsers[$switchRole] as $switchUser)
+                        <form method="POST" action="{{ route('system.switch-demo-user') }}">
+                            @csrf
+                            <input type="hidden" name="user_id" value="{{ $switchUser->id }}">
+                            <button type="submit"
+                                    class="w-full flex items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition-all {{ auth()->id() === $switchUser->id ? 'bg-blue-500/15 text-blue-400' : 'text-[var(--cc-sidebar-link)] hover:bg-white/10' }}">
+                                <span class="material-symbols-outlined text-[15px]">
+                                    {{ $switchRole === 'gm' ? 'apartment' : ($switchRole === 'manager' ? 'leaderboard' : ($switchRole === 'sales' ? 'business_center' : ($switchRole === 'finance' ? 'payments' : 'badge'))) }}
+                                </span>
+                                <span class="min-w-0">
+                                    <span class="block truncate font-semibold">{{ $switchUser->name }}</span>
+                                    <span class="block truncate text-[10px] opacity-70">{{ $roleLabels[$switchRole] ?? strtoupper($switchRole) }}</span>
+                                </span>
+                            </button>
+                        </form>
+                        @endforeach
+                    </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+        @endif
 
         <div x-show="sidebarOpen" class="nav-section-label">{{ __('ui.main') }}</div>
         <a href="{{ route('dashboard') }}" class="nav-item {{ Request::routeIs('dashboard') ? 'active' : '' }} flex items-center gap-3">

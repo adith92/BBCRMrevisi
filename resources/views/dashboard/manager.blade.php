@@ -3,6 +3,7 @@
 @section('header_title', 'Manager Dashboard')
 
 @section('content')
+<div x-data="{ showTopPerformers: false }">
 <x-dashboard-grid :saved-layout="auth()->user()->dashboard_settings">
 
     {{-- Row 1: Team Overview Cards (3 cards) --}}
@@ -175,7 +176,18 @@
         <div class="grid-stack-item-content">
             <div class="cc-card rounded-xl border border-[var(--cc-border)] shadow-sm overflow-hidden h-full">
                 <div class="px-5 py-4 border-b border-[var(--cc-border)]">
-                    <h3 class="font-semibold text-[var(--cc-text)]">KPI Tim - {{ now()->format('F Y') }}</h3>
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-semibold text-[var(--cc-text)]">KPI Tim - {{ now()->format('F Y') }}</h3>
+                            <p class="text-xs text-[var(--cc-text-muted)] mt-1">Ringkasan target dan pencapaian sales di bawah manager ini.</p>
+                        </div>
+                        <button type="button"
+                                @click="showTopPerformers = true"
+                                class="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-500 hover:bg-amber-400/20 transition">
+                            <span class="material-symbols-outlined text-[16px]">bolt</span>
+                            Top Performers
+                        </button>
+                    </div>
                 </div>
                 <div class="p-5 overflow-y-auto" style="max-height:calc(100% - 56px)">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -216,6 +228,98 @@
     </div>
 
 </x-dashboard-grid>
+
+<div x-show="showTopPerformers"
+     x-cloak
+     class="fixed inset-0 z-[9999] overflow-y-auto"
+     @keydown.escape.window="showTopPerformers = false">
+    <div x-show="showTopPerformers"
+         x-transition.opacity
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm"
+         @click="showTopPerformers = false"></div>
+
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div x-show="showTopPerformers"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-3 scale-95"
+             class="relative w-full max-w-4xl rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-surface)] shadow-2xl overflow-hidden">
+            <div class="flex items-start justify-between gap-4 border-b border-[var(--cc-border)] px-6 py-5">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-400">bolt</span>
+                        <h3 class="text-xl font-bold text-[var(--cc-text)]">Top Performers Tim</h3>
+                    </div>
+                    <p class="text-sm text-[var(--cc-text-muted)] mt-1">Ranking berdasarkan revenue won bulan ini, lalu jumlah won dan pipeline aktif.</p>
+                </div>
+                <button type="button" @click="showTopPerformers = false" class="text-[var(--cc-text-muted)] hover:text-[var(--cc-text)] transition">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="max-h-[70vh] overflow-y-auto p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @forelse($topPerformers as $idx => $performer)
+                    <div class="rounded-2xl border border-[var(--cc-border)] bg-black/5 dark:bg-white/5 p-4">
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border font-bold
+                                {{ $idx === 0 ? 'border-amber-400/50 bg-amber-400/15 text-amber-400' : ($idx === 1 ? 'border-slate-400/40 bg-slate-400/10 text-slate-300' : ($idx === 2 ? 'border-orange-400/40 bg-orange-400/10 text-orange-400' : 'border-[var(--cc-border)] text-[var(--cc-text-muted)]')) }}">
+                                {{ $idx + 1 }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <h4 class="truncate font-bold text-[var(--cc-text)]">{{ $performer->name }}</h4>
+                                        <p class="text-xs text-[var(--cc-text-muted)] mt-1">{{ $performer->won_count }} won • Win rate {{ $performer->win_rate }}%</p>
+                                    </div>
+                                    <span class="shrink-0 rounded-full px-2 py-1 text-[10px] font-bold {{ $performer->kpi_pct >= 100 ? 'bg-green-500/15 text-green-400' : ($performer->kpi_pct >= 60 ? 'bg-yellow-500/15 text-yellow-400' : 'bg-red-500/15 text-red-400') }}">
+                                        {{ $performer->kpi_pct }}%
+                                    </span>
+                                </div>
+
+                                <div class="mt-4 grid grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                        <p class="text-[var(--cc-text-muted)]">Revenue Won</p>
+                                        <p class="font-mono font-bold text-emerald-400">Rp {{ number_format($performer->won_revenue ?? 0, 0, ',', '.') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--cc-text-muted)]">Target</p>
+                                        <p class="font-mono font-bold text-[var(--cc-text)]">Rp {{ number_format($performer->target_revenue ?? 0, 0, ',', '.') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--cc-text-muted)]">Pipeline Aktif</p>
+                                        <p class="font-mono font-bold text-blue-400">Rp {{ number_format($performer->pipeline_value ?? 0, 0, ',', '.') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--cc-text-muted)]">Status</p>
+                                        <p class="font-bold text-[var(--cc-text)]">{{ $performer->kpi_status }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 flex items-center justify-between gap-3">
+                                    <div class="h-2 flex-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                                        <div class="h-2 rounded-full {{ $performer->kpi_pct >= 100 ? 'bg-green-500' : ($performer->kpi_pct >= 60 ? 'bg-yellow-400' : 'bg-red-400') }}"
+                                             style="width: {{ min($performer->kpi_pct, 100) }}%"></div>
+                                    </div>
+                                    <a href="{{ route('sales.performance', $performer->id) }}" class="text-xs font-bold text-blue-500 hover:underline">Detail</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="md:col-span-2 rounded-2xl border border-dashed border-[var(--cc-border)] p-8 text-center text-sm text-[var(--cc-text-muted)]">
+                        Belum ada data performa untuk tim ini.
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>

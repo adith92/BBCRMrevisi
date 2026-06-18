@@ -517,6 +517,10 @@ class DashboardController extends Controller
         $teamPipelineValue = $teamMembers->sum('pipeline_value');
         $teamWon           = $teamMembers->sum('won_count');
         $teamLost          = $teamMembers->sum('lost_count');
+        $topPerformers     = $teamMembers
+            ->sortByDesc(fn ($member) => (($member->won_revenue ?? 0) * 1000) + (($member->won_count ?? 0) * 100) + ($member->pipeline_value ?? 0))
+            ->values()
+            ->take(10);
 
         $stages       = ['prospecting', 'proposal', 'negotiation'];
         $stageLabels  = ['Prospecting', 'Proposal', 'Negotiation'];
@@ -577,7 +581,8 @@ class DashboardController extends Controller
         return view('dashboard.manager', compact(
             'teamMembers', 'teamPipelineValue', 'teamWon', 'teamLost',
             'stages', 'stageLabels', 'stageColors', 'stageBreakdown',
-            'recentActivities', 'activityIcons', 'revenueTrend', 'revenueTrendRanges'
+            'recentActivities', 'activityIcons', 'revenueTrend', 'revenueTrendRanges',
+            'topPerformers'
         ));
     }
 

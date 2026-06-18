@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class SystemController extends Controller
 {
@@ -33,5 +35,21 @@ class SystemController extends Controller
         }
 
         return response()->json(['status' => 'success']);
+    }
+
+    public function switchDemoUser(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        $user = User::whereKey($request->integer('user_id'))
+            ->whereIn('role', ['gm', 'manager', 'sales', 'operational', 'pool', 'finance'])
+            ->firstOrFail();
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard')->with('success', 'Demo role switched to ' . $user->name . '.');
     }
 }

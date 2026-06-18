@@ -138,6 +138,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/system/seed-demo', [SystemController::class, 'seedDemo'])
         ->name('system.seed-demo')
         ->middleware('role:gm');
+    Route::post('/system/switch-demo-user', [SystemController::class, 'switchDemoUser'])
+        ->name('system.switch-demo-user');
 });
 
 require __DIR__.'/auth.php';
