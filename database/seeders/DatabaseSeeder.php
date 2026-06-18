@@ -19,8 +19,8 @@ use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
-    private const DEMO_FLEET_TARGET = 100;
-    private const DEMO_DRIVER_TARGET = 100;
+    private const DEMO_FLEET_TARGET = 60;
+    private const DEMO_DRIVER_TARGET = 60;
 
     public function run(): void
     {

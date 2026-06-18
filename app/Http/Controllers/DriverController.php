@@ -116,7 +116,7 @@ class DriverController extends Controller
             });
 
         $sortPending = request('sort_pending', 'date');
-        $direction = request('direction', 'asc');
+        $direction = request('direction', 'desc');
 
         if ($sortPending === 'name') {
             $pendingAssignments = $direction === 'desc'
@@ -127,9 +127,19 @@ class DriverController extends Controller
                 ? $pendingAssignments->sortByDesc(fn($opp) => $opp->client->company_name ?? '')
                 : $pendingAssignments->sortBy(fn($opp) => $opp->client->company_name ?? '');
         } else {
-            $pendingAssignments = $direction === 'desc'
-                ? $pendingAssignments->sortByDesc(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at)
-                : $pendingAssignments->sortBy(fn($opp) => $opp->actual_close_date ?? $opp->expected_close_date ?? $opp->created_at);
+            $pendingAssignments = $pendingAssignments->sort(function ($a, $b) use ($direction) {
+                $aPriority = (($a->missing_fleets ?? 0) + ($a->missing_drivers ?? 0)) > 0 ? 1 : 0;
+                $bPriority = (($b->missing_fleets ?? 0) + ($b->missing_drivers ?? 0)) > 0 ? 1 : 0;
+
+                if ($aPriority !== $bPriority) {
+                    return $bPriority <=> $aPriority;
+                }
+
+                $aDate = strtotime((string) ($a->actual_close_date ?? $a->expected_close_date ?? $a->created_at)) ?: 0;
+                $bDate = strtotime((string) ($b->actual_close_date ?? $b->expected_close_date ?? $b->created_at)) ?: 0;
+
+                return $direction === 'asc' ? $aDate <=> $bDate : $bDate <=> $aDate;
+            });
         }
 
         $pendingAssignments = $pendingAssignments->values();

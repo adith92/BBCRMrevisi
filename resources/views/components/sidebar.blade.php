@@ -185,7 +185,7 @@
         </a>
         @endif
 
-        @if(in_array($role, ['gm','manager','operational','sales','pool']))
+        @if(in_array($role, ['gm','manager','operational','pool']))
         <div x-show="sidebarOpen" class="nav-section-label">{{ __('ui.operations') }}</div>
 
         <a href="{{ route('fleet.index') }}" class="nav-item {{ Request::routeIs('fleet*','vehicles*') ? 'active' : '' }} flex items-center gap-3">
