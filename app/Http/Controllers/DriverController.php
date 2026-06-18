@@ -87,8 +87,8 @@ class DriverController extends Controller
             ->whereIn('stage', ['negotiation', 'won'])
             ->get()
             ->filter(function ($opp) use ($user) {
-                $requiredFleets = $opp->requiredFleetQty();
-                $requiredDrivers = $opp->requiredDriverQty();
+                $requiredFleets = $opp->demoRequiredFleetQty(10);
+                $requiredDrivers = $opp->demoRequiredDriverQty(10);
                 $assignedFleets = $opp->assignedVehicles->count();
                 $assignedDrivers = $opp->assignedDrivers->count();
 

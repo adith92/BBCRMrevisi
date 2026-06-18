@@ -101,8 +101,8 @@ class FleetController extends Controller
             ->whereIn('stage', ['negotiation', 'won'])
             ->get()
             ->filter(function ($opp) use ($user) {
-                $requiredFleets = $opp->requiredFleetQty();
-                $requiredDrivers = $opp->requiredDriverQty();
+                $requiredFleets = $opp->demoRequiredFleetQty(10);
+                $requiredDrivers = $opp->demoRequiredDriverQty(10);
                 
                 $assignedFleets = $opp->assignedVehicles->count();
                 $assignedDrivers = $opp->assignedDrivers->count();
@@ -309,8 +309,8 @@ class FleetController extends Controller
         $shouldSyncVehicles = $request->has('vehicle_ids');
         $shouldSyncDrivers = $request->has('driver_ids');
 
-        $requiredFleets = $opportunity->requiredFleetQty();
-        $requiredDrivers = $opportunity->requiredDriverQty();
+        $requiredFleets = $opportunity->demoRequiredFleetQty(10);
+        $requiredDrivers = $opportunity->demoRequiredDriverQty(10);
 
         $userPoolId = $user->isPool() ? $user->pool_id : null;
         

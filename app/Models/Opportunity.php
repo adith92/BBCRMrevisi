@@ -250,6 +250,16 @@ class Opportunity extends Model
         return $qty;
     }
 
+    public function demoRequiredFleetQty(int $max = 10): int
+    {
+        return min($this->requiredFleetQty(), $max);
+    }
+
+    public function demoRequiredDriverQty(int $max = 10): int
+    {
+        return min($this->requiredDriverQty(), $max);
+    }
+
     private function isFleetProductText(string $value): bool
     {
         $value = trim(strtolower($value));
