@@ -38,6 +38,9 @@
             <span id="notif-badge" class="notif-badge" style="display:flex">4</span>
         </button>
 
+        {{-- Skin switch: Modern / Classic (second axis) --}}
+        <x-skin-toggle />
+
         {{-- Dark/Light toggle --}}
         <x-theme-toggle />
 

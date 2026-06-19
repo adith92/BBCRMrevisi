@@ -47,6 +47,9 @@ document.addEventListener('alpine:init', () => {
         },
     });
 
+    /* Skin (modern|classic) sekarang server-side via cookie + middleware ApplySkin.
+       data-skin di-render di <html> oleh server — tidak ada store Alpine lagi. */
+
     /* ── Store: Focus/Presentation Mode ── */
     Alpine.store('focus', {
         active: false,

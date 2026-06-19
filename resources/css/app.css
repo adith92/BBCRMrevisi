@@ -1,4 +1,6 @@
 @import "gridstack/dist/gridstack.min.css";
+/* Montserrat — brand font dipakai HANYA oleh CLASSIC skin (Claude Design). MODERN tetap Inter. */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -671,4 +673,128 @@ html.light .theme-orbs {
 }
 html.dark .theme-orbs {
     opacity: 0.40;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CLASSIC SKIN  —  data-skin="classic"  (ADDITIVE / OPT-IN)
+   ──────────────────────────────────────────────────────────────
+   Sumbu kedua di samping light/dark. MODERN (default, tanpa atribut
+   atau data-skin="modern") TIDAK tersentuh — semua aturan di-scope
+   ketat ke [data-skin="classic"].
+   Nilai diambil dari Claude Design "Bluebird CRM Design System"
+   (tokens/colors.css = light, tokens/theme-dark.css = dark,
+   spacing.css = radius/shadow, typography.css = Montserrat brand font).
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── CLASSIC · Light tokens (Claude Design base palette) ── */
+html.light[data-skin="classic"] {
+    --cc-bg:          #f4f7fb;   /* canvas */
+    --cc-surface:     #f5f7fa;
+    --cc-card:        #ffffff;
+    --cc-card-hover:  #eef2f8;
+    --cc-sidebar:     #001737;   /* deep navy */
+    --cc-topbar:      #ffffff;
+    --cc-border:      #e5e7eb;
+    --cc-border-h:    #d3d9e2;
+    --cc-text:        #001737;
+    --cc-text-muted:  #667085;
+    --cc-text-faint:  #98a2b3;
+    --cc-input-bg:    #ffffff;
+    --cc-input-bd:    #d3d9e2;
+    --cc-scrollbar:   rgba(0,23,55,0.12);
+    --cc-overlay:     rgba(0,23,55,0.45);
+    --cc-modal-bg:    #ffffff;
+    --cc-row-hover:   rgba(13,90,166,0.04);
+    --cc-th-bg:       #f5f7fa;
+    --cc-progress-bg: rgba(0,23,55,0.06);
+    --cc-kbd:         #f5f7fa;
+    --cc-kbd-text:    #667085;
+    --cc-accent:      #0d5aa6;
+    --cc-accent-dim:  rgba(13,90,166,0.10);
+
+    /* Sidebar — navy with light text */
+    --cc-sidebar-brand:     #ffffff;
+    --cc-sidebar-text:      #9db6d4;
+    --cc-sidebar-hover:     #ffffff;
+    --cc-sidebar-hover-bg:  rgba(255,255,255,0.08);
+    --cc-sidebar-active:    #ffffff;
+    --cc-sidebar-active-bg: rgba(46,124,214,0.30);
+    --cc-sidebar-active-bd: rgba(159,182,212,0.24);
+    --cc-sidebar-label:     rgba(234,242,251,0.50);
+    --cc-sidebar-divider:   rgba(255,255,255,0.08);
+    --cc-sidebar-user:      #eaf2fb;
+    --cc-sidebar-user-role: #9db6d4;
+    --cc-sidebar-user-bg:   rgba(255,255,255,0.06);
+    --cc-sidebar-user-bd:   rgba(255,255,255,0.08);
+}
+
+/* ── CLASSIC · Dark tokens (Claude Design theme-dark) ── */
+html.dark[data-skin="classic"] {
+    --cc-bg:          #0a1426;
+    --cc-surface:     #16243f;
+    --cc-card:        #111e36;
+    --cc-card-hover:  #1e2f4d;
+    --cc-sidebar:     #061226;
+    --cc-topbar:      #111e36;
+    --cc-border:      rgba(148,173,214,0.14);
+    --cc-border-h:    rgba(148,173,214,0.26);
+    --cc-text:        #e8eefc;
+    --cc-text-muted:  #9db2d0;
+    --cc-text-faint:  #6b82a6;
+    --cc-input-bg:    rgba(255,255,255,0.03);
+    --cc-input-bd:    rgba(148,173,214,0.20);
+    --cc-scrollbar:   rgba(148,173,214,0.20);
+    --cc-overlay:     rgba(0,0,0,0.7);
+    --cc-modal-bg:    #111e36;
+    --cc-row-hover:   rgba(255,255,255,0.03);
+    --cc-th-bg:       rgba(255,255,255,0.03);
+    --cc-progress-bg: rgba(255,255,255,0.06);
+    --cc-kbd:         rgba(255,255,255,0.05);
+    --cc-kbd-text:    #9db2d0;
+    --cc-accent:      #2e7cd6;
+    --cc-accent-dim:  rgba(46,124,214,0.16);
+
+    /* Sidebar — dark navy */
+    --cc-sidebar-brand:     #ffffff;
+    --cc-sidebar-text:      rgba(232,238,252,0.72);
+    --cc-sidebar-hover:     #ffffff;
+    --cc-sidebar-hover-bg:  rgba(255,255,255,0.08);
+    --cc-sidebar-active:    #d8efff;
+    --cc-sidebar-active-bg: rgba(46,124,214,0.28);
+    --cc-sidebar-active-bd: rgba(148,173,214,0.24);
+    --cc-sidebar-label:     rgba(232,238,252,0.46);
+    --cc-sidebar-divider:   rgba(255,255,255,0.08);
+    --cc-sidebar-user:      #e8eefc;
+    --cc-sidebar-user-role: #9db2d0;
+    --cc-sidebar-user-bg:   rgba(255,255,255,0.06);
+    --cc-sidebar-user-bd:   rgba(255,255,255,0.08);
+}
+
+/* ── CLASSIC · Component-level re-skin (mode-independent) ──
+   Flat, border-led, sudut kotak (radius 4/5/8px), tanpa ambient glow,
+   tanpa lift-on-hover. Brand font = Montserrat. */
+html[data-skin="classic"] .theme-orbs        { display: none; }
+html[data-skin="classic"] .cc-card           { border-radius: 8px; box-shadow: 0 1px 3px rgba(0,23,55,0.06), 0 1px 2px rgba(0,23,55,0.04); }
+html[data-skin="classic"] .cc-card:hover     { transform: none; }
+html[data-skin="classic"] .kpi-card          { border-radius: 8px; }
+html[data-skin="classic"] .kpi-card::before  { display: none; }
+html[data-skin="classic"] .kpi-card:hover    { transform: none; }
+html[data-skin="classic"] .btn-primary       { border-radius: 5px; box-shadow: none; }
+html[data-skin="classic"] .btn-primary:hover { transform: none; box-shadow: 0 2px 6px rgba(13,90,166,0.25); }
+html[data-skin="classic"] .btn-secondary     { border-radius: 5px; }
+html[data-skin="classic"] .dark-input,
+html[data-skin="classic"] .dark-input:focus  { border-radius: 4px; }
+html[data-skin="classic"] .nav-item          { border-radius: 5px; }
+
+/* Montserrat brand font for headings, nav & buttons (body stays Inter) */
+html[data-skin="classic"] h1,
+html[data-skin="classic"] h2,
+html[data-skin="classic"] h3,
+html[data-skin="classic"] h4,
+html[data-skin="classic"] h5,
+html[data-skin="classic"] h6,
+html[data-skin="classic"] .nav-item,
+html[data-skin="classic"] .btn-primary,
+html[data-skin="classic"] .btn-secondary {
+    font-family: "Montserrat", "Inter", system-ui, sans-serif;
 }

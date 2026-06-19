@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" data-skin="{{ $skin ?? 'modern' }}">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -10,6 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Apply saved theme BEFORE paint — prevents white flash on dark mode --}}
     <script>(function(){var t=localStorage.getItem('crm-theme')||'light';document.documentElement.classList.remove('dark','light');document.documentElement.classList.add(t);})();</script>
+    {{-- Skin (modern|classic) di-set server-side di tag <html data-skin> — anti-flash, no JS needed --}}
     <style>
         /* ── SPA SHELL ── */
         html, body { height: 100%; overflow: hidden; }

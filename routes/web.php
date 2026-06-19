@@ -31,6 +31,12 @@ Route::get('/language/{locale}', function (string $locale) {
     return back();
 })->name('language.switch');
 
+Route::get('/skin/{mode}', function (string $mode) {
+    $mode = $mode === 'classic' ? 'classic' : 'modern';
+
+    return back()->withCookie(cookie()->forever('crm-skin', $mode, secure: false, httpOnly: false));
+})->name('skin.switch');
+
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard
