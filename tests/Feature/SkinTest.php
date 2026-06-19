@@ -117,6 +117,42 @@ class SkinTest extends TestCase
     }
 
     /** @test */
+    public function fleet_classic_view_renders(): void
+    {
+        $res = $this->actingAs($this->user('gm'))
+            ->withUnencryptedCookie('crm-skin', 'classic')
+            ->get(route('fleet.index'));
+
+        $res->assertOk();
+        $res->assertSee('data-skin="classic"', false);
+        $res->assertSee('bb-table', false);
+    }
+
+    /** @test */
+    public function drivers_classic_view_renders(): void
+    {
+        $res = $this->actingAs($this->user('gm'))
+            ->withUnencryptedCookie('crm-skin', 'classic')
+            ->get(route('drivers.index'));
+
+        $res->assertOk();
+        $res->assertSee('data-skin="classic"', false);
+        $res->assertSee('bb-table', false);
+    }
+
+    /** @test */
+    public function bookings_classic_view_renders(): void
+    {
+        $res = $this->actingAs($this->user('gm'))
+            ->withUnencryptedCookie('crm-skin', 'classic')
+            ->get(route('bookings.index'));
+
+        $res->assertOk();
+        $res->assertSee('data-skin="classic"', false);
+        $res->assertSee('bb-table', false);
+    }
+
+    /** @test */
     public function all_role_dashboards_render_under_classic(): void
     {
         foreach (['gm', 'manager', 'sales', 'operational', 'finance'] as $role) {
