@@ -292,8 +292,10 @@ class RoleBugFixTest extends TestCase
             ->get(route('drivers.index'));
 
         $response->assertOk();
-        $response->assertSee('Supir Required:');
-        $response->assertSee('>2</strong>', false);
+        // UI redesain operasional (commit f01f1a0): "Supir Required:" → blok kartu "Required"
+        // + data pending assignment di-expose sebagai JSON. Feature tetap sama: menampilkan
+        // jumlah supir yang dibutuhkan untuk opportunity yang belum dialokasikan.
+        $response->assertSee('Required');
         $response->assertSee('"required_drivers":2', false);
     }
 

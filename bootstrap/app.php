@@ -37,6 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\ApplySkin::class,
         ]);
+
+        // crm-skin = preferensi tema (non-sensitif). Plaintext supaya konsisten
+        // antara route, middleware, dan pre-paint JS — bukan data rahasia.
+        $middleware->encryptCookies(except: ['crm-skin']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
