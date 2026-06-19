@@ -153,6 +153,30 @@ class SkinTest extends TestCase
     }
 
     /** @test */
+    public function finance_classic_view_renders(): void
+    {
+        $res = $this->actingAs($this->user('finance'))
+            ->withUnencryptedCookie('crm-skin', 'classic')
+            ->get(route('finance.index'));
+
+        $res->assertOk();
+        $res->assertSee('data-skin="classic"', false);
+        $res->assertSee('bb-table', false);
+    }
+
+    /** @test */
+    public function subscriptions_classic_view_renders(): void
+    {
+        $res = $this->actingAs($this->user('finance'))
+            ->withUnencryptedCookie('crm-skin', 'classic')
+            ->get(route('subscriptions.index'));
+
+        $res->assertOk();
+        $res->assertSee('data-skin="classic"', false);
+        $res->assertSee('bb-table', false);
+    }
+
+    /** @test */
     public function all_role_dashboards_render_under_classic(): void
     {
         foreach (['gm', 'manager', 'sales', 'operational', 'finance'] as $role) {
