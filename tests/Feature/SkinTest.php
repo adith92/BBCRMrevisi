@@ -70,6 +70,29 @@ class SkinTest extends TestCase
     }
 
     /** @test */
+    public function clients_uses_dedicated_classic_view_when_ported(): void
+    {
+        $res = $this->actingAs($this->user('gm'))
+            ->withUnencryptedCookie('crm-skin', 'classic')
+            ->get(route('clients.index'));
+
+        $res->assertOk();
+        $res->assertSee('data-skin="classic"', false);
+        $res->assertSee('bb-table', false);          // markup khas view classic clients
+        $res->assertSee('Revenue by Industry', false);
+    }
+
+    /** @test */
+    public function clients_modern_view_is_untouched(): void
+    {
+        $res = $this->actingAs($this->user('gm'))->get(route('clients.index'));
+
+        $res->assertOk();
+        $res->assertSee('data-skin="modern"', false);
+        $res->assertDontSee('bb-table', false);       // tidak memakai markup classic
+    }
+
+    /** @test */
     public function all_role_dashboards_render_under_classic(): void
     {
         foreach (['gm', 'manager', 'sales', 'operational', 'finance'] as $role) {
