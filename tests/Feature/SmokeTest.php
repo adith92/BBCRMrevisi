@@ -250,6 +250,51 @@ class SmokeTest extends TestCase
     }
 
     /** @test */
+
+    /** @test */
+    public function search_returns_empty_results_for_null_query(): void
+    {
+        $this->actAs('sales')
+            ->getJson(route('search.global'))
+            ->assertStatus(200)
+            ->assertJson(['results' => [], 'query' => '']);
+    }
+
+    /** @test */
+    public function search_returns_empty_results_for_whitespace_query(): void
+    {
+        $this->actAs('sales')
+            ->getJson(route('search.global', ['q' => '   ']))
+            ->assertStatus(200)
+            ->assertJson(['results' => [], 'query' => '']);
+    }
+
+    /** @test */
+    public function search_works_for_exact_two_characters(): void
+    {
+        Client::factory()->create(['company_name' => 'Abc Corp']);
+
+        $this->actAs('sales')
+            ->getJson(route('search.global', ['q' => 'Ab']))
+            ->assertStatus(200)
+            ->assertJsonPath('results.0.type', 'client')
+            ->assertJsonPath('results.0.label', 'Abc Corp');
+    }
+
+    /** @test */
+    public function search_handles_special_characters_safely(): void
+    {
+        Client::factory()->create(['company_name' => 'O\'Connor % Co_']);
+
+        // Just ensure it doesn't crash (500) and returns 200 OK
+        $this->actAs('sales')
+            ->getJson(route('search.global', ['q' => 'O\'Connor % Co_']))
+            ->assertStatus(200)
+            ->assertJsonPath('results.0.type', 'client')
+            ->assertJsonPath('results.0.label', 'O\'Connor % Co_');
+    }
+
+    /** @test */
     public function search_max_16_results(): void
     {
         Client::factory(20)->create(['company_name' => fn() => 'TestCorp ' . fake()->uuid()]);
